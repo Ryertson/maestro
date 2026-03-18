@@ -1,0 +1,66 @@
+<%= form_with(model: activity, class: "row g-3") do |form| %>
+  <% if activity.errors.any? %>
+    <div class="col-12 alert alert-danger">
+      <h6 class="fw-bold"><%= pluralize(activity.errors.count, "erro") %> impediram o salvamento:</h6>
+      <ul class="mb-0 small">
+        <% activity.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Campo oculto para manter o vínculo com a aula de origem, se houver %>
+  <%= form.hidden_field :lesson_id %>
+
+  <div class="col-12">
+    <%= form.label :classroom_id, "Turma Destino", class: "form-label fw-bold" %>
+    <%= form.collection_select :classroom_id, 
+          Classroom.all.includes(:course, :grade, :section), :id, :full_name_info, 
+          { prompt: "Selecione a Turma..." }, 
+          { class: "form-select shadow-sm" } %>
+  </div>
+
+  <%# CAMPO ADICIONADO: Disciplina (Essencial para o Boletim) %>
+  <div class="col-12">
+    <%= form.label :subject_id, "Disciplina", class: "form-label fw-bold" %>
+    <%= form.collection_select :subject_id, Subject.all, :id, :name, 
+          { prompt: "Selecione a Disciplina..." }, 
+          { class: "form-select shadow-sm", required: true } %>
+  </div>
+
+  <div class="col-md-8">
+    <%= form.label :name, "Nome da Atividade", class: "form-label fw-bold" %>
+    <%= form.text_field :name, class: "form-control", placeholder: "Ex: Exercícios de Fixação Cap. 2" %>
+  </div>
+
+  <div class="col-md-4">
+    <%= form.label :activity_type, "Tipo de Atividade", class: "form-label fw-bold" %>
+    <%= form.select :activity_type, ["Prova", "Lista de Exercícios", "Relatório de Laboratório", "Trabalho em Grupo", "Simulado", "Visto no Caderno", "Apresentação", "Relatório"], { prompt: "Selecione o tipo" }, { class: "form-select shadow-sm" } %>
+  </div>
+
+  <div class="col-md-6">
+    <%= form.label :student_delivery_date, "Data de Entrega ao Aluno", class: "form-label fw-bold" %>
+    <%= form.date_field :student_delivery_date, class: "form-control shadow-sm" %>
+  </div>
+
+  <div class="col-md-6">
+    <%= form.label :teacher_delivery_date, "Data de Entrega ao Professor", class: "form-label fw-bold" %>
+    <%= form.date_field :teacher_delivery_date, class: "form-control shadow-sm" %>
+  </div>
+
+  <div class="col-md-8">
+    <%= form.label :status, "Status da Entrega", class: "form-label fw-bold" %>
+    <%= form.select :status, ["Entregue no prazo", "Entregue com atraso", "Não fez"], { prompt: "Selecione o status" }, { class: "form-select shadow-sm" } %>
+  </div>
+
+  <div class="col-md-4">
+    <%= form.label :grade, "Nota da Atividade", class: "form-label fw-bold" %>
+    <%= form.text_field :grade, class: "form-control shadow-sm", placeholder: "0.0" %>
+  </div>
+
+  <div class="col-12 text-end mt-4">
+    <%= link_to "Cancelar", activities_path, class: "btn btn-light border me-2" %>
+    <%= form.submit "Salvar Atividade na Turma", class: "btn btn-success px-4" %>
+  </div>
+<% end %>

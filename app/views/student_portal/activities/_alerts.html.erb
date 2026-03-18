@@ -1,0 +1,38 @@
+<%# --- QUADRO DE ALERTAS NEON (PARTIAL) --- %>
+<div class="alerts-wrapper mb-5">
+  <div class="d-flex align-items-center mb-3">
+    <div class="neon-pulse-dot me-2"></div>
+    <h6 class="text-label-neon mb-0">Alertas e Notificações</h6>
+  </div>
+
+  <%# Lógica: Busca atividades criadas nos últimos 3 dias específicas da turma do aluno %>
+  <% recent_activities = @activities.where('activities.created_at >= ?', 3.days.ago).limit(3) %>
+  
+  <% if recent_activities.any? %>
+    <% recent_activities.each do |activity| %>
+      <div class="alert-card-neon animate__animated animate__fadeIn">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <div class="alert-icon-box me-3">
+              <i class="bx bxs-bell-ring bx-tada"></i>
+            </div>
+            <div>
+              <div class="alert-title text-white">Nova Atividade Lançada!</div>
+              <div class="alert-subtitle">
+                <span class="text-cyan-neon"><%= activity.discipline&.name %></span> • <%= activity.name %>
+              </div>
+            </div>
+          </div>
+          <div class="text-end d-none d-md-block">
+            <span class="badge-new-neon">NOVO</span>
+            <div class="alert-time text-muted mt-1">Lançada <%= time_ago_in_words(activity.created_at) %> atrás</div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="empty-alerts text-center p-4">
+      <p class="text-muted small mb-0 opacity-50">Nenhuma notificação nova. Você está em dia!</p>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,293 @@
+<div class="dashboard-wrapper-neon">
+  <div class="dashboard-container p-4">
+    
+    <%# --- CABEÇALHO DA PÁGINA --- %>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between welcome-card-neon shadow-lg">
+          <div class="d-flex align-items-center">
+            <div class="icon-box-neon me-3">
+              <i class="bx bx-book-content"></i>
+            </div>
+            <div>
+              <h2 class="fw-bold text-white mb-0">Minhas <span class="text-cyan-neon">Atividades</span></h2>
+              <p class="mb-0 text-white-50 small">
+                Gerencie suas tarefas e acompanhe suas notas na turma: 
+                <strong class="text-white">
+                  <%= @student.classroom&.try(:name) || @student.classroom&.try(:title) || @student.classroom&.try(:description) || "Minha Turma" %>
+                </strong>
+              </p>
+            </div>
+          </div>
+          <div class="d-none d-md-block text-end">
+             <span class="badge-neon-cyan">Total: <%= @activities.count %> Atividades</span>
+             <div class="text-muted mt-1" style="font-size: 10px; text-transform: uppercase;">Portal do Aluno v2.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# --- QUADRO DE ALERTAS ATUALIZADO (LÓGICA DE STATUS) --- %>
+    <% 
+      # Iniciamos o contador de pendências reais
+      real_pending_count = 0
+      
+      # Varremos as atividades para checar o status individual de cada uma
+      @activities.each do |activity|
+        submission = @student.student_activities.find_by(activity_id: activity.id)
+        
+        # Se não existe registro OU se o status for explicitamente "Não entregue"
+        if submission.nil? || (submission.try(:status)&.downcase == "não entregue")
+          real_pending_count += 1
+        end
+      end
+    %>
+
+    <% if real_pending_count > 0 %>
+      <%# --- QUADRO VERMELHO PULSANTE --- %>
+      <div class="alert-empty-neon alert-danger-neon mb-4 p-4 d-flex align-items-center">
+        <div class="me-4">
+          <i class="bx bx-error-alt text-red-neon animate-flicker" style="font-size: 3rem;"></i>
+        </div>
+        <div>
+          <h5 class="text-red-neon fw-bold mb-1">Atenção: Você possui pendências!</h5>
+          <p class="mb-0 text-white opacity-75">
+            Identificamos <strong><%= real_pending_count %></strong> <%= real_pending_count == 1 ? 'atividade com status "Não entregue"' : 'atividades com status "Não entregue"' %>.
+            <br>
+            <span class="text-white-50 small text-uppercase fw-bold">Por favor, visualize o quadro de Atividade/Disciplina abaixo para regularizar.</span>
+          </p>
+        </div>
+      </div>
+    <% else %>
+      <%# --- QUADRO VERDE (TUDO OK) --- %>
+      <div class="alert-empty-neon mb-4 p-4 d-flex align-items-center">
+        <i class="bx bx-check-double text-green-neon me-3" style="font-size: 2.5rem;"></i>
+        <div>
+          <h5 class="text-green-neon fw-bold mb-0">Nenhuma notificação nova. Você está em dia!</h5>
+          <p class="mb-0 text-white-50 small">Parabéns! Todas as atividades desta lista foram concluídas.</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%# --- FERRAMENTAS DE BUSCA E ABAS DE DISCIPLINAS --- %>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="filter-wrapper-neon p-3">
+          <%= form_with url: student_portal_activities_path, method: :get, class: "row g-3 align-items-center mb-4", data: { turbo_frame: "activities_table" } do |f| %>
+            <div class="col-md-9">
+              <div class="search-input-group">
+                <i class="bx bx-search"></i>
+                <%= f.text_field :query, value: params[:query], placeholder: "Buscar por nome da atividade...", class: "form-control-neon" %>
+                <%= f.hidden_field :subject_id, value: params[:subject_id] if params[:subject_id].present? %>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <%= f.submit "Buscar", class: "btn-filter-neon w-100" %>
+            </div>
+          <% end %>
+
+          <div class="tabs-scroll-container">
+            <div class="nav-tabs-neon">
+              <%= link_to student_portal_activities_path(query: params[:query]), 
+                  class: "tab-item-neon #{'active' unless params[:subject_id].present?}" do %>
+                <i class="bx bx-grid-alt me-1"></i> Todas
+              <% end %>
+
+              <% if @available_subjects.present? %>
+                <% @available_subjects.each do |subject| %>
+                  <%= link_to student_portal_activities_path(subject_id: subject.id, query: params[:query]), 
+                      class: "tab-item-neon #{'active' if params[:subject_id].to_s == subject.id.to_s}" do %>
+                    <%= subject.try(:name) || subject.try(:title) %>
+                  <% end %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# --- LISTAGEM PRINCIPAL --- %>
+    <div class="row">
+      <div class="col-12">
+        <div class="content-card-neon">
+          <div class="table-responsive">
+            <table class="table table-dark-custom align-middle border-0 custom-neon-table">
+              <thead>
+                <tr>
+                  <th class="ps-0 bg-transparent text-muted text-uppercase fw-bold" style="font-size: 10px;">Atividade / Disciplina</th>
+                  <th class="text-center bg-transparent text-muted text-uppercase fw-bold" style="font-size: 10px;">Data de Entrega</th>
+                  <th class="text-center bg-transparent text-muted text-uppercase fw-bold" style="font-size: 10px;">Nota</th>
+                  <th class="bg-transparent text-muted text-uppercase fw-bold" style="font-size: 10px;">Status</th>
+                  <th class="text-end pe-0 bg-transparent text-muted text-uppercase fw-bold" style="font-size: 10px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @activities.any? %>
+                  <% @activities.each do |activity| %>
+                    <% submission = @student.student_activities.find_by(activity_id: activity.id) %>
+                    <tr>
+                      <td class="ps-0 bg-transparent">
+                        <div class="fw-bold text-white"><%= activity.name %></div>
+                        <small class="text-cyan-neon d-block" style="font-size: 11px;">
+                          <%= activity.subject&.try(:name) || activity.subject&.try(:title) %>
+                        </small>
+                      </td>
+                      <td class="text-center bg-transparent">
+                        <% 
+                          due_date = activity.try(:date) || activity.try(:due_date)
+                          days_until = due_date.present? ? (due_date.to_date - Date.today).to_i : 99
+                          
+                          urgency_class = case
+                                          when days_until < 0 then "text-muted" 
+                                          when days_until <= 1 then "urgency-high" 
+                                          when days_until <= 3 then "urgency-medium" 
+                                          else "urgency-low" 
+                                          end
+                        %>
+                        <div class="d-flex flex-column align-items-center fw-semibold" style="font-size: 13px;">
+                          <% if submission.present? && submission.try(:status)&.downcase != "não entregue" %>
+                             <i class="bx bx-check-circle text-green-neon mb-1" style="font-size: 16px;"></i>
+                             <span class="text-white-50"><%= due_date&.strftime("%d/%m/%Y") || "Sem prazo" %></span>
+                          <% else %>
+                             <i class="bx bx-hourglass-alt mb-1 <%= urgency_class %>" style="font-size: 16px;"></i>
+                             <span class="text-white"><%= due_date&.strftime("%d/%m/%Y") || "Sem prazo" %></span>
+                          <% end %>
+                        </div>
+                      </td>
+                      <td class="text-center bg-transparent">
+                        <% if submission&.respond_to?(:points) && submission.points.present? %>
+                          <span class="grade-badge <%= submission.points >= 6 ? 'grade-high' : 'grade-low' %>">
+                            <%= submission.points %>
+                          </span>
+                        <% else %>
+                          <span class="text-muted opacity-50" style="font-size: 12px;">Pendente</span>
+                        <% end %>
+                      </td>
+                      <td class="bg-transparent">
+                        <% if submission %>
+                          <span class="status-pill <%= submission.try(:status) == 'Corrigida' ? 'bg-corrigida' : (submission.try(:status)&.downcase == 'não entregue' ? 'status-pending' : 'status-delivered') %>">
+                            <%= submission.try(:status) || "Entregue" %>
+                          </span>
+                        <% else %>
+                          <span class="status-pill status-pending">Não entregue</span>
+                        <% end %>
+                      </td>
+                      <td class="text-end pe-0 bg-transparent">
+                        <%= link_to student_portal_activity_path(activity), class: "btn-action-neon", title: "Ver Detalhes" do %>
+                          <i class="bx bx-right-arrow-alt" style="font-size: 1.2rem;"></i>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% else %>
+                  <tr>
+                    <td colspan="5" class="text-center py-5">
+                      <div class="text-muted">
+                        <i class="bx bx-search-alt-2 d-block mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
+                        Nenhuma atividade encontrada nesta categoria.
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* --- BASE E CORES --- */
+  :root {
+    --bg-dark-panel: #1e1e2d;
+    --bg-darker: #12121e;
+    --neon-cyan: #00f3ff;
+    --neon-cyan-dim: rgba(0, 243, 255, 0.1);
+    --neon-green: #39ff14;
+    --neon-green-dim: rgba(57, 255, 20, 0.1);
+    --neon-red: #ff4b5c;
+    --neon-yellow: #ffca28;
+    --input-bg: rgba(255, 255, 255, 0.03);
+  }
+
+  /* Animações Neon */
+  @keyframes pulse-red {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes pulse-red-bg {
+    0% { box-shadow: 0 0 5px rgba(255, 75, 92, 0.3); border-color: rgba(255, 75, 92, 0.2); background: rgba(255, 75, 92, 0.05); }
+    50% { box-shadow: 0 0 25px rgba(255, 75, 92, 0.7); border-color: rgba(255, 75, 92, 1); background: rgba(255, 75, 92, 0.15); }
+    100% { box-shadow: 0 0 5px rgba(255, 75, 92, 0.3); border-color: rgba(255, 75, 92, 0.2); background: rgba(255, 75, 92, 0.05); }
+  }
+
+  .animate-flicker {
+    animation: pulse-red 1.5s infinite ease-in-out;
+  }
+
+  /* Classes de Urgência e Alerta */
+  .alert-danger-neon {
+    border: 1px solid var(--neon-red) !important;
+    animation: pulse-red-bg 1.5s infinite ease-in-out !important;
+  }
+
+  .text-red-neon {
+    color: var(--neon-red) !important;
+    text-shadow: 0 0 10px rgba(255, 75, 92, 0.5);
+  }
+
+  .urgency-low { color: var(--neon-green) !important; }
+  .urgency-medium { color: var(--neon-yellow) !important; }
+  .urgency-high { 
+    color: var(--neon-red) !important; 
+    animation: pulse-red 1.5s infinite;
+    text-shadow: 0 0 10px rgba(255, 75, 92, 0.5);
+  }
+
+  /* Layout Base */
+  .dashboard-wrapper-neon { background-color: var(--bg-darker) !important; min-height: 100vh; color: #fff; font-family: 'Inter', sans-serif; }
+  .welcome-card-neon, .content-card-neon, .filter-wrapper-neon { background: var(--bg-dark-panel); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; }
+  .welcome-card-neon { padding: 25px; }
+  
+  .alert-empty-neon {
+    background: var(--neon-green-dim);
+    border: 1px solid var(--neon-green);
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .content-card-neon { padding: 20px; }
+  .filter-wrapper-neon { background: rgba(30, 30, 45, 0.6); backdrop-filter: blur(10px); }
+  .tabs-scroll-container { overflow-x: auto; white-space: nowrap; padding-bottom: 5px; scrollbar-width: thin; scrollbar-color: var(--neon-cyan) transparent; }
+  .nav-tabs-neon { display: flex; gap: 10px; }
+  .tab-item-neon { text-decoration: none; color: #a2a3b7; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; transition: all 0.3s ease; }
+  .tab-item-neon:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+  .tab-item-neon.active { color: var(--neon-cyan); background: var(--neon-cyan-dim); border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+  .search-input-group { position: relative; display: flex; align-items: center; }
+  .search-input-group i { position: absolute; left: 15px; color: var(--neon-cyan); font-size: 18px; }
+  .form-control-neon { background: var(--input-bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; color: #fff !important; padding: 10px 15px 10px 45px; font-size: 13px; transition: all 0.3s; width: 100%; }
+  .form-control-neon:focus { background: rgba(0, 243, 255, 0.02); border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); outline: none; }
+  .btn-filter-neon { background: var(--neon-cyan-dim); color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 10px; border-radius: 10px; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; transition: all 0.3s; cursor: pointer; }
+  .btn-filter-neon:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+  .custom-neon-table th, .custom-neon-table tr { background-color: transparent !important; color: #fff !important; }
+  .custom-neon-table tbody td { border-bottom: 1px solid rgba(255,255,255,0.03) !important; padding: 18px 0; background: transparent !important; }
+  .text-cyan-neon { color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 243, 255, 0.2); }
+  .text-green-neon { color: var(--neon-green) !important; text-shadow: 0 0 8px rgba(57, 255, 20, 0.4); }
+  .status-pill { padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
+  .status-delivered { background: rgba(255,255,255,0.05); color: #fff; }
+  .status-pending { background: rgba(255, 75, 92, 0.15) !important; color: var(--neon-red) !important; border: 1px solid var(--neon-red) !important; }
+  .bg-corrigida { background: rgba(57, 255, 20, 0.1); color: var(--neon-green); border-color: var(--neon-green); }
+  .grade-badge { padding: 5px 12px; border-radius: 8px; font-weight: 800; font-size: 13px; }
+  .grade-high { border: 1px solid var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+  .grade-low { border: 1px solid var(--neon-red); color: var(--neon-red); }
+  .btn-action-neon { background: rgba(255, 255, 255, 0.05); color: #fff; padding: 8px 12px; border-radius: 10px; transition: 0.3s; display: inline-flex; align-items: center; text-decoration: none; }
+  .btn-action-neon:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+  .icon-box-neon { background: var(--neon-cyan-dim); color: var(--neon-cyan); padding: 12px; border-radius: 12px; font-size: 1.8rem; }
+  .badge-neon-cyan { border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 5px 15px; border-radius: 50px; font-size: 11px; font-weight: bold; }
+</style>

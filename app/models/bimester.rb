@@ -1,0 +1,2 @@
+class Bimester < ApplicationRecord
+end

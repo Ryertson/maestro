@@ -1,0 +1,5 @@
+<%= turbo_stream.replace @lesson do %>
+  <%= render @lesson %>
+<% end %>
+
+<%= turbo_stream.replace "modal", "" %>

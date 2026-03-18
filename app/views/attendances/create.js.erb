@@ -1,0 +1,75 @@
+(function() {
+  // 1. Dados do Aluno e Status
+  var studentId = "<%= @student.id %>";
+  var date = "<%= @attendance.date.to_s %>";
+  var statusRaw = "<%= @attendance.status %>"; 
+  
+  var statusSlug = "";
+  var iconClass = "";
+
+  switch(statusRaw.toLowerCase()) {
+    case 'presente': case 'present':
+      statusSlug = "present"; iconClass = "bi-check-lg"; break;
+    case 'faltou': case 'absent':
+      statusSlug = "absent"; iconClass = "bi-x-lg"; break;
+    case 'atrasado': case 'late':
+      statusSlug = "late"; iconClass = "bi-clock"; break;
+    case 'justificada': case 'justified':
+      statusSlug = "justified"; iconClass = "bi-info-circle"; break;
+    default:
+      statusSlug = "cleared";
+  }
+
+  // 2. Atualiza o Quadrado na Planilha
+  var btn = document.getElementById("btn-" + studentId + "-" + date);
+  if (btn) {
+    btn.classList.remove('p-present', 'p-absent', 'p-late', 'p-justified', 'opacity-50');
+    if (statusRaw === "cleared") {
+      btn.classList.add('opacity-50');
+      btn.innerHTML = ''; 
+    } else {
+      btn.classList.add('p-' + statusSlug);
+      btn.innerHTML = '<i class="bi ' + iconClass + ' small text-white"></i>';
+    }
+    var bootstrapDropdown = bootstrap.Dropdown.getInstance(btn);
+    if (bootstrapDropdown) { bootstrapDropdown.hide(); }
+  }
+
+  // 3. Atualiza o Contador de Faltas Individual (Coluna F)
+  var totalCell = document.getElementById("total-faltas-" + studentId);
+  if (totalCell) {
+    totalCell.innerHTML = "<%= @student.attendances.where(status: ['Faltou', 'absent']).count %>";
+  }
+
+  // 4. ATUALIZAÇÃO SILENCIOSA DOS CARDS (Sem F5)
+  <% 
+    # Recalculamos as métricas da turma no servidor para enviar ao JS
+    relevant = Attendance.where(classroom_id: @classroom_id, date: @attendance.date.beginning_of_month..@attendance.date.end_of_month)
+    presents = relevant.where(status: ['Presente', 'present']).count
+    absents  = relevant.where(status: ['Faltou', 'absent']).count
+    lates    = relevant.where(status: ['Atrasado', 'late']).count
+    justified = relevant.where(status: ['Justificada', 'justified']).count
+    
+    # Cálculo da Taxa
+    total_lessons = Lesson.where(classroom_id: @classroom_id, date: @attendance.date.beginning_of_month..@attendance.date.end_of_month).count
+    total_students = Student.where(classroom_id: @classroom_id).count
+    possible = total_lessons * total_students
+    rate = possible > 0 ? (((presents + lates + justified).to_f / possible) * 100).round(1) : 0
+  %>
+
+  // Injeta os novos valores nos Cards
+  document.getElementById("total-presents-card").innerHTML = "<%= presents %>";
+  document.getElementById("total-absents-card").innerHTML = "<%= absents %>";
+  document.getElementById("total-lates-card").innerHTML = "<%= lates %>";
+  document.getElementById("total-justified-card").innerHTML = "<%= justified %>";
+  
+  // Atualiza a Porcentagem e a Barra
+  document.getElementById("attendance-rate-text").innerHTML = "<%= rate %>%";
+  var progressBar = document.getElementById("attendance-progress-bar");
+  if (progressBar) {
+    progressBar.style.width = "<%= rate %>%";
+    progressBar.setAttribute("aria-valuenow", "<%= rate %>");
+  }
+
+  console.log("Maestro: Atualização silenciosa concluída.");
+})();

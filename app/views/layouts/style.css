@@ -1,0 +1,254 @@
+/* ==========================================================================
+   1. CONFIGURAÇÕES GLOBAIS E TEMA NEON (O CORAÇÃO)
+   ========================================================================== */
+:root {
+  /* Cores de Fundo */
+  --bg-dark-master: #0a0a0f;    /* Fundo profundo da página */
+  --card-bg: #141421;           /* Fundo dos cards e modais */
+  
+  /* Cores Neon */
+  --purple-neon: #bc13fe;       /* Roxo principal vibrante */
+  --purple-glow: rgba(188, 19, 254, 0.4);
+  --success-neon: #39ff14;      /* Verde neon para "Pronto" */
+  --danger-neon: #ff3131;       /* Vermelho neon para "Excluir" */
+  --warning-neon: #ff9100;      /* Laranja neon para "Pendente" */
+  
+  /* Cores de Texto */
+  --lavender: #d1d1f0;          /* Texto secundário/Labels */
+  --white-neon: #ffffff;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', serif;
+  background-color: var(--bg-dark-master); /* Garante que o fundo seja escuro */
+  color: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+li {
+  list-style: none;
+}
+
+/* ==========================================================================
+   2. ESTRUTURA DE LAYOUT (SIDEBAR & MAIN)
+   ========================================================================== */
+.wrapper {
+  display: flex;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  transition: all 0.25s ease-in-out;
+  background-color: var(--bg-dark-master); /* Mudado de #fff para Dark Neon */
+}
+
+#sidebar {
+  width: 90px;
+  min-width: 90px;
+  transition: all 0.25s ease-in-out;
+  background-color: #0b0f19; /* Fundo original da sidebar */
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(188, 19, 254, 0.1);
+}
+
+#sidebar.expand {
+  width: 260px;
+  min-width: 260px;
+}
+
+#sidebar:not(.expand) .sidebar-logo,
+#sidebar:not(.expand) a.sidebar-link span {
+  display: none;
+}
+
+.toggle-btn {
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  border-radius: 0.425rem;
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #323c55;
+  cursor: pointer;
+  border: none;
+}
+
+#sidebar.expand .sidebar-logo,
+#sidebar.expand a.sidebar-link span {
+  animation: fadeIn .25s ease;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.sidebar-logo a {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  padding: 0.7rem 0;
+  flex: 1 1 auto;
+  z-index: 10;
+}
+
+a.sidebar-link {
+  padding: .625rem 1.625rem;
+  color: #fff;
+  display: block;
+  white-space: nowrap;
+  font-weight: 700;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.sidebar-link i {
+  font-size: 1.1rem;
+  margin-right: .75rem;
+}
+
+/* Hover e Estado Ativo com Roxo Neon */
+a.sidebar-link:hover {
+  background-color: rgba(188, 19, 254, 0.1);
+  border-left: 3px solid var(--purple-neon);
+  color: #fff;
+}
+
+a.sidebar-link:hover i, 
+.sidebar-link.active i {
+  color: var(--purple-neon);
+  text-shadow: 0 0 10px var(--purple-glow);
+}
+
+.sidebar-link.active {
+  background-color: rgba(188, 19, 254, 0.15);
+  border-left: 3px solid var(--purple-neon) !important;
+}
+
+/* ==========================================================================
+   3. COMPONENTES DO DASHBOARD (AULAS & GESTÃO)
+   ========================================================================== */
+
+/* Cards com efeito Neon */
+.content-card-purple {
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Inputs e Selects que combinam com o tema Dark */
+.form-select-neon, .form-control-neon {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(188, 19, 254, 0.3) !important;
+  color: white !important;
+  border-radius: 10px;
+  padding: 0.6rem;
+  transition: all 0.3s ease;
+}
+
+.form-select-neon:focus, .form-control-neon:focus {
+  border-color: var(--purple-neon) !important;
+  box-shadow: 0 0 12px var(--purple-glow) !important;
+  outline: none;
+}
+
+/* Texto que brilha */
+.text-purple-neon {
+  color: var(--purple-neon) !important;
+  text-shadow: 0 0 10px var(--purple-glow);
+}
+
+.label-neon-small {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--lavender);
+  display: block;
+}
+
+/* Botões Neon */
+.btn-outline-purple-neon {
+  background: transparent;
+  border: 2px solid var(--purple-neon);
+  color: white;
+  border-radius: 50px;
+  font-weight: bold;
+  padding: 0.5rem 1.5rem;
+  transition: 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-outline-purple-neon:hover {
+  background: var(--purple-neon);
+  box-shadow: 0 0 20px var(--purple-glow);
+  color: white;
+}
+
+/* Estilo de Tabelas Dark */
+.table-dark-neon {
+  --bs-table-bg: transparent;
+  color: #fff;
+}
+
+.table-dark-neon thead {
+  background: rgba(188, 19, 254, 0.1);
+  color: var(--purple-neon);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.table-dark-neon td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 0.5rem;
+}
+
+/* Badges e Status */
+.badge-neon-purple {
+  background: rgba(188, 19, 254, 0.2);
+  color: var(--purple-neon);
+  border: 1px solid var(--purple-neon);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+/* Barras de Progresso */
+.progress-neon {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.progress-bar-purple {
+  background: linear-gradient(90deg, #8a2be2, var(--purple-neon));
+  box-shadow: 0 0 15px var(--purple-glow);
+  height: 100%;
+  transition: width 0.6s ease;
+}

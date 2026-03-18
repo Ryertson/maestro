@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  student: one
+  date: 2026-02-17
+  status: 1
+
+two:
+  student: two
+  date: 2026-02-17
+  status: 1

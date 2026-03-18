@@ -1,0 +1,85 @@
+<% content_for :title, "Matricular Alunos | Maestro" %>
+
+<div class="container py-4">
+  <%# --- CABEÇALHO --- %>
+  <div class="mb-5 text-center">
+    <div class="icon-shape bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 60px; height: 60px;">
+      <i class="bi bi-person-plus-fill fs-2"></i>
+    </div>
+    <h2 class="fw-bold text-dark">Matrícula de Estudantes</h2>
+    <p class="text-muted">Escolha entre o cadastro individual ou a importação por planilha.</p>
+  </div>
+
+  <div class="row g-5">
+    <%# --- COLUNA 1: CADASTRO INDIVIDUAL --- %>
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-0">
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Cadastro Individual</h5>
+        </div>
+        <div class="card-body p-4">
+          <%# Certifique-se de atualizar o arquivo _form.html.erb com o código que passei abaixo %>
+          <%= render "form", student: @student %>
+        </div>
+      </div>
+    </div>
+
+    <%# --- COLUNA 2: IMPORTAÇÃO E LISTAGEM --- %>
+    <div class="col-lg-6">
+      <%# Importação %>
+      <div class="card border-0 shadow-sm rounded-4 bg-light mb-4" style="border-top: 5px solid #198754;">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-3 fw-bold text-dark">
+            <i class="bi bi-file-earmark-excel-fill text-success me-2"></i>Importação em Massa
+          </h5>
+          
+          <%= form_with url: import_students_path, multipart: true, class: "row g-3" do |f| %>
+            <div class="col-12">
+              <%= f.label :file, "Selecione o arquivo CSV (Modelo Organizado)", class: "form-label small fw-bold" %>
+              <%= f.file_field :file, class: "form-control border-0 shadow-sm", accept: ".csv", required: true %>
+            </div>
+
+            <div class="col-12 mt-4">
+              <%= f.submit "Iniciar Importação Coletiva", class: "btn btn-success w-100 fw-bold py-2 rounded-pill shadow-sm" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Listagem com o novo campo CURSO %>
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-0">
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Alunos Recentes</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Nome</th>
+                  <th>Curso</th>
+                  <th>Série/Turma</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @students.limit(10).order(created_at: :desc).each do |student| %>
+                  <tr>
+                    <td class="ps-4 fw-medium"><%= student.name %></td>
+                    <td><span class="badge bg-info text-dark"><%= student.course %></span></td>
+                    <td><%= "#{student.grade} #{student.section}" %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 text-center">
+        <%= link_to students_path, class: "text-decoration-none text-muted small" do %>
+          <i class="bi bi-arrow-left"></i> Voltar para a Lista de Frequência
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,17 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Professors" %>
+
+<h1>Professors</h1>
+
+<div id="professors">
+  <% @professors.each do |professor| %>
+    <%= render professor %>
+    <p>
+      <%= link_to "Show this professor", professor %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "Novo Professor", new_professor_registration_path, class: "btn btn-primary" %>
+

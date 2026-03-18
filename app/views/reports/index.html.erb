@@ -1,0 +1,100 @@
+<div class="container-fluid py-4">
+  <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-white p-4 border-bottom">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold text-dark mb-1">Boletim de Desempenho</h2>
+          <p class="text-muted mb-0">
+            <%= @selected_course %> | <%= @selected_grade %>
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <% @bimesters.each do |b| %>
+            <%= link_to b.name, reports_path(course: @selected_course, grade_level: @selected_grade, bimester_id: b.id), 
+                class: "btn #{b == @current_bimester ? 'btn-primary' : 'btn-outline-primary'} rounded-pill px-3" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light text-center">
+            <tr>
+              <th class="text-start ps-4 py-3" style="width: 250px;">Estudante</th>
+              <% @activities.each do |activity| %>
+                <th class="small px-2">
+                  <div class="text-truncate" style="max-width: 120px;" title="<%= activity.title %>">
+                    <%= activity.title %>
+                  </div>
+                  <span class="text-muted fw-normal" style="font-size: 0.7rem;">
+                    <%= activity.date.strftime("%d/%m") %>
+                  </span>
+                </th>
+              <% end %>
+              <th class="bg-dark text-white fw-bold" style="width: 100px;">Média</th>
+              <th class="text-center" style="width: 120px;">Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @students.any? %>
+              <% @students.each do |student| %>
+                <tr>
+                  <td class="ps-4 fw-bold text-secondary"><%= student.name %></td>
+                  
+                  <% total_score = 0 %>
+                  <% count_grades = 0 %>
+
+                  <% @activities.each do |activity| %>
+                    <%# Busca a nota na tabela Grades %>
+                    <% grade = Grade.find_by(student: student, activity: activity) %>
+                    <% score = grade&.value || 0 %>
+                    <% total_score += score.to_f %>
+                    <% count_grades += 1 if grade.present? %>
+                    
+                    <td class="text-center">
+                      <span class="fw-semibold <%= score.to_f >= 6 ? 'text-primary' : 'text-danger' %>">
+                        <%= score > 0 ? number_with_precision(score, precision: 1) : "-" %>
+                      </span>
+                    </td>
+                  <% end %>
+
+                  <%# Cálculo da Média Simples %>
+                  <% media = @activities.any? ? (total_score / @activities.size) : 0 %>
+                  <td class="text-center fw-bold bg-light">
+                    <span class="<%= media >= 6 ? 'text-success' : 'text-danger' %>">
+                      <%= number_with_precision(media, precision: 1) %>
+                    </span>
+                  </td>
+
+                  <td class="text-center">
+                    <% if media >= 6 %>
+                      <span class="badge bg-success-subtle text-success border border-success px-3">Aprovado</span>
+                    <% elsif media > 0 %>
+                      <span class="badge bg-danger-subtle text-danger border border-danger px-3">Reprovado</span>
+                    <% else %>
+                      <span class="badge bg-light text-muted border px-3">Sem Notas</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="<%= @activities.size + 3 %>" class="text-center py-5 text-muted">
+                  Nenhum aluno encontrado para este filtro.
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="card-footer bg-white p-3 text-end">
+      <button onclick="window.print();" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-printer me-2"></i>Imprimir Boletim
+      </button>
+    </div>
+  </div>
+</div>

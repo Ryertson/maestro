@@ -1,0 +1,17 @@
+(function() {
+  var rowId = "badge-status-<%= @sa.id %>";
+  var badge = document.getElementById(rowId);
+  
+  if (badge) {
+    // Atualiza o texto
+    badge.innerHTML = "<%= @sa.status %>";
+    
+    // Atualiza a cor
+    badge.className = "badge rounded-pill <%= status_class(@sa.status) %> p-2 px-3";
+    
+    // Efeito de brilho para confirmar
+    badge.style.transition = "transform 0.2s";
+    badge.style.transform = "scale(1.2)";
+    setTimeout(() => { badge.style.transform = "scale(1)"; }, 200);
+  }
+})();

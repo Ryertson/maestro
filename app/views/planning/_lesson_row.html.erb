@@ -1,0 +1,25 @@
+<tr id="<%= dom_id(lesson) %>" style="font-size: 0.9rem;">
+  <td class="px-4 fw-bold text-dark"><%= lesson.topic_name %></td>
+  <td><span class="badge rounded-pill bg-light text-dark border px-3"><%= lesson.status %></span></td>
+  <td><%= lesson.week %></td>
+  <td class="text-muted small">
+     <%= lesson.has_activity ? "✅ Com Atividade" : "---" %>
+  </td>
+  <td><span class="text-secondary"><%= lesson.grade_level %></span></td>
+  <td class="text-center">
+    <div class="btn-group">
+      <%= link_to edit_lesson_path(lesson),
+            data: { turbo_frame: "modal" },
+            class: "btn btn-sm text-primary p-2" do %>
+        <i class="bi bi-pencil-fill"></i>
+      <% end %>
+
+      <%= button_to lesson_path(lesson),
+            method: :delete,
+            data: { turbo_confirm: "Tem certeza que deseja excluir esta aula?" },
+            class: "btn btn-sm btn-outline-danger rounded-circle" do %>
+        <i class="bi bi-trash"></i>
+      <% end %>
+    </div>
+  </td>
+</tr>

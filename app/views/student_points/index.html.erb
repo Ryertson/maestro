@@ -1,0 +1,162 @@
+<div class="container-fluid px-4 py-4">
+  <%# --- Cabeçalho --- %>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-0">
+        <i class="bi bi-grid-3x3-gap me-2 text-purple"></i>Mapa de Pontuação
+      </h1>
+      <p class="text-muted small mb-0">Gestão de pontos por atividade e aproveitamento total (Média por Categorias)</p>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <div class="dropdown">
+        <button class="btn btn-white border shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-person-video3 me-2"></i><%= @current_classroom&.full_name_info || "Selecionar Turma" %>
+        </button>
+        <ul class="dropdown-menu shadow border-0">
+          <% @classrooms.each do |c| %>
+            <li><%= link_to c.full_name_info, student_points_path(classroom_id: c.id), class: "dropdown-item" %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <% if @current_classroom %>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+      <div class="table-responsive" style="max-height: 75vh;">
+        <table class="table table-hover align-middle mb-0 border-start-0 border-end-0">
+          <thead class="table-light sticky-top" style="z-index: 10;">
+            <tr>
+              <th class="ps-4 sticky-column bg-light border-end" style="min-width: 280px; z-index: 11;">
+                <span class="text-uppercase small fw-bold text-muted">Estudante</span>
+              </th>
+              <% @activities.each do |activity| %>
+                <th class="text-center border-end" style="min-width: 140px;">
+                  <div class="badge bg-purple-light text-purple mb-1" style="font-size: 0.65rem;">
+                    <%= activity.activity_type %>
+                  </div>
+                  <div class="text-truncate d-block small fw-bold text-dark" title="<%= activity.name %>">
+                    <%= activity.name %>
+                  </div>
+                  <div class="text-muted fw-normal" style="font-size: 0.7rem;">
+                    Data: <%= activity.date&.strftime("%d/%m") %> | Max: <span class="fw-bold"><%= activity.points %></span>
+                  </div>
+                </th>
+              <% end %>
+              <th class="text-center bg-primary text-white fw-bold shadow-sm" style="min-width: 120px;">
+                MÉDIA FINAL
+              </th>
+            </tr>
+          </thead>
+          
+          <tbody>
+            <% @students.each do |student| %>
+              <tr>
+                <td class="ps-4 fw-bold sticky-column bg-white border-end shadow-sm">
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-circle me-2"><%= student.name[0] %></div>
+                    <%= student.name %>
+                  </div>
+                </td>
+                
+                <% @activities.each do |activity| %>
+                  <% score_record = student.student_points.find { |sp| sp.activity_id == activity.id } %>
+                  <% current_val = score_record&.points || 0 %>
+                  
+                  <td class="text-center p-2 border-end">
+                    <input type="text" 
+                           value="<%= score_record&.points %>" 
+                           class="form-control form-control-sm text-center js-point-input mx-auto"
+                           data-student="<%= student.id %>"
+                           data-activity="<%= activity.id %>"
+                           placeholder="0.0"
+                           style="width: 75px; border-radius: 8px; font-weight: 600; <%= 'background-color: #f1f3f5;' if current_val == 0 %>">
+                  </td>
+                <% end %>
+                
+                <%# AQUI ENTRA A SUA NOVA LÓGICA DE MÉDIA %>
+                <td class="text-center fw-bold bg-light-blue border-start shadow-sm">
+                  <span class="h6 mb-0 fw-bold text-primary js-total-<%= student.id %>">
+                    <%= student.calcular_nota_com_pesos(@activities.map(&:id)) %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div class="alert alert-info rounded-4 border-0 shadow-sm p-4 text-center">
+      <i class="bi bi-info-circle h1 d-block mb-3"></i>
+      <h5 class="fw-bold">Nenhuma turma selecionada</h5>
+      <p class="mb-0">Por favor, selecione uma turma no menu superior para visualizar o mapa de pontos.</p>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .sticky-column { position: sticky; left: 0; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+  .bg-purple-light { background-color: #f3f0ff; color: #6f42c1; }
+  .bg-light-blue { background-color: #f8fbff; }
+  .text-purple { color: #6f42c1 !important; }
+  .avatar-circle { width: 30px; height: 30px; background-color: #e9ecef; color: #495057; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
+  .js-point-input { transition: all 0.2s ease; border: 1px solid #dee2e6; }
+  .js-point-input:focus { border-color: #6f42c1; box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.15); background-color: #fff !important; }
+  .save-success { border-color: #2fb344 !important; background-color: #f0fff4 !important; }
+  .save-error { border-color: #d63939 !important; background-color: #fff5f5 !important; }
+</style>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    const inputs = document.querySelectorAll('.js-point-input');
+
+    inputs.forEach(input => {
+      input.addEventListener('blur', function() {
+        const studentId = this.dataset.student;
+        const activityId = this.dataset.activity;
+        let points = this.value.replace(',', '.');
+
+        if (points === "") points = 0;
+        this.style.opacity = '0.5';
+
+        fetch('/update_student_points', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({ student_id: studentId, activity_id: activityId, points: points })
+        })
+        .then(response => response.json())
+        .then(data => {
+          this.style.opacity = '1';
+          if(data.status === 'success') {
+            this.classList.add('save-success');
+            this.classList.remove('save-error');
+            this.value = data.points;
+            
+            // O servidor precisará retornar a nova média calculada no JSON para atualizar em tempo real
+            const totalSpan = document.querySelector(`.js-total-${studentId}`);
+            if(totalSpan && data.nova_media) {
+              totalSpan.innerText = data.nova_media;
+              totalSpan.classList.add('text-success');
+              setTimeout(() => totalSpan.classList.remove('text-success'), 2000);
+            }
+
+            setTimeout(() => this.classList.remove('save-success'), 1500);
+          } else {
+            this.classList.add('save-error');
+            alert("Erro ao salvar: " + data.message);
+          }
+        })
+        .catch(error => {
+          this.style.opacity = '1';
+          this.classList.add('save-error');
+          console.error('Error:', error);
+        });
+      });
+    });
+  });
+</script>

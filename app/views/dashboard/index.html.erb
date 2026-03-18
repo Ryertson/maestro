@@ -1,0 +1,332 @@
+<div class="teacher-dashboard-neon min-vh-100 py-4">
+  <div class="container-fluid px-4">
+    
+    <%# --- TOPO: SELEÇÃO E FILTROS --- %>
+    <div class="content-card-purple mb-4 p-3 shadow-lg">
+      <%= form_with url: root_path, method: :get, local: true, class: "row g-3 align-items-center" do |f| %>
+        <div class="col-md-3">
+          <h1 class="h4 fw-bold text-purple-neon mb-0">
+            <i class="bx bxs-zap me-2"></i>Maestro IA
+          </h1>
+          <small class="text-white opacity-75">Análise de Desempenho em Tempo Real</small>
+        </div>
+
+        <div class="col-md-2">
+          <label class="label-neon-small text-lavender">1. Filtrar Turma</label>
+          <%= f.select :classroom_id, options_from_collection_for_select(@classrooms, :id, :full_name_info, params[:classroom_id]), { prompt: "Selecionar Turma" }, { class: "form-select-neon text-white", onchange: "this.form.submit()" } %>
+        </div>
+
+        <div class="col-md-2">
+          <label class="label-neon-small text-lavender">2. Disciplina</label>
+          <%= f.select :subject_id, options_from_collection_for_select(@subjects_in_classroom || [], :id, :name, params[:subject_id]), { prompt: "Selecione a Matéria" }, { class: "form-select-neon text-white", onchange: "this.form.submit()" } %>
+        </div>
+
+        <div class="col-md-3">
+          <label class="label-neon-small text-lavender">3. Selecionar Aluno</label>
+          <%= f.select :student_id, options_from_collection_for_select(@students || [], :id, :name, params[:student_id]), { prompt: "Selecione o Aluno" }, { class: "form-select-neon text-white", onchange: "this.form.submit()" } %>
+        </div>
+
+        <div class="col-md-2 text-end pt-3">
+          <span class="badge-neon-purple px-3 py-2" title="<%= current_professor.email %>">
+            <i class="bx bxs-user-circle me-1"></i>
+            <%= current_view_mode == :modo_admin ? "Administrador" : (@teacher&.name&.split(' ')&.first || "Docente") %>
+          </span>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @student.nil? %>
+      <div class="text-center py-5">
+        <div class="display-1 text-purple-neon opacity-50 mb-3">
+          <i class="bx <%= @classrooms.any? ? 'bx-search-alt' : 'bx-folder-open' %>"></i>
+        </div>
+        <h3 class="text-white fw-light">Selecione uma <strong>Turma</strong> e um <strong>Aluno</strong>.</h3>
+      </div>
+    <% else %>
+
+      <%# --- SEÇÃO 1: FILTROS DE PERÍODO --- %>
+      <div class="content-card-purple p-3 mb-4 shadow-lg">
+        <div class="row align-items-center g-3">
+          <div class="col-xl-4 col-lg-12">
+            <h5 class="fw-bold text-white mb-0">
+              <i class="bx bx-calendar text-purple-neon me-2"></i>Período de Análise
+            </h5>
+            <small class="text-white-50">Dados de: <strong class="text-purple-neon"><%= @subject&.name %></strong></small>
+          </div>
+          
+          <div class="col-xl-8 col-lg-12">
+            <div class="d-flex flex-wrap justify-content-xl-end align-items-center gap-3">
+              <div class="btn-group-neon p-1 rounded-pill">
+                <% [
+                  { key: 'weekly', label: 'Semana' }, { key: 'monthly', label: 'Mês' },
+                  { key: '1b', label: '1ºB' }, { key: '2b', label: '2ºB' },
+                  { key: '3b', label: '3ºB' }, { key: '4b', label: '4ºB' }
+                ].each do |btn| %>
+                  <%= link_to btn[:label], root_path(student_id: @student.id, classroom_id: @classroom.id, subject_id: @subject&.id, period: btn[:key]), 
+                      class: "btn-period #{ @period_filter == btn[:key] ? 'active' : '' }" %>
+                <% end %>
+              </div>
+
+              <%= form_with url: root_path, method: :get, local: true, class: "date-picker-neon" do |f| %>
+                <%= f.hidden_field :student_id, value: @student.id %>
+                <%= f.hidden_field :classroom_id, value: @classroom.id %>
+                <%= f.hidden_field :subject_id, value: @subject&.id %>
+                <div class="d-flex align-items-center px-2">
+                  <%= f.date_field :start_date, value: @start_date, class: "input-date-neon text-white" %>
+                  <span class="text-white small mx-2">à</span>
+                  <%= f.date_field :end_date, value: @end_date, class: "input-date-neon text-white" %>
+                </div>
+                <button type="submit" class="btn-search-neon">
+                  <i class="bx bx-search-alt-2"></i>
+                </button>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# --- SEÇÃO 2: CARDS DE FREQUÊNCIA --- %>
+      <div class="row g-3 mb-4">
+        <% [
+          { label: 'Semanal', valor: @freq_semanal },
+          { label: 'Mensal', valor: @freq_mensal },
+          { label: 'Bimestral', valor: @freq_bimestral },
+          { label: 'Anual', valor: @freq_anual }
+        ].each do |item| %>
+          <div class="col-md-3">
+            <% is_good = (item[:valor] || 0) >= 75 %>
+            <div class="stat-card-neon h-100 <%= is_good ? 'glow-success' : 'glow-danger' %>">
+              <small class="label-neon-small text-white-50 d-block mb-2"><%= item[:label] %></small>
+              <div class="d-flex justify-content-between align-items-end">
+                <h2 class="fw-bold mb-0 text-white"><%= item[:valor] || 0 %>%</h2>
+                <span class="badge bg-dark-dim text-white border-0" style="font-size: 0.65rem;">META 75%</span>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# --- SEÇÃO 3: GRÁFICO E STATUS DE ENTREGA --- %>
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="content-card-purple h-100 p-4 shadow-lg">
+            <h6 class="fw-bold mb-4 text-white"><i class="bx bx-line-chart text-purple-neon me-2"></i>Evolução Acadêmica</h6>
+            <div style="height: 300px;">
+              <canvas id="evolutionChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="content-card-purple h-100 p-4 shadow-lg d-flex flex-column">
+            <h6 class="fw-bold mb-4 text-white border-bottom border-secondary pb-2">Status de Entrega</h6>
+            <div class="row text-center mb-4">
+              <div class="col-4">
+                <div class="fs-4 fw-bold text-success-neon"><%= @entregas_prazo %></div>
+                <div class="label-neon-small text-lavender">No Prazo</div>
+              </div>
+              <div class="col-4 border-start border-secondary">
+                <div class="fs-4 fw-bold text-warning-neon"><%= @entregas_atraso %></div>
+                <div class="label-neon-small text-lavender">Atraso</div>
+              </div>
+              <div class="col-4 border-start border-secondary">
+                <div class="fs-4 fw-bold text-danger-neon"><%= @nao_entregues %></div>
+                <div class="label-neon-small text-lavender">Pendente</div>
+              </div>
+            </div>
+
+            <div class="progress-container-neon mb-3">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="small fw-bold text-white">Taxa de Entrega</span>
+                <span class="small fw-bold text-purple-neon"><%= @taxa_entrega_aluno %>%</span>
+              </div>
+              <div class="progress-neon">
+                <div class="progress-bar-purple" style="width: <%= @taxa_entrega_aluno %>%"></div>
+              </div>
+            </div>
+
+            <div class="alert-neon-info p-3 mt-auto">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <i class="bx bx-info-circle me-2 text-purple-neon"></i>
+                  <span class="text-white-50 small">Total contabilizado:</span>
+                </div>
+                <span class="text-white fw-bold"><strong><%= @total_atv %></strong> ativ.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# --- SEÇÃO 4: INSIGHTS DA IA & QUICK WINS (SUGESTÃO 3) --- %>
+      <div class="ai-insight-card p-4 shadow-lg mb-4">
+        <div class="row align-items-center">
+          <div class="col-md-auto mb-3 mb-md-0 text-center">
+            <div class="ai-icon-box shadow-lg">
+              <i class="bx bxs-magic-wand text-purple-neon fs-3"></i>
+            </div>
+          </div>
+          <div class="col-md px-md-4">
+            <h6 class="fw-bold text-white mb-1">Maestro IA: <span class="badge bg-purple-dim text-purple-neon ms-2" style="font-size: 10px;">AÇÕES RÁPIDAS</span></h6>
+            <div class="mb-0 text-white small">
+              <% if (@freq_mensal || 0) < 75 %>
+                O aluno <strong><%= @student.name.split.first %></strong> está com baixa assiduidade. O Maestro sugere intervenção imediata.
+              <% elsif (@media_aluno || 0) < 6 %>
+                Desempenho acadêmico abaixo do esperado. Recomendado reforço em <strong><%= @subject&.name %></strong>.
+              <% else %>
+                Desempenho exemplar! Ótimo momento para reforçar o engajamento positivo.
+              <% end %>
+            </div>
+          </div>
+          <div class="col-md-auto mt-3 mt-md-0 d-flex gap-2">
+            <% if (@freq_mensal || 0) < 75 %>
+              <button class="btn-quick-win win-danger" onclick="alert('Enviando alerta de frequência para os responsáveis...')">
+                <i class="bx bx-bell me-1"></i> Alerta Pais
+              </button>
+            <% elsif (@media_aluno || 0) < 6 %>
+              <button class="btn-quick-win win-warning" onclick="alert('Gerando roteiro de estudos personalizado...')">
+                <i class="bx bx-list-check me-1"></i> Plano de Reforço
+              </button>
+            <% else %>
+              <button class="btn-quick-win win-success" onclick="alert('Enviando parabéns ao aluno!')">
+                <i class="bx bx-medal me-1"></i> Parabenizar
+              </button>
+            <% end %>
+            <button class="btn-outline-purple-neon">
+              <i class="bx bx-file-blank me-1"></i> Relatório PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <%# --- SEÇÃO 5: NOTAS E MÉDIAS --- %>
+      <div class="row g-4 mb-4">
+        <div class="col-lg-12">
+          <div class="content-card-purple p-4 shadow-lg">
+            <div class="row align-items-center">
+              <div class="col-md-3 text-center border-end border-secondary">
+                <p class="label-neon-small text-lavender mb-1">Média do Aluno</p>
+                <% media = (@media_aluno || 0) %>
+                <div class="display-5 fw-bold <%= media >= 6 ? 'text-success-neon' : 'text-danger-neon' %>">
+                  <%= media %>
+                </div>
+              </div>
+              <div class="col-md-3 text-center border-end border-secondary">
+                <p class="label-neon-small text-lavender mb-1">Média da Turma</p>
+                <div class="display-5 fw-bold text-white-50"><%= @media_turma_notas %></div>
+              </div>
+              <div class="col-md-6 px-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold text-white small">Desempenho Comparativo</span>
+                  <% nota_diff = ((@media_aluno || 0) - (@media_turma_notas || 0)).round(1) %>
+                  <span class="badge <%= nota_diff >= 0 ? 'bg-success-neon shadow-success' : 'bg-danger-neon shadow-danger' %> rounded-pill text-dark fw-bold px-3">
+                    <%= nota_diff >= 0 ? '+' : '' %><%= nota_diff %> pts
+                  </span>
+                </div>
+                <div class="progress-neon" style="height: 12px;">
+                  <div class="progress-bar-purple" style="width: <%= (@media_aluno || 0) * 10 %>%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% end %>
+  </div>
+</div>
+
+<style>
+  :root {
+    --bg-dark-master: #0a0a0f;
+    --card-bg: #141421;
+    --purple-neon: #bc13fe;
+    --purple-glow: rgba(188, 19, 254, 0.5);
+    --success-neon: #39ff14;
+    --success-glow: rgba(57, 255, 20, 0.4);
+    --danger-neon: #ff3131;
+    --danger-glow: rgba(255, 49, 49, 0.4);
+    --warning-neon: #ff9100;
+    --lavender-light: #d1d1f0;
+  }
+
+  .teacher-dashboard-neon { background: var(--bg-dark-master); color: #fff; font-family: 'Inter', sans-serif; }
+
+  /* --- QUICK WINS BUTTONS --- */
+  .btn-quick-win {
+    border: none; border-radius: 8px; padding: 8px 15px; font-size: 0.75rem; font-weight: bold;
+    display: flex; align-items: center; transition: 0.3s; color: #000;
+  }
+  .win-danger { background: var(--danger-neon); box-shadow: 0 0 10px var(--danger-glow); }
+  .win-warning { background: var(--warning-neon); box-shadow: 0 0 10px rgba(255,145,0,0.4); }
+  .win-success { background: var(--success-neon); box-shadow: 0 0 10px var(--success-glow); }
+  .btn-quick-win:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+  /* Estilos Mantidos */
+  .input-date-neon { background: transparent; border: none; color: #fff !important; font-size: 0.75rem; width: 110px; filter: invert(0) brightness(2); }
+  ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+  
+  .glow-success { border: 1px solid var(--success-neon) !important; box-shadow: 0 0 15px var(--success-glow); background: linear-gradient(145deg, #141421, #0d210d); }
+  .glow-danger { border: 1px solid var(--danger-neon) !important; box-shadow: 0 0 15px var(--danger-glow); background: linear-gradient(145deg, #141421, #210d0d); }
+  
+  .stat-card-neon { transition: all 0.3s ease; border-radius: 1.25rem; padding: 1.5rem; }
+  .text-success-neon { color: var(--success-neon) !important; text-shadow: 0 0 10px var(--success-neon); }
+  .text-danger-neon { color: var(--danger-neon) !important; text-shadow: 0 0 10px var(--danger-neon); }
+  .text-warning-neon { color: var(--warning-neon) !important; text-shadow: 0 0 10px var(--warning-neon); }
+  .bg-purple-dim { background: rgba(188, 19, 254, 0.2); }
+
+  .content-card-purple { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; }
+  .text-purple-neon { color: var(--purple-neon) !important; text-shadow: 0 0 10px var(--purple-glow); }
+  .form-select-neon { background-color: rgba(255,255,255,0.1); border: 1px solid rgba(188,19,254,0.3); color: #fff; border-radius: 10px; padding: 0.5rem; width: 100%; }
+  .label-neon-small { text-transform: uppercase; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; color: var(--lavender-light); }
+  
+  .btn-period { border: none; background: transparent; color: var(--lavender-light); padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
+  .btn-period.active { background: var(--purple-neon); color: #fff; box-shadow: 0 0 15px var(--purple-glow); }
+  .btn-group-neon { background: rgba(255,255,255,0.08); display: inline-flex; }
+
+  .date-picker-neon { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 50px; padding: 2px 10px; border: 1px solid rgba(255,255,255,0.2); }
+  .btn-search-neon { background: var(--purple-neon); color: #fff; border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+  .ai-insight-card { background: linear-gradient(135deg, #1a1a2e 0%, #2e1a47 100%); border-radius: 1.5rem; border: 1px solid var(--purple-neon); }
+  .ai-icon-box { background: #fff; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+  .btn-outline-purple-neon { background: transparent; border: 2px solid var(--purple-neon); color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
+  
+  .progress-neon { background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; }
+  .progress-bar-purple { background: var(--purple-neon); height: 100%; box-shadow: 0 0 10px var(--purple-neon); }
+  .alert-neon-info { background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(188, 19, 254, 0.2); }
+</style>
+
+<script>
+  document.addEventListener("turbo:load", function() {
+    const ctx = document.getElementById('evolutionChart');
+    if (!ctx) return;
+    if (window.myEvolutionChart) { window.myEvolutionChart.destroy(); }
+
+    window.myEvolutionChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: <%= raw (@labels_evolucao || []).to_json %>,
+        datasets: [{
+          label: 'Aluno',
+          data: <%= raw (@notas_aluno_evolucao || []).to_json %>,
+          borderColor: '#bc13fe',
+          backgroundColor: 'rgba(188, 19, 254, 0.1)',
+          borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#fff'
+        },
+        {
+          label: 'Turma',
+          data: <%= raw (@notas_turma_evolucao || []).to_json %>,
+          borderColor: 'rgba(255,255,255,0.3)', borderDash: [5, 5], tension: 0.4, fill: false, pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#fff' } } },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+          x: { grid: { display: false }, ticks: { color: '#fff' } }
+        }
+      }
+    });
+  });
+</script>

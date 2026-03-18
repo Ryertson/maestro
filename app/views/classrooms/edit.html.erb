@@ -1,0 +1,84 @@
+<% content_for :title, "Editar Turma | Maestro" %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <%# --- CABEÇALHO --- %>
+    <div class="text-center mb-4">
+      <div class="icon-shape bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 60px; height: 60px;">
+        <i class="bx bx-edit-alt fs-2"></i>
+      </div>
+      <h2 class="fw-bold text-dark">Atualizar Turma</h2>
+      <p class="text-muted">Modifique as conexões desta turma abaixo.</p>
+    </div>
+
+    <%# --- CARD DO FORMULÁRIO --- %>
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="card-body p-5">
+        <%= form_with(model: @classroom, local: true) do |f| %>
+          
+          <% if @classroom.errors.any? %>
+            <div class="alert alert-danger border-0 rounded-3 mb-4">
+              <ul class="mb-0 small">
+                <% @classroom.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <%# Seleção de Curso %>
+          <div class="mb-4">
+            <%= f.label :course_id, "Curso Acadêmico", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-0"><i class="bx bx-book-bookmark text-primary"></i></span>
+              <%= f.collection_select :course_id, Course.all, :id, :name, 
+                  { prompt: "Selecione o curso..." }, 
+                  { class: "form-select bg-light border-0 py-3" } %>
+            </div>
+          </div>
+
+          <div class="row">
+            <%# Seleção de Série %>
+            <div class="col-md-7 mb-4">
+              <%= f.label :grade_id, "Série / Ano", class: "form-label small fw-bold text-muted text-uppercase" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="bx bx-layer text-warning"></i></span>
+                <%= f.collection_select :grade_id, Grade.all, :id, :name, 
+                    { prompt: "Série..." }, 
+                    { class: "form-select bg-light border-0 py-3" } %>
+              </div>
+            </div>
+
+            <%# Seleção de Seção %>
+            <div class="col-md-5 mb-4">
+              <%= f.label :section_id, "Turma / Letra", class: "form-label small fw-bold text-muted text-uppercase" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="bx bx-font text-info"></i></span>
+                <%= f.collection_select :section_id, Section.all, :id, :name, 
+                    { prompt: "Turma..." }, 
+                    { class: "form-select bg-light border-0 py-3" } %>
+              </div>
+            </div>
+
+          <%# --- NOVO: Seleção de Professor Responsável --- %>
+          <div class="mb-4">
+            <%= f.label :teacher_id, "Professor Responsável", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-0"><i class="bx bx-user-pin text-success"></i></span>
+              <%= f.collection_select :teacher_id, Teacher.all.order(:name), :id, :name, 
+                  { include_blank: "Sem professor atribuído..." }, 
+                  { class: "form-select bg-light border-0 py-3" } %>
+            </div>
+            <div class="form-text small mt-1">Vincule um professor do Corpo Docente a esta turma.</div>
+          </div>
+
+          <%# Botões de Ação %>
+          <div class="d-grid gap-2 mt-4">
+            <%= f.submit "Salvar Alterações", class: "btn btn-primary btn-lg rounded-pill fw-bold shadow-sm py-3" %>
+            <%= link_to "Descartar Mudanças", classroom_path(@classroom), class: "btn btn-link text-muted text-decoration-none small" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

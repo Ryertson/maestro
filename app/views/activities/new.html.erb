@@ -1,0 +1,139 @@
+<% content_for :title, "Nova Atividade | Maestro" %>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <div class="d-flex align-items-center mb-4">
+        <%= link_to :back, class: "btn btn-outline-secondary rounded-circle me-3 shadow-sm border-0" do %>
+          <i class="bi bi-arrow-left"></i>
+        <% end %>
+        <div>
+          <h2 class="fw-bold text-dark mb-0">Planejar Atividade</h2>
+          <p class="text-muted mb-0">Defina os detalhes, prazos e critérios de avaliação.</p>
+        </div>
+      </div>
+
+      <%= form_with(model: @activity, class: "needs-validation") do |f| %>
+        
+        <% if @activity.errors.any? %>
+          <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+            <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Ajuste os campos abaixo:</h6>
+            <ul class="mb-0 small">
+              <% @activity.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%= f.hidden_field :lesson_id %>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-primary-subtle text-primary p-2 rounded-3 me-3">
+                <i class="bi bi-info-circle-fill fs-5"></i>
+              </div>
+              <h5 class="card-title fw-bold mb-0">Informações Básicas</h5>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <%= f.label :classroom_id, "Turma Destino", class: "form-label fw-semibold" %>
+                <%= f.collection_select :classroom_id, Classroom.all, :id, :full_name_info, 
+                    { prompt: "Para qual turma é esta atividade?" }, 
+                    { class: "form-select form-select-lg shadow-sm border-light-subtle" } %>
+              </div>
+
+              <%# CAMPO ADICIONADO: Disciplina %>
+              <div class="col-12">
+                <%= f.label :subject_id, "Disciplina", class: "form-label fw-semibold" %>
+                <%= f.collection_select :subject_id, Subject.all, :id, :name, 
+                    { prompt: "Selecione a disciplina (Ex: Química)" }, 
+                    { class: "form-select form-select-lg shadow-sm border-light-subtle", required: true } %>
+              </div>
+
+              <div class="col-md-8">
+                <%= f.label :name, "Título da Atividade", class: "form-label fw-semibold" %>
+                <%= f.text_field :name, class: "form-control shadow-sm", placeholder: "Ex: Avaliação Bimestral de Algoritmos" %>
+              </div>
+
+              <div class="col-md-4">
+                <%= f.label :activity_type, "Tipo", class: "form-label fw-semibold" %>
+                <%= f.select :activity_type, 
+                    ["Prova", "Lista de Exercícios", "Relatório", "Trabalho em Grupo", "Simulado", "Visto no Caderno", "Apresentação"], 
+                    { prompt: "Selecione..." }, 
+                    { class: "form-select shadow-sm" } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-warning-subtle text-warning-emphasis p-2 rounded-3 me-3">
+                <i class="bi bi-calendar-check-fill fs-5"></i>
+              </div>
+              <h5 class="card-title fw-bold mb-0">Cronograma de Entrega</h5>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <%= f.label :student_delivery_date, "Passar para os alunos em:", class: "form-label fw-semibold text-muted small text-uppercase" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-megaphone"></i></span>
+                  <%= f.date_field :student_delivery_date, class: "form-control border-start-0 shadow-sm" %>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <%= f.label :teacher_delivery_date, "Data limite para receber:", class: "form-label fw-semibold text-muted small text-uppercase" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0"><i class="bi bi-inbox"></i></span>
+                  <%= f.date_field :teacher_delivery_date, class: "form-control border-start-0 shadow-sm" %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-5">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-success-subtle text-success p-2 rounded-3 me-3">
+                <i class="bi bi-star-fill fs-5"></i>
+              </div>
+              <h5 class="card-title fw-bold mb-0">Status e Avaliação</h5>
+            </div>
+
+            <div class="row g-3 align-items-end">
+              <div class="col-md-7">
+                <%= f.label :status, "Situação Inicial", class: "form-label fw-semibold" %>
+                <%= f.select :status, 
+                    ["Planejada", "Em andamento", "Finalizada", "Cancelada"], 
+                    {}, 
+                    { class: "form-select shadow-sm" } %>
+              </div>
+
+              <div class="col-md-5">
+                <%= f.label :grade, "Valor/Nota (Opcional)", class: "form-label fw-semibold" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-light fw-bold">pts</span>
+                  <%= f.text_field :grade, class: "form-control shadow-sm", placeholder: "Ex: 10.0" %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-5">
+          <%= link_to "Cancelar", :back, class: "btn btn-light btn-lg px-5 rounded-pill fw-medium border" %>
+          <%= f.submit "Finalizar Planejamento", class: "btn btn-primary btn-lg px-5 rounded-pill fw-bold shadow" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+</div>

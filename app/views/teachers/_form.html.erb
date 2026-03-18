@@ -1,0 +1,156 @@
+<%= form_with(model: teacher, class: "row g-4") do |form| %>
+  <% if teacher.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger border-0 shadow-sm rounded-4">
+        <h5 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Ops! Algo deu errado:</h5>
+        <ul class="mb-0">
+          <% teacher.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <%# --- SEÇÃO 1: INFORMAÇÕES BÁSICAS --- %>
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+      <div class="card-header bg-white py-3 border-bottom">
+        <h5 class="mb-0 fw-bold text-secondary"><i class="bi bi-person-vcard me-2 text-primary"></i>Dados Pessoais</h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-3">
+          <div class="col-md-12">
+            <%= form.label :name, "Nome Completo", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <%= form.text_field :name, class: "form-control border-light-subtle shadow-sm", placeholder: "Ex: Prof. Dr. Carlos Silva" %>
+          </div>
+
+          <div class="col-md-6">
+            <%= form.label :email, "E-mail Institucional", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <%= form.email_field :email, class: "form-control border-light-subtle shadow-sm", placeholder: "carlos.silva@escola.com" %>
+          </div>
+
+          <div class="col-md-6">
+            <%= form.label :phone, "Telefone / WhatsApp", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <%= form.text_field :phone, class: "form-control border-light-subtle shadow-sm", placeholder: "(00) 00000-0000" %>
+          </div>
+
+          <div class="col-12">
+            <%= form.label :bio, "Biografia / Resumo Acadêmico", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <%= form.text_area :bio, class: "form-control border-light-subtle shadow-sm", rows: 4, placeholder: "Breve descrição sobre a formação e experiência do docente..." %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# --- SEÇÃO 2: STATUS E CONFIGURAÇÕES --- %>
+  <div class="col-md-4">
+    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+      <div class="card-header bg-white py-3 border-bottom">
+        <h5 class="mb-0 fw-bold text-secondary"><i class="bi bi-gear-fill me-2 text-primary"></i>Sistema</h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="mb-4">
+          <%= form.label :status, "Status do Professor", class: "form-label small fw-bold text-muted text-uppercase" %>
+          <%= form.select :status, [["Ativo", "ativo"], ["Afastado", "afastado"], ["Inativo", "inativo"]], {}, class: "form-select border-light-subtle shadow-sm" %>
+        </div>
+
+        <div class="alert alert-light border-0 shadow-sm rounded-4">
+          <small class="text-muted italic d-block">
+            <i class="bi bi-info-circle-fill text-primary me-1"></i>
+            O status define se o professor aparecerá nas listagens de novas aulas.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# --- SEÇÃO 3: ESPECIALIDADES POR ÁREA DO CONHECIMENTO --- %>
+  <div class="col-12">
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+      <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+        <h5 class="mb-0 fw-bold text-secondary">
+          <i class="bi bi-mortarboard-fill me-2 text-primary"></i>Áreas de Atuação e Disciplinas
+        </h5>
+        <span class="badge bg-light text-muted border fw-normal">Selecione as disciplinas que o docente leciona</span>
+      </div>
+      
+      <div class="card-body p-4">
+        <% if KnowledgeArea.any? %>
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <% KnowledgeArea.all.includes(:subjects).each do |area| %>
+              <div class="col">
+                <div class="p-3 rounded-4 border border-light-subtle bg-white h-100 shadow-sm transition-hover">
+                  <div class="d-flex align-items-center mb-3 pb-2 border-bottom border-light">
+                    <div style="background-color: <%= area.color %>; width: 12px; height: 12px;" class="rounded-circle me-2 shadow-sm"></div>
+                    <h6 class="fw-bold mb-0 text-dark"><%= area.name %></h6>
+                  </div>
+                  
+                  <div class="d-flex flex-wrap gap-2">
+                    <% area.subjects.each do |subject| %>
+                      <div class="subject-item">
+                        <%# Ajuste no ID e no Name para garantir o salvamento como array %>
+                        <%= check_box_tag "teacher[subject_ids][]", subject.id, teacher.subject_ids.include?(subject.id), 
+                            id: "subject_#{subject.id}", class: "btn-check" %>
+                        
+                        <%# CORREÇÃO: Usando a interpolação correta do Ruby no for: %>
+                        <label class="btn btn-outline-light text-dark btn-sm rounded-pill px-3 border shadow-sm d-flex align-items-center bg-white" for="<%= "subject_#{subject.id}" %>">
+                          <i class="bi bi-plus-circle me-2 small opacity-50 icon-check"></i>
+                          <%= subject.name %>
+                        </label>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <%# Hidden field para garantir que, se nenhuma disciplina for marcada, o Rails envie um array vazio %>
+          <%= hidden_field_tag "teacher[subject_ids][]", "" %>
+        <% else %>
+          <div class="text-center py-5 bg-light rounded-4" style="border: 2px dashed #dee2e6;">
+            <i class="bi bi-folder-x fs-1 text-muted"></i>
+            <p class="text-muted mt-2">Nenhuma Área do Conhecimento cadastrada. <br>
+            <%= link_to "Cadastre-as aqui primeiro", academic_settings_path, class: "fw-bold text-decoration-none" %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 text-end mb-5">
+    <%= link_to "Cancelar", teachers_path, class: "btn btn-light rounded-pill px-4 me-2 fw-bold" %>
+    <%= form.submit "Salvar Professor", class: "btn btn-primary rounded-pill px-5 fw-bold shadow" %>
+  </div>
+<% end %>
+
+<style>
+  .transition-hover:hover {
+    border-color: #dee2e6 !important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+
+  /* Efeito de Checkbox Ativo */
+  .btn-check:checked + label {
+    background-color: #0d6efd !important;
+    color: white !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2) !important;
+  }
+  
+  .btn-check:checked + label .icon-check::before {
+    content: "\F26A"; /* Ícone de check-circle-fill do Bootstrap Icons */
+    font-family: "bootstrap-icons";
+  }
+
+  .btn-check:checked + label .icon-check {
+    opacity: 1 !important;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+  }
+</style>

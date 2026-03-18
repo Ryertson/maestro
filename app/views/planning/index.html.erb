@@ -1,0 +1,394 @@
+<%# Exibição do Alerta Centralizado %>
+<% if notice %>
+  <div class="alert-centered fw-bold" role="alert">
+    <div class="fs-4 mb-2">Aviso do Sistema</div>
+    <div class="fs-5"><%= notice %></div>
+  </div>
+<% end %>
+
+<% content_for :title, "Planejamento de Aulas" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="fw-bold text-dark" style="letter-spacing: -1px; font-family: 'Inter', sans-serif;">
+    Planejamento Acadêmico
+  </h1>
+  <%# --- BOTÃO PARA O BOLETIM GERAL --- %>
+  <%= link_to reports_path(course: params[:course], grade_level: params[:grade_level]), class: "btn btn-dark rounded-pill px-4 shadow-sm" do %>
+    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Ver Boletim de Notas
+  <% end %>
+</div>
+
+<%# ---------------- FILTROS (FORA DO TURBO FRAME) ---------------- %>
+<div class="card p-3 mb-4 shadow-sm border-0 bg-light">
+  <%= form_with url: planning_path, method: :get,
+        data: { turbo_frame: "planning_dashboard" },
+        class: "row g-3 align-items-end" do |f| %>
+
+    <div class="col-md-5">
+      <label class="form-label small fw-bold text-muted text-uppercase">Filtrar por Curso</label>
+      <%= f.select :course, ["Agroecologia", "Análises Clínicas", "Informática"],
+            { selected: params[:course], prompt: "Todos os Cursos" },
+            class: "form-select shadow-sm border-0",
+            onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="col-md-5">
+      <label class="form-label small fw-bold text-muted text-uppercase">Filtrar por Série</label>
+      <%= f.select :grade_level, ["1ª Série", "2ª Série", "3ª Série"],
+            { selected: params[:grade_level], prompt: "Todas as Séries" },
+            class: "form-select shadow-sm border-0",
+            onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="col-md-2 text-end">
+      <%= link_to "Limpar", planning_path,
+            class: "btn btn-sm btn-outline-secondary w-100 border-0" %>
+    </div>
+
+  <% end %>
+</div>
+
+<%# ---------------- TURBO FRAME (APENAS CARDS + TABELA) ---------------- %>
+<%= turbo_frame_tag "planning_dashboard" do %>
+
+<% if @lessons.present? %>
+
+  <% total = @lessons.count %>
+  <% com_atividade = @lessons.where(has_activity: true).count %>
+  <% prontas = @lessons.where(status: "Pronto").count %>
+
+  <% percentual_atividade = total > 0 ? ((com_atividade.to_f / total) * 100).round : 0 %>
+  <% percentual_conclusao = total > 0 ? ((prontas.to_f / total) * 100).round : 0 %>
+
+  <%# ---------------- DASHBOARD ---------------- %>
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+        <div class="text-muted small text-uppercase fw-bold mb-2">Total de Aulas Geradas</div>
+        <div class="fs-2 fw-bold text-dark"><%= total %></div>
+        <div class="progress mt-3" style="height: 8px;">
+          <div class="progress-bar bg-primary progress-bar-animated" style="width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+        <div class="text-muted small text-uppercase fw-bold mb-2">Aulas com Atividade</div>
+        <div class="fs-2 fw-bold text-success"><%= com_atividade %></div>
+        <div class="progress mt-3" style="height: 8px;">
+          <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: <%= percentual_atividade %>%;"></div>
+        </div>
+        <div class="small text-muted mt-2"><%= percentual_atividade %>% possuem atividade</div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+        <div class="text-muted small text-uppercase fw-bold mb-2">Aulas Concluídas</div>
+        <div class="fs-2 fw-bold text-warning"><%= prontas %></div>
+        <div class="progress mt-3" style="height: 8px;">
+          <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width: <%= percentual_conclusao %>%;"></div>
+        </div>
+        <div class="small text-muted mt-2"><%= percentual_conclusao %>% do planejamento concluído</div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<%# ---------------- TABELA ---------------- %>
+<div class="card shadow-sm border-0 mb-4 overflow-hidden">
+  <div class="card-header bg-white py-3 border-bottom">
+    <h4 class="mb-0 fw-bold text-secondary" style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px;">
+      Estrutura Curricular
+    </h4>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="bg-light">
+        <tr class="text-uppercase small fw-bold text-muted" style="font-size: 0.75rem;">
+          <th class="px-4 py-3" style="width: 45%;">Nome do Tópico</th>
+          <th style="width: 15%;">Status</th>
+          <th style="width: 10%;">Sem.</th>
+          <th style="width: 15%;">Avaliação</th>
+          <th style="width: 10%;">Série</th>
+          <th class="text-center" style="width: 5%;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @lessons&.any? %>
+          <%= render partial: "lesson_row", collection: @lessons, as: :lesson %>
+        <% else %>
+          <tr>
+            <td colspan="6" class="text-center py-5 text-muted">Nenhuma aula cadastrada.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% end %>
+
+<%# ---------------- QUADRO DE CADASTRO ---------------- %>
+<div class="card shadow-sm border-0 mb-5" style="border-radius: 15px;">
+  <div class="card-header bg-white py-3 border-bottom">
+    <h4 class="mb-0 fw-bold text-primary" style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px;">
+      <i class="bi bi-plus-circle me-2"></i>Cadastrar Novo Tópico
+    </h4>
+  </div>
+
+  <div class="card-body p-4 bg-white">
+    <%= form_with model: (@lesson || Lesson.new), class: "row g-3" do |f| %>
+      <div class="col-md-12">
+        <%= f.label :topic_name, "Nome do Tópico/Conteúdo", class: "form-label small fw-bold text-muted" %>
+        <%= f.text_field :topic_name, class: "form-control border-0 bg-light py-2", placeholder: "Ex: Introdução à Genética Mendeliana", required: true %>
+      </div>
+
+      <div class="col-md-3">
+        <%= f.label :grade_level, "Série", class: "form-label small fw-bold text-muted" %>
+        <%= f.select :grade_level, ["1ª Série", "2ª Série", "3ª Série"], { prompt: "Selecione..." }, { class: "form-select border-0 bg-light", required: true } %>
+      </div>
+
+      <div class="col-md-3">
+        <%= f.label :course, "Curso", class: "form-label small fw-bold text-muted" %>
+        <%= f.select :course, ["Agroecologia", "Análises Clínicas", "Informática"], { prompt: "Selecione..." }, { class: "form-select border-0 bg-light" } %>
+      </div>
+
+      <div class="col-md-3">
+        <%= f.label :status, "Status Inicial", class: "form-label small fw-bold text-muted" %>
+        <%= f.select :status, ["Não Iniciada", "Em Andamento", "Pronto"], { selected: "Não Iniciada" }, { class: "form-select border-0 bg-light" } %>
+      </div>
+
+      <div class="col-md-3">
+        <%= f.label :week, "Semana Letiva", class: "form-label small fw-bold text-muted" %>
+        <%= f.number_field :week, class: "form-control border-0 bg-light", placeholder: "Ex: 1" %>
+      </div>
+
+      <div class="col-md-6">
+        <%= f.label :date, "Data Prevista no Cronograma", class: "form-label small fw-bold text-muted" %>
+        <%= f.date_field :date, class: "form-control border-0 bg-light" %>
+      </div>
+
+      <div class="col-md-6 d-flex align-items-end">
+        <div class="form-check form-switch bg-light p-2 rounded-3 w-100 ps-5" style="min-height: 38px; display: flex; align-items: center;">
+          <%= f.check_box :has_activity, class: "form-check-input", id: "switchAtividade" %>
+          <%= f.label :has_activity, "Possui atividade prática/avaliação?", class: "form-check-label small fw-bold ms-2 mb-0", for: "switchAtividade" %>
+        </div>
+      </div>
+
+      <div class="col-md-12 mt-4 text-end">
+        <%= f.submit "Salvar no Planejamento", class: "btn btn-primary px-5 fw-bold shadow-sm py-2" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%# ---------------- SEÇÃO DE CRONOGRAMA E BIMESTRES DINÂMICOS ---------------- %>
+<div class="row g-4 pb-5">
+  <div class="col-12">
+    <div class="d-flex align-items-center mb-4">
+      <h3 class="fw-bold text-secondary mb-0"><i class="bi bi-calendar-range me-2 text-primary"></i>Cronograma por Bimestres</h3>
+      <div class="flex-grow-1 ms-3 border-bottom opacity-25"></div>
+      <button class="btn btn-sm btn-outline-primary ms-3 rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalBimestres">
+        <i class="bi bi-gear me-1"></i>Configurar Datas
+      </button>
+    </div>
+    
+    <div class="row g-3 mb-5">
+      <% if @bimesters&.any? %>
+        <% @bimesters.each do |b| %>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden bg-white h-100">
+              <div style="height: 5px; background-color: <%= b.color %>;"></div>
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge rounded-pill" style="background-color: <%= b.color %>;"><%= b.name %></span>
+                  <small class="text-muted fw-bold">Período Letivo</small>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mt-3">
+                  <div class="text-center">
+                    <div class="small text-muted text-uppercase" style="font-size: 0.6rem;">Início</div>
+                    <div class="fw-bold text-dark"><%= b.start_date.strftime("%d/%m") %></div>
+                  </div>
+                  <div class="text-muted"><i class="bi bi-arrow-right"></i></div>
+                  <div class="text-center">
+                    <div class="small text-muted text-uppercase" style="font-size: 0.6rem;">Término</div>
+                    <div class="fw-bold text-dark"><%= b.end_date.strftime("%d/%m") %></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="col-12">
+          <div class="alert alert-light border-dashed text-center p-4">
+            <i class="bi bi-calendar-x fs-2 text-muted mb-2 d-block"></i>
+            <span class="text-muted">Nenhum bimestre cadastrado no banco de dados.</span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# --- CALENDÁRIO ACADÊMICO DINÂMICO --- %>
+  <div class="col-12">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar3 me-2 text-primary"></i>Calendário de Atividades</h5>
+        
+        <div class="btn-group shadow-sm">
+          <%= link_to planning_path(date: @view_date - 1.month), class: "btn btn-light btn-sm border" do %>
+            <i class="bi bi-chevron-left"></i>
+          <% end %>
+          
+          <button class="btn btn-white btn-sm px-4 fw-bold border" disabled>
+            <%= I18n.l(@view_date, format: "%B %Y").capitalize %>
+          </button>
+
+          <%= link_to planning_path(date: @view_date + 1.month), class: "btn btn-light btn-sm border" do %>
+            <i class="bi bi-chevron-right"></i>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0 border-light text-center calendar-table">
+            <thead class="bg-light text-muted small text-uppercase">
+              <tr>
+                <% %w[Dom Seg Ter Qua Qui Sex Sáb].each do |dia| %>
+                  <th class="py-3" style="width: 14.28%"><%= dia %></th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% (@start_of_calendar..@end_of_calendar).to_a.in_groups_of(7) do |week| %>
+                <tr>
+                  <% week.each do |day| %>
+                    <% 
+                      is_current_month = day.month == @view_date.month
+                      active_bim = @bimesters.find { |b| day.between?(b.start_date, b.end_date) }
+                      bg_style = active_bim ? "background-color: #{active_bim.color}08;" : "" 
+                    %>
+                    <td class="calendar-day <%= 'bg-light opacity-50' unless is_current_month %>" style="<%= bg_style %>">
+                      <div class="d-flex flex-column h-100">
+                        <span class="fw-bold small text-start mb-2 <%= 'text-primary' if day == Date.today %>">
+                          <%= day.day %>
+                        </span>
+                        
+                        <% if @calendar_events[day] %>
+                              <% @calendar_events[day].each do |event| %>
+                                <% if event[:type] == 'activity' %>
+                                  <%# Link para lançamento de notas %>
+                                  <%= link_to grading_activity_path(event[:id]), class: "event-tag bg-danger-subtle text-danger border-start border-danger border-3 shadow-sm text-decoration-none", title: "Clique para lançar notas" do %>
+                                    <i class="bi bi-pencil-square me-1"></i><%= event[:name].truncate(12) %>
+                                  <% end %>
+                                <% else %>
+                                  <%# Bloco para aulas normais %>
+                                  <div class="event-tag bg-primary-subtle text-primary border-start border-primary border-3 shadow-sm" title="<%= event[:name] %>">
+                                    <i class="bi bi-book me-1"></i><%= event[:name].truncate(15) %>
+                                  </div>
+                                <% end %>
+                              <% end %>
+                            <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calendar-day {
+    height: 120px;
+    padding: 10px !important;
+    vertical-align: top;
+    transition: background 0.2s;
+    border-color: #f1f1f1 !important;
+  }
+  .calendar-day:hover { background-color: #f8f9fa; }
+  .event-tag {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: left;
+    margin-bottom: 4px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+  .event-tag:hover { filter: brightness(0.95); }
+  .border-dashed { border-style: dashed !important; border-width: 2px; }
+  .bg-primary-subtle { background-color: #e7f1ff !important; }
+  .bg-danger-subtle { background-color: #f8d7da !important; }
+</style>
+
+<%# --- MODAL PARA CONFIGURAR BIMESTRES --- %>
+<div class="modal fade" id="modalBimestres" tabindex="-1" aria-labelledby="modalBimestresLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold text-dark" id="modalBimestresLabel">Configurar Períodos Letivos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <%= form_with model: Bimester.new, class: "row g-3 mb-4 p-3 bg-light rounded-3" do |f| %>
+          <div class="col-md-7">
+            <%= f.label :name, "Nome (Ex: 1º Bimestre)", class: "form-label small fw-bold" %>
+            <%= f.text_field :name, class: "form-control form-control-sm", placeholder: "Ex: 1º Bimestre", required: true %>
+          </div>
+          <div class="col-md-5">
+            <%= f.label :color, "Cor do Período", class: "form-label small fw-bold" %>
+            <%= f.color_field :color, class: "form-control form-control-sm form-control-color w-100", value: "#0d6efd" %>
+          </div>
+          <div class="col-md-6">
+            <%= f.label :start_date, "Início", class: "form-label small fw-bold" %>
+            <%= f.date_field :start_date, class: "form-control form-control-sm", required: true %>
+          </div>
+          <div class="col-md-6">
+            <%= f.label :end_date, "Término", class: "form-label small fw-bold" %>
+            <%= f.date_field :end_date, class: "form-control form-control-sm", required: true %>
+          </div>
+          <div class="col-12 mt-3">
+            <%= f.submit "Adicionar Período", class: "btn btn-primary btn-sm w-100 fw-bold" %>
+          </div>
+        <% end %>
+
+        <hr class="my-4 opacity-25">
+
+        <h6 class="fw-bold mb-3 small text-muted text-uppercase">Bimestres Ativos</h6>
+        <div class="list-group list-group-flush">
+          <% @bimesters.each do |b| %>
+            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+              <div class="d-flex align-items-center">
+                <div style="width: 12px; height: 12px; background-color: <%= b.color %>;" class="rounded-circle me-2"></div>
+                <div>
+                  <div class="fw-bold small"><%= b.name %></div>
+                  <small class="text-muted"><%= b.start_date.strftime("%d/%m") %> até <%= b.end_date.strftime("%d/%m") %></small>
+                </div>
+              </div>
+              <%= link_to bimester_path(b), data: { turbo_method: :delete, turbo_confirm: "Remover este período?" }, class: "btn btn-link text-danger p-0" do %>
+                <i class="bi bi-trash"></i>
+              <% end %>
+            </div>
+          <% end %>
+          <% if @bimesters.empty? %>
+            <small class="text-muted text-center py-2">Nenhum período definido ainda.</small>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= turbo_frame_tag "modal" %>

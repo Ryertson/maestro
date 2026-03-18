@@ -1,0 +1,92 @@
+pt-BR:
+  # --- TRADUÇÕES DE DATA ---
+  date:
+    formats:
+      month_year: "%B %Y"
+      default: "%d/%m/%Y"
+      short: "%d %b"
+      long: "%d de %B de %Y"
+    day_names:
+      - domingo
+      - segunda-feira
+      - terça-feira
+      - quarta-feira
+      - quinta-feira
+      - sexta-feira
+      - sábado
+    abbr_day_names:
+      - dom
+      - seg
+      - ter
+      - qua
+      - qui
+      - sex
+      - sáb
+    month_names:
+      - 
+      - janeiro
+      - fevereiro
+      - março
+      - abril
+      - maio
+      - junho
+      - julho
+      - agosto
+      - setembro
+      - outubro
+      - novembro
+      - dezembro
+    abbr_month_names:
+      - 
+      - jan
+      - fev
+      - mar
+      - abr
+      - mai
+      - jun
+      - jul
+      - ago
+      - set
+      - out
+      - nov
+      - dez
+
+  # --- TRADUÇÕES DO DEVISE ---
+  devise:
+    failure:
+      unauthenticated: "Você precisa entrar ou se cadastrar antes de continuar."
+      already_authenticated: "Você já está logado no sistema."
+      invalid: "Email ou senha inválidos."
+      not_found_in_database: "Email ou senha inválidos."
+      locked: "Sua conta está bloqueada."
+      inactive: "Sua conta ainda não foi ativada."
+      # Específico para o StudentUser se houver conflito
+      student_user:
+        already_authenticated: "Você já está logado como aluno."
+    sessions:
+      signed_in: "Login realizado com sucesso."
+      signed_out: "Logout realizado com sucesso."
+    registrations:
+      signed_up: "Cadastro realizado com sucesso."
+      updated: "Conta atualizada com sucesso."
+      destroyed: "Tchau! Sua conta foi cancelada com sucesso. Esperamos ver você novamente em breve."
+
+  # --- TRADUÇÕES DE ERROS GERAIS (Resolve o erro inicial de 'not_saved') ---
+  errors:
+    messages:
+      not_saved:
+        one: "1 erro impediu que este %{resource} fosse salvo:"
+        other: "%{count} erros impediram que este %{resource} fosse salvo:"
+      required: "é obrigatório(a)"
+
+  # --- TRADUÇÕES DE ATRIBUTOS ---
+  activerecord:
+    errors:
+      models:
+        student_user:
+          attributes:
+            student:
+              required: "precisa ser selecionado na lista"
+            student_id:
+              required: "não pode ficar em branco"
+              taken: "já possui um acesso cadastrado"

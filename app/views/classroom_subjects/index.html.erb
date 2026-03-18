@@ -1,0 +1,101 @@
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <%= link_to classrooms_path, class: "text-decoration-none small mb-1 d-block" do %>
+        <i class="bx bx-left-arrow-alt"></i> Voltar para Turmas
+      <% end %>
+      <h2 class="fw-bold mb-0">Disciplinas: <%= @classroom.display_name %></h2>
+      <p class="text-muted"><%= @classroom.course&.name %></p>
+    </div>
+
+    <%# Botão para abrir o formulário de vínculo %>
+    <button type="button" class="btn btn-dark rounded-pill px-4" data-bs-toggle="collapse" data-bs-target="#addSubjectForm">
+      <i class="bx bx-plus me-1"></i> Vincular Disciplina
+    </button>
+  </div>
+
+  <%# Formulário de Vínculo Atualizado com Seleção de Professor %>
+  <div class="collapse mb-4" id="addSubjectForm">
+    <div class="card card-body border-0 shadow-sm rounded-4">
+      <%= form_with(model: @classroom_subject, url: classroom_subjects_path(classroom_id: @classroom.id), local: true, class: "row g-3 align-items-end") do |f| %>
+        
+        <div class="col-md-4">
+          <%= f.label :subject_id, "Selecione a Disciplina", class: "form-label small fw-bold" %>
+          <%= f.collection_select :subject_id, @available_subjects, :id, :name, { prompt: "Escolha uma disciplina..." }, { class: "form-select rounded-3", required: true } %>
+        </div>
+
+        <div class="col-md-4">
+          <%= f.label :teacher_id, "Atribuir Professor (Opcional)", class: "form-label small fw-bold" %>
+          <%= f.collection_select :teacher_id, Teacher.all.order(:name), :id, :name, { prompt: "Selecione um professor..." }, { class: "form-select rounded-3" } %>
+        </div>
+
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-primary w-100 rounded-3">
+            <i class="bx bx-check-circle me-1"></i> Confirmar Vínculo
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="bg-light">
+        <tr>
+          <th class="ps-4">Disciplina</th>
+          <th>Professor Responsável</th>
+          <th class="text-end pe-4">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @classroom_subjects.any? %>
+          <% @classroom_subjects.each do |cs| %>
+            <tr>
+              <td class="ps-4 fw-bold text-dark">
+                <div class="d-flex align-items-center">
+                  <div class="icon-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                    <i class="bx bx-book text-primary"></i>
+                  </div>
+                  <%= cs.subject.name %>
+                </div>
+              </td>
+              <td>
+                <% if cs.teacher.present? %>
+                  <span class="badge bg-info-subtle text-info px-3 rounded-pill">
+                    <i class="bi bi-person me-1"></i> <%= cs.teacher.name %>
+                  </span>
+                <% else %>
+                  <span class="text-muted small italic">A definir</span>
+                <% end %>
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group gap-2">
+                  <%# Atalho direto para o Boletim Rápido daquela disciplina específica %>
+                  <%= link_to grading_classroom_path(@classroom, subject_id: cs.subject_id), class: "btn btn-sm btn-success rounded-pill px-3" do %>
+                    <i class="bx bx-spreadsheet me-1"></i> Lançar Notas
+                  <% end %>
+                  
+                  <%= button_to classroom_subject_path(cs, classroom_id: @classroom.id), method: :delete, class: "btn btn-sm btn-outline-danger rounded-circle", data: { confirm: "Deseja remover o vínculo desta disciplina com a turma?" } do %>
+                    <i class="bx bx-trash"></i>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="3" class="text-center py-5 text-muted">
+              <i class="bx bx-info-circle fs-4 d-block mb-2"></i>
+              Nenhuma disciplina vinculada a esta turma ainda.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .bg-info-subtle { background-color: #e0f7fa; color: #006064; }
+  .btn-group .btn { display: inline-flex; align-items: center; }
+</style>

@@ -1,0 +1,2 @@
+module AcademicSettingsHelper
+end

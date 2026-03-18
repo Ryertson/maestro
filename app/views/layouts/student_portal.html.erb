@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <title><%= content_for(:title) || "Portal do Aluno | Maestro" %></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+
+  <style>
+    /* --- VARIÁVEIS E BASE --- */
+    :root {
+      --neon-cyan: #00f3ff;
+      --bg-dark-sidebar: #1e1e2d;
+      --bg-dark-body: #12121e;
+      --neon-cyan-dim: rgba(0, 243, 255, 0.1);
+    }
+
+    body { 
+      font-family: 'Outfit', sans-serif; 
+      background-color: var(--bg-dark-body); 
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+    
+    .wrapper { display: flex; align-items: stretch; }
+
+    /* --- SIDEBAR NEON --- */
+    #sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--bg-dark-sidebar);
+      transition: all 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    #sidebar.collapsed {
+      width: 70px;
+      min-width: 70px;
+    }
+
+    .sidebar-logo a {
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: #fff !important;
+    }
+
+    .text-cyan-neon { color: var(--neon-cyan); }
+
+    .sidebar-nav { padding: 0 10px; flex-grow: 1; list-style: none; }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      color: #a2a3b7;
+      text-decoration: none;
+      border-radius: 12px;
+      margin-bottom: 5px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .sidebar-link i { font-size: 1.4rem; margin-right: 15px; }
+
+    /* ESTADO ATIVO NEON */
+    .sidebar-link.active {
+      background: var(--neon-cyan-dim);
+      color: var(--neon-cyan) !important;
+      font-weight: 600;
+      box-shadow: inset 4px 0 0 var(--neon-cyan);
+    }
+
+    .sidebar-link:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    /* --- NAVBAR SUPERIOR --- */
+    .main { width: 100%; overflow-y: auto; background: var(--bg-dark-body); }
+
+    .navbar-neon {
+      background: var(--bg-dark-sidebar) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .nav-user-box {
+      background: var(--bg-dark-body);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      padding: 5px 15px;
+      transition: 0.3s;
+    }
+
+    .nav-user-box:hover { border-color: var(--neon-cyan); }
+
+    /* --- FLASH MESSAGES --- */
+    .flash-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1060;
+      max-width: 350px;
+    }
+
+    .flash-message { animation: slideInRight 0.5s ease-out forwards; }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Ajustes Mobile */
+    @media (max-width: 768px) {
+      #sidebar { position: fixed; left: -260px; z-index: 1050; }
+      #sidebar.expand { left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="flash-messages" class="flash-container">
+    <% if notice %>
+      <div class="flash-message alert alert-success shadow-lg border-0 border-start border-success border-5 d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+        <div class="small fw-bold"><%= notice %></div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+    <% end %>
+
+    <% if alert %>
+      <div class="flash-message alert alert-danger shadow-lg border-0 border-start border-danger border-5 d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <div class="small fw-bold"><%= alert %></div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="wrapper">
+    <%# --- SIDEBAR DO ALUNO ATUALIZADA --- %>
+    <aside id="sidebar">
+      <div class="d-flex justify-content-between align-items-center p-4">
+        <div class="sidebar-logo">
+          <a href="<%= student_portal_root_path %>" class="text-decoration-none fw-bold">
+            MAESTRO<span class="text-cyan-neon">.ALUNO</span>
+          </a>
+        </div>
+        <button class="toggle-btn border-0 text-white bg-transparent" type="button">
+          <i id="icon" class="bx bx-chevrons-right"></i>
+        </button>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="sidebar-item">
+          <%= link_to student_portal_root_path, class: "sidebar-link #{'active' if current_page?(student_portal_root_path)}" do %>
+            <i class="bx bx-grid-alt"></i>
+            <span>Meu Painel</span>
+          <% end %>
+        </li>
+
+        <li class="sidebar-item">
+          <%# O segredo é o prefixo 'student_portal_' antes de 'activities_path' %>
+          <%= link_to student_portal_activities_path, class: "sidebar-link #{'active' if controller_name == 'activities'}" do %>
+            <i class="bx bx-task"></i>
+            <span>Minhas Atividades</span>
+          <% end %>
+        </li>
+
+        <li class="sidebar-item">
+          <%= link_to student_portal_grades_path, class: "sidebar-link #{'active' if controller_name == 'grades'}" do %>
+            <i class="bx bx-medal"></i>
+            <span>Minhas Notas</span>
+          <% end %>
+        </li>
+
+        <li class="sidebar-item">
+          <%= link_to student_portal_attendances_path, class: "sidebar-link #{'active' if controller_name == 'attendances'}" do %>
+            <i class="bx bx-calendar-check"></i>
+            <span>Minha Frequência</span>
+          <% end %>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <%= link_to destroy_student_user_session_path, data: { turbo_method: :delete }, class: "sidebar-link text-danger border-0 bg-transparent w-100" do %>
+          <i class="bx bx-log-out"></i>
+          <span>Sair do Portal</span>
+        <% end %>
+      </div>
+    </aside>
+
+    <%# --- CONTEÚDO PRINCIPAL ATUALIZADO --- %>
+    <div class="main">
+      <nav class="navbar navbar-expand px-4 py-3 navbar-neon shadow-sm">
+        <div class="d-flex align-items-center">
+          <span class="fw-bold text-white opacity-75 d-none d-md-inline">Bem-vindo ao Portal</span>
+        </div>
+        
+        <div class="navbar-collapse collapse">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item dropdown">
+              <a href="#" data-bs-toggle="dropdown" class="nav-icon pe-md-0 d-flex align-items-center text-decoration-none">
+                <div class="nav-user-box d-flex align-items-center">
+                  <div class="text-end me-3 d-none d-md-block">
+                    <span class="d-block text-white fw-bold" style="line-height: 1; font-size: 0.85rem;"><%= current_student_user.student&.name&.split(' ')&.first %></span>
+                    <small class="text-cyan-neon" style="font-size: 0.6rem; text-transform: uppercase; font-weight: 800;">Aluno</small>
+                  </div>
+                  <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background: var(--neon-cyan); color: #000;">
+                    <i class="bx bx-user" style="font-size: 20px;"></i>
+                  </div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow mt-3 bg-dark">
+                <div class="dropdown-header text-center text-white-50 small">
+                  <%= current_student_user.email %>
+                </div>
+                <div class="dropdown-divider border-secondary"></div>
+                <%= link_to destroy_student_user_session_path, data: { turbo_method: :delete }, class: "dropdown-item text-danger d-flex align-items-center" do %>
+                  <i class="bx bx-log-out-circle me-2"></i><span>Sair</span>
+                <% end %>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <main class="content px-3 py-4">
+        <div class="container-fluid">
+          <%= yield %>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    function setupSidebar() {
+      const btn = document.querySelector(".toggle-btn");
+      const sidebar = document.querySelector("#sidebar");
+      const icon = document.querySelector("#icon");
+      
+      if (btn && sidebar) {
+        btn.addEventListener("click", function(e) {
+          e.preventDefault();
+          // No mobile usa 'expand', no desktop usa 'collapsed'
+          if (window.innerWidth > 768) {
+            sidebar.classList.toggle("collapsed");
+          } else {
+            sidebar.classList.toggle("expand");
+          }
+          
+          if (icon) {
+            const isExpanded = sidebar.classList.contains("expand") || !sidebar.classList.contains("collapsed");
+            icon.className = isExpanded ? "bx bx-chevrons-left" : "bx bx-chevrons-right";
+          }
+        });
+      }
+    }
+
+    function setupFlashMessages() {
+      const messages = document.querySelectorAll('.flash-message');
+      messages.forEach(msg => {
+        setTimeout(() => {
+          msg.style.opacity = '0';
+          setTimeout(() => msg.remove(), 500);
+        }, 4000);
+      });
+    }
+
+    document.addEventListener("turbo:load", () => {
+      setupSidebar();
+      setupFlashMessages();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons';
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+/* --- GERAL --- */
+a {
+  text-decoration: none;
+}
+
+li {
+  list-style: none;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #f8f9fa;
+}
+
+.wrapper {
+  display: flex;
+}
+
+/* --- CONTEÚDO PRINCIPAL --- */
+.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  background-color: #fff;
+}
+
+/* --- SIDEBAR (BARRA LATERAL) --- */
+#sidebar {
+  width: 70px;
+  min-width: 70px;
+  height: 100vh;
+  transition: all 0.3s ease-in-out;
+  background-color: #0b0f19;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Estado Expandido */
+#sidebar.expand {
+  width: 260px;
+  min-width: 260px;
+}
+
+/* Controle de visibilidade do texto e logo */
+#sidebar:not(.expand) .sidebar-logo,
+#sidebar:not(.expand) a.sidebar-link span {
+  display: none;
+}
+
+/* Botão de Toggle (Setinhas) */
+.toggle-btn {
+  width: 35px;
+  height: 35px;
+  color: #fff;
+  border-radius: 0.425rem;
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #323c55;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle-btn:hover {
+  background-color: #3b7ddd;
+}
+
+/* Animação de Fade In ao abrir */
+#sidebar.expand .sidebar-logo,
+#sidebar.expand a.sidebar-link span {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.sidebar-logo {
+  padding: 10px 0;
+}
+
+.sidebar-logo a {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  padding: 0.7rem 0;
+  flex: 1 1 auto;
+}
+
+/* Links do Menu */
+a.sidebar-link {
+  padding: 0.8rem 1.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-weight: 600;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.sidebar-link i {
+  font-size: 1.3rem;
+  min-width: 2.5rem;
+}
+
+a.sidebar-link:hover {
+  background-color: rgba(255, 255, 255, .075);
+  color: #fff;
+  border-left: 3px solid #3b7ddd;
+}
+
+/* Dropdowns na Sidebar */
+.sidebar-item {
+  position: relative;
+}
+
+.sidebar-dropdown .sidebar-link {
+  padding-left: 3.5rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+/* --- NAVBAR SUPERIOR --- */
+.navbar {
+  background-color: #fff;
+  box-shadow: 0 0 2rem 0 rgba(33, 37, 41, .1);
+}
+
+.avatar-img-fluid {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* --- CARDS --- */
+.card {
+  background-color: #fff;
+  border: 1px solid rgba(231, 234, 243, 0.7);
+  border-radius: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* --- FOOTER --- */
+footer {
+  background-color: #f8f9fa;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e9ecef;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 768px) {
+  #sidebar:not(.expand) {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+
+/* No fundo da sidebar */
+.logout-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #dc3545;
+  font-size: 1.5rem;
+  transition: all 0.3s;
+}
+
+.logout-btn:hover {
+  color: #a71d2a;
+  transform: translateX(-50%) scale(1.1);
+}
+
+/* Cores de Presença */
+.p-present { background-color: #198754 !important; }
+.p-absent { background-color: #dc3545 !important; }
+.p-late { background-color: #ffc107 !important; color: #000 !important; }
+.p-justified { background-color: #0dcaf0 !important; }
+.p-cleared { background-color: #2b2b40 !important; opacity: 0.5; }
+
+/* Estilização do Rodapé da Sidebar */
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #111;
+    z-index: 1000;
+    padding: 10px 0;
+}
+
+/* Forçar a visibilidade do botão de Sair */
+.sidebar-link.text-danger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-link.text-danger i, 
+.sidebar-link.text-danger span {
+    color: #ff4d4d !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.sidebar-link.text-danger:hover {
+    background-color: rgba(255, 77, 77, 0.1);
+    transform: translateX(5px);
+}
+
+/* Padronização de Títulos */
+.page-title, .section-title {
+    font-family: 'Outfit', sans-serif;
+    color: #333;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Alertas Centralizados */
+.alert-centered {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  min-width: 350px;
+  text-align: center;
+  padding: 30px;
+  border-radius: 20px;
+  background-color: #212529;
+  color: white;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+  border: none;
+  animation: fadeInOut 3.5s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -60%) scale(0.9); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -40%) scale(0.9); visibility: hidden; }
+}
+
+/* Progress Bar Animada */
+.progress-bar {
+  transition: width 0.9s cubic-bezier(.4,0,.2,1);
+}
+
+/* --- ESTILOS EXCLUSIVOS GESTÃO DE ATIVIDADES (MAESTRO 2026) --- */
+
+/* Roxo Translúcido solicitado para Grids/Bimestres */
+.bg-purple-translucent {
+  background-color: rgba(111, 66, 193, 0.08) !important;
+  border: 1px solid rgba(111, 66, 193, 0.15);
+  border-radius: 12px;
+}
+
+/* Scroll para o Banco de Aulas */
+.table-responsive-scroll {
+  max-height: 450px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(111, 66, 193, 0.2) transparent;
+}
+
+.table-responsive-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.table-responsive-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(111, 66, 193, 0.2);
+  border-radius: 10px;
+}
+
+/* Etiquetas Sobrescritas */
+.badge-sobrescrito {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 5px;
+  vertical-align: super; /* Efeito sobrescrito */
+}
+
+/* Cores específicas das etiquetas */
+.badge-vinculada { background-color: #0d6efd; color: white; }    /* Azul */
+.badge-nao-vinculada { background-color: #dc3545; color: white; } /* Vermelha */
+.badge-pendente { background-color: #fd7e14; color: white; }     /* Laranja */
+.badge-corrigida { background-color: #ffc107; color: #000; }      /* Dourado */
+
+/* Cards de Bimestre */
+.card-bimestre {
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.card-bimestre:hover {
+  background-color: #fff;
+  border-color: #6f42c1;
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.1);
+}
+
+.sticky-thead {
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Destaque para o Bimestre Atual */
+.is-current-term {
+  box-shadow: 0 0 15px rgba(111, 66, 193, 0.2);
+  border: 2px solid #6f42c1 !important;
+  position: relative;
+  transform: scale(1.05); /* Leve aumento no tamanho */
+  z-index: 5;
+}
+
+.is-current-term::after {
+  content: "ATUAL";
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: #6f42c1;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+}

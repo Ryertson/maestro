@@ -1,0 +1,113 @@
+<h1>AcademicSettings#index</h1>
+<div class="container py-4">
+  <%# --- HEADER --- %>
+  <div class="d-flex align-items-center mb-4">
+    <div class="icon-shape bg-primary text-white rounded-4 p-3 me-3 shadow-sm">
+      <i class="bi bi-gear-wide-connected fs-4"></i>
+    </div>
+    <div>
+      <h2 class="fw-bold mb-0">Configurações Acadêmicas</h2>
+      <p class="text-muted mb-0">Gerencie áreas do conhecimento e disciplinas do Maestro</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <%# --- COLUNA DA ESQUERDA: LISTAGEM --- %>
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-nested me-2 text-primary"></i>Estrutura Atual</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr class="small fw-bold text-muted text-uppercase">
+                  <th class="px-4 py-3">Área / Disciplina</th>
+                  <th>Cor Identificadora</th>
+                  <th class="text-center">Qtd. Disciplinas</th>
+                  <th class="text-end px-4">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @knowledge_areas.each do |area| %>
+                  <tr class="bg-light-subtle">
+                    <td class="px-4 py-3">
+                      <div class="d-flex align-items-center">
+                        <div style="width: 12px; height: 12px; background-color: <%= area.color %>; border-radius: 3px;" class="me-2 shadow-sm"></div>
+                        <span class="fw-bold text-dark"><%= area.name %></span>
+                      </div>
+                    </td>
+                    <td><code><%= area.color %></code></td>
+                    <td class="text-center"><span class="badge bg-secondary rounded-pill"><%= area.subjects.count %></span></td>
+                    <td class="text-end px-4">
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-white border shadow-sm"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-white border shadow-sm text-danger"><i class="bi bi-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <% area.subjects.each do |subject| %>
+                    <tr>
+                      <td class="px-5 py-2 text-muted">
+                        <i class="bi bi-arrow-return-right me-2 opacity-50"></i><%= subject.name %>
+                      </td>
+                      <td colspan="2"></td>
+                      <td class="text-end px-4">
+                        <button class="btn btn-link btn-sm text-danger p-0 border-0"><i class="bi bi-x-circle"></i></button>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# --- COLUNA DA DIREITA: FORMULÁRIOS --- %>
+    <div class="col-md-4">
+      <%# Card: Nova Área %>
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle me-2 text-primary"></i>Nova Área</h6>
+          <%= form_with model: @new_area, url: knowledge_areas_path do |f| %>
+            <div class="mb-3">
+              <%= f.label :name, "Nome da Área", class: "form-label small fw-bold text-muted" %>
+              <%= f.text_field :name, class: "form-control form-control-sm", placeholder: "Ex: Ciências da Natureza" %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :color, "Cor da Área", class: "form-label small fw-bold text-muted" %>
+              <%= f.color_field :color, class: "form-control form-control-color w-100", value: "#0d6efd" %>
+            </div>
+            <%= f.submit "Criar Área", class: "btn btn-primary btn-sm w-100 fw-bold rounded-pill" %>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Card: Nova Disciplina %>
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-journal-plus me-2 text-success"></i>Nova Disciplina</h6>
+          <%= form_with model: @new_subject, url: subjects_path do |f| %>
+            <div class="mb-3">
+              <%= f.label :knowledge_area_id, "Vincular à Área", class: "form-label small fw-bold text-muted" %>
+              <%= f.collection_select :knowledge_area_id, KnowledgeArea.all, :id, :name, { prompt: "Selecione..." }, { class: "form-select form-select-sm" } %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :name, "Nome da Disciplina", class: "form-label small fw-bold text-muted" %>
+              <%= f.text_field :name, class: "form-control form-control-sm", placeholder: "Ex: Biologia" %>
+            </div>
+            <%= f.submit "Adicionar Disciplina", class: "btn btn-success btn-sm w-100 fw-bold rounded-pill" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .icon-shape { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+  .table-hover tbody tr:hover { background-color: rgba(0,0,0,0.02); }
+</style>

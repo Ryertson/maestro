@@ -1,0 +1,455 @@
+<div class="container-fluid px-4 py-4">
+
+  <%# --- NOVO: Botão de Alternância de Avatar (Apenas para Admins) --- %>
+  <% if current_professor.admin? %>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm" style="background: linear-gradient(90deg, #6f42c1 0%, #4e73df 100%); border-radius: 15px;">
+          <div class="card-body d-flex justify-content-between align-items-center py-2 px-4">
+            <div class="text-white d-flex align-items-center">
+              <i class="bi bi-person-badge-fill fs-4 me-3"></i>
+              <div>
+                <span class="small text-uppercase fw-bold d-block" style="letter-spacing: 1px; font-size: 0.7rem; opacity: 0.8;">Visão Atual</span>
+                <span class="badge bg-white text-primary px-3 text-uppercase">
+                  <%= current_professor.view_mode.to_s.humanize %>
+                </span>
+              </div>
+            </div>
+            
+            <%= button_to toggle_view_mode_path, method: :post, class: "btn btn-sm btn-light rounded-pill shadow-sm fw-bold px-4 py-2", data: { turbo: false } do %>
+              <i class="bi bi-arrow-left-right me-2"></i>
+              Mudar para <%= current_professor.modo_professor? ? "Modo Administrador" : "Modo Professor" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+  
+  <%# --- Cabeçalho e Pesquisa (ATUALIZADO COM FILTRO DE TURMA) --- %>
+  <div class="row align-items-center mb-4">
+    <div class="col-md-3">
+      <h1 class="page-title mb-0">Gestão de Atividades</h1>
+    </div>
+    <div class="col-md-9">
+      <%= form_tag lessons_path, method: :get, class: "row g-2 justify-content-end" do %>
+        
+        <%# Novo Filtro de Turma %>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <%= select_tag :classroom_id, options_from_collection_for_select(@available_classrooms, :id, :full_name_info, params[:classroom_id]), include_blank: "Todas as Turmas", class: "form-select", id: "filterClassroom", onchange: "this.form.submit()" %>
+            <label for="filterClassroom">Filtrar Turma</label>
+          </div>
+        </div>
+
+        <%# Filtro de Disciplina %>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <%= select_tag :subject_id, options_from_collection_for_select(@available_subjects, :id, :name, params[:subject_id] || (current_view_mode == :modo_professor ? @available_subjects.first&.id : nil)), include_blank: "Todas as Disciplinas", class: "form-select", id: "filterSubject", onchange: "this.form.submit()" %>
+            <label for="filterSubject">Filtrar Disciplina</label>
+          </div>
+        </div>
+
+        <%# Campo de Busca %>
+        <div class="col-md-4">
+          <div class="form-floating">
+            <input type="text" name="search" class="form-control" id="floatingInput" placeholder="Pesquisar..." value="<%= params[:search] %>">
+            <label for="floatingInput">Pesquisar tópicos...</label>
+          </div>
+        </div>
+
+        <div class="col-md-2 d-flex">
+          <button type="submit" class="btn btn-outline-primary w-100 shadow-sm">
+            <i class="bi bi-search me-2"></i>Buscar
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# --- Cards de Períodos Letivos --- %>
+  <div class="container bg-purple-translucent p-4 mb-5 rounded-4 shadow-sm">
+    <div class="row align-items-stretch gx-3 text-center">
+      <% @terms.each do |term| %>
+        <div class="col">
+          <div class="card card-bimestre border-0 shadow-sm h-100 <%= current_term_class(term) %>" style="border-top: 4px solid <%= term.color %> !important; transition: all 0.3s ease;">
+            <div class="card-body py-3 px-1">
+              <span class="d-block text-xs font-bold uppercase mb-1" style="font-size: 0.75rem; color: <%= term.color %>;">
+                <%= term.name %>
+              </span>
+              <div class="h5 fw-bold mb-0 text-slate-800"><%= term.work_days %></div>
+              <div class="text-muted uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Dias Letivos</div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <div class="col-auto d-flex align-items-center">
+        <button type="button" class="btn btn-outline-dark shadow-sm px-3 py-3" data-bs-toggle="modal" data-bs-target="#configBimestral">
+          <i class="bi bi-gear-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <%# --- Dashboard de Resumo --- %>
+  <div class="grid text-center mb-4" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+    <div class="p-3 border rounded shadow-sm bg-primary text-white">
+      <div class="small fw-bold uppercase">Total de Aulas</div>
+      <div class="h3 mb-0"><%= @total_lessons %></div>
+    </div>
+    <div class="p-3 border rounded shadow-sm bg-success text-white">
+      <div class="small fw-bold uppercase">Aulas Prontas</div>
+      <div class="h3 mb-0"><%= @lessons_ready %></div>
+    </div>
+    <div class="p-3 border rounded shadow-sm bg-warning text-dark">
+      <div class="small fw-bold uppercase">Em Andamento</div>
+      <div class="h3 mb-0"><%= @lessons_in_progress %></div>
+    </div>
+    <div class="p-3 border rounded shadow-sm bg-secondary text-white">
+      <div class="small fw-bold uppercase">Não Iniciadas</div>
+      <div class="h3 mb-0"><%= @lessons_not_started %></div>
+    </div>
+  </div>
+
+  <%# --- Barra de Progresso --- %>
+  <div class="mb-5 px-1">
+    <div class="d-flex justify-content-between mb-1">
+      <span class="text-xs font-bold text-gray-600 uppercase">Percentual de Aulas Finalizadas</span>
+      <span class="text-sm font-bold text-primary"><%= @progress_percentage %>%</span>
+    </div>
+    <div class="progress" style="height: 10px; border-radius: 10px;">
+      <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: <%= @progress_percentage %>%"></div>
+    </div>
+  </div>
+
+  <%# --- Tabela de Aulas --- %>
+  <div class="card shadow-sm mb-5 overflow-hidden border-0">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold text-dark">Banco de Aulas Lecionadas</h5>
+      <span class="badge text-bg-light border text-muted">Role para ver mais</span>
+    </div>
+    <div class="table-responsive-scroll">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="sticky-thead table-light">
+          <tr>
+            <th class="ps-4">Nome da Aula</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Turma</th>
+            <th>Disciplina</th>
+            <th class="text-end pe-4">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @lessons_list.each do |lesson| %>
+            <tr>
+              <td class="ps-4">
+                <span class="fw-bold text-slate-800"><%= lesson.topic_name %></span>
+                <% if lesson.has_activity %>
+                  <span class="badge badge-sobrescrito badge-vinculada">Atividade Vinculada</span>
+                  <% act = Activity.find_by(lesson_id: lesson.id) %>
+                  <% if act&.status == "corrigida" %>
+                    <span class="badge badge-sobrescrito badge-corrigida">
+                      <i class="bi bi-check-circle-fill me-1"></i>Atividade Corrigida
+                    </span>
+                  <% else %>
+                    <span class="badge badge-sobrescrito badge-pendente">Não Corrigida</span>
+                  <% end %>
+                <% else %>
+                  <span class="badge badge-sobrescrito badge-nao-vinculada">Atividade não vinculada</span>
+                <% end %>
+              </td>
+              <td><span class="badge <%= status_color_bootstrap(lesson.status) %> px-2 py-1"><%= lesson.status.humanize %></span></td>
+              <td class="text-muted small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
+              <td><span class="badge text-bg-light border"><%= lesson.classroom.display_name %></span></td>
+              <td>
+                <% if lesson.subject %>
+                  <span class="badge bg-info bg-opacity-10 text-info border border-info" style="font-size: 0.7rem;">
+                    <%= lesson.subject.name %>
+                  </span>
+                <% else %>
+                  <span class="text-muted small">-</span>
+                <% end %>
+              </td>
+              <td class="text-end pe-4">
+                <div class="d-inline-flex gap-2">
+                  <%= link_to edit_lesson_path(lesson), class: "btn btn-outline-primary btn-sm rounded-pill" do %><i class="bi bi-pencil"></i><% end %>
+                  <%= button_to lesson_path(lesson), method: :delete, class: "btn btn-outline-danger btn-sm rounded-pill", data: { turbo_confirm: "Excluir esta aula?" } do %><i class="bi bi-trash"></i><% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%# --- FORMULÁRIO DE CADASTRO RÁPIDO --- %>
+  <div class="card custom-card border-0 shadow-sm bg-white mb-5 p-4">
+    <h5 class="fw-bold text-purple mb-4">Novo Tópico de Aula</h5>
+
+    <% if @lesson&.errors&.any? %>
+      <div class="alert alert-danger shadow-sm rounded-4 mb-4">
+        <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Erro ao salvar:</h6>
+        <ul class="mb-0 small">
+          <% @lesson.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with(model: @lesson, local: true) do |f| %>
+      <div class="row g-4 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted uppercase">Título da Aula</label>
+          <%= f.text_field :topic_name, class: "form-control", id: "main_topic_field", placeholder: "Ex: Equações de 2º Grau" %>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted uppercase">Turma</label>
+          <%= f.collection_select :classroom_id, @available_classrooms, :id, :full_name_info, { prompt: "Turma" }, { class: "form-select", id: "main_classroom_select" } %>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted uppercase">Disciplina</label>
+          <%= f.collection_select :subject_id, @available_subjects, :id, :name, { prompt: "Disciplina" }, { class: "form-select", id: "main_subject_select" } %>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted uppercase">Dia da Aula</label>
+          <%= f.date_field :date, class: "form-control", id: "main_date_field" %>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted uppercase">Status</label>
+          <%= f.select :status, Lesson.statuses.keys.map { |s| [s.humanize, s] }, {}, class: "form-select" %>
+        </div>
+        <div class="col-md-1 text-center">
+          <label class="form-label small fw-bold text-muted uppercase d-block">Atividade?</label>
+          <div class="form-check form-switch d-inline-block">
+            <%= f.check_box :has_activity, class: "form-check-input js-main-toggle", role: "switch", id: "main_has_activity" %>
+          </div>
+        </div>
+
+        <div id="main-activity-section" class="col-12 mt-3 border rounded p-4 shadow-sm" style="display: none; background-color: #f8f9fa; border-left: 5px solid #6f42c1 !important;">
+          <h6 class="fw-bold text-purple mb-3 small text-uppercase">
+            <i class="bi bi-pencil-square me-1"></i> Detalhes da Atividade Vinculada
+          </h6>
+          
+          <%= f.fields_for :activities, (@lesson.activities.first || @lesson.activities.build) do |a| %>
+            <div class="row g-3 align-items-end">
+              <div class="col-md-6">
+                <%= a.label :name, "Nome da Atividade", class: "form-label small fw-bold" %>
+                <%= a.text_field :name, class: "form-control bg-white", id: "main_act_name" %>
+              </div>
+              <div class="col-md-3">
+                <%= a.label :activity_type, "Tipo de Atividade", class: "form-label small fw-bold" %>
+                <%= a.select :activity_type, ["Avaliação", "Trabalho", "Visto", "Redação", "Relatório", "Apresentação", "Lista de Exercícios"], { prompt: "Selecione..." }, { class: "form-select bg-white" } %>
+              </div>
+              <div class="col-md-3">
+                <%= a.label :points, "Pontuação (Peso)", class: "form-label small fw-bold" %>
+                <%= a.number_field :points, step: 0.1, class: "form-control bg-white", value: 10.0 %>
+              </div>
+              <%= a.hidden_field :date, id: "main_act_date_hidden" %>
+              <%= a.hidden_field :classroom_id, id: "main_act_classroom_hidden" %>
+              <%= a.hidden_field :subject_id, id: "main_act_subject_hidden" %>
+              <%= a.hidden_field :status, value: "pendente" %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="col-12 text-center mt-4">
+          <%= f.submit "Cadastrar Aula no Maestro", class: "btn btn-primary px-5 fw-bold py-2 rounded-pill shadow-sm" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- Calendário com Largura e Altura Fixas --- %>
+  <div class="card border-0 shadow-sm bg-white mb-5 overflow-hidden">
+    <% current_date = params[:start_date] ? params[:start_date].to_date : Date.today %>
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-3">
+        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
+          <i class="bi bi-calendar3 me-2 text-purple"></i>
+          <span class="text-capitalize"><%= I18n.l(current_date, format: "%B %Y") %></span>
+        </h5>
+        <div class="btn-group shadow-sm ms-2">
+          <%= link_to lessons_path(start_date: current_date - 1.month), class: "btn btn-outline-secondary btn-sm px-3" do %><i class="bi bi-chevron-left"></i><% end %>
+          <%= link_to "Hoje", lessons_path(start_date: Date.today), class: "btn btn-outline-secondary btn-sm px-3 fw-bold" %>
+          <%= link_to lessons_path(start_date: current_date + 1.month), class: "btn btn-outline-secondary btn-sm px-3" do %><i class="bi bi-chevron-right"></i><% end %>
+        </div>
+      </div>
+    </div>
+    <div class="card-body p-0 overflow-auto">
+      <div class="calendar-container-fixed">
+        <%= month_calendar(events: @lessons_list, attribute: :date, header: { class: "d-none" }) do |date, lessons| %>
+          <% active_term = @terms.find { |t| date >= t.start_date && date <= t.end_date } %>
+          <div class="calendar-day-cell" style="<%= "background-color: #{active_term.color}15 !important;" if active_term %>">
+            <div class="text-end mb-1">
+              <span class="small fw-bold <%= 'bg-primary text-white rounded-circle d-inline-block text-center shadow-sm' if date == Date.today %>" style="<%= 'width: 24px; height: 24px; line-height: 24px;' if date == Date.today %>">
+                <%= date.day %>
+              </span>
+            </div>
+            <div class="lessons-wrapper">
+              <% lessons.each do |lesson| %>
+                <div class="badge-calendar-lesson" 
+                     data-bs-toggle="tooltip" 
+                     data-bs-placement="top" 
+                     data-bs-html="true"
+                     title="<strong><%= lesson.topic_name %></strong><br><span class='small'>Série: <%= lesson.classroom.display_name %></span>">
+                  <%= lesson.topic_name %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<%# --- Modal de Configuração Bimestral --- %>
+<div class="modal fade" id="configBimestral" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-purple">Configuração dos Períodos Letivos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <% @terms.each do |term| %>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3 bg-light">
+                <h6 class="fw-bold mb-3 border-bottom pb-2" style="color: <%= term.color %>"><%= term.name %></h6>
+                <%= form_with(model: term, local: false) do |f| %>
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <label class="text-xs fw-bold text-muted uppercase" style="font-size: 0.65rem;">Início</label>
+                      <%= f.date_field :start_date, class: "form-control form-control-sm" %>
+                    </div>
+                    <div class="col-6">
+                      <label class="text-xs fw-bold text-muted uppercase" style="font-size: 0.65rem;">Fim</label>
+                      <%= f.date_field :end_date, class: "form-control form-control-sm" %>
+                    </div>
+                    <div class="col-12 mt-2 d-flex gap-2">
+                      <%= f.color_field :color, class: "form-control form-control-color", style: "width: 50px; height: 31px;" %>
+                      <button type="submit" class="btn btn-sm btn-primary flex-grow-1 shadow-sm">Salvar</button>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calendar-container-fixed table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: collapse;
+  }
+  .simple-calendar .calendar-heading { display: none !important; }
+  .calendar-day-cell { 
+    height: 125px; 
+    width: 100%; 
+    padding: 6px; 
+    border-right: 1px solid #f0f0f0; 
+    border-bottom: 1px solid #f0f0f0; 
+    transition: background 0.2s ease;
+    overflow: hidden;
+  }
+  .lessons-wrapper {
+    max-height: 85px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .badge-calendar-lesson {
+    background-color: #6f42c1;
+    color: white;
+    font-size: 0.62rem;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    cursor: pointer;
+    border-left: 3px solid rgba(0,0,0,0.2);
+    display: block;
+  }
+  .badge-calendar-lesson:hover { filter: brightness(1.1); }
+  .tooltip-inner {
+    background-color: #2d3436 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 12px;
+  }
+  .badge-sobrescrito { font-size: 0.6rem; padding: 2px 6px; margin-left: 5px; }
+  .badge-vinculada { background-color: #e7f5ff; color: #1971c2; border: 1px solid #a5d8ff; }
+  .badge-nao-vinculada { background-color: #fff5f5; color: #c92a2a; border: 1px solid #ffa8a8; }
+  .badge-corrigida { background-color: #ebfbee; color: #2b8a3e; border: 1px solid #b2f2bb; }
+  .badge-pendente { background-color: #fff9db; color: #e67700; border: 1px solid #ffe066; }
+</style>
+
+<script>
+  function setupAllPageScripts() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    const mainToggle = document.querySelector('.js-main-toggle');
+    const mainSection = document.getElementById('main-activity-section');
+    const topicInput = document.getElementById('main_topic_field');
+    const nameInput = document.getElementById('main_act_name');
+    const dateInput = document.getElementById('main_date_field');
+    const classroomSelect = document.getElementById('main_classroom_select');
+    const subjectSelect = document.getElementById('main_subject_select');
+    
+    const hiddenDate = document.getElementById('main_act_date_hidden');
+    const hiddenClassroom = document.getElementById('main_act_classroom_hidden');
+    const hiddenSubject = document.getElementById('main_act_subject_hidden');
+
+    if (mainToggle && mainSection) {
+      const syncHiddenFields = () => {
+        if (hiddenDate && dateInput) hiddenDate.value = dateInput.value;
+        if (hiddenClassroom && classroomSelect) hiddenClassroom.value = classroomSelect.value;
+        if (hiddenSubject && subjectSelect) hiddenSubject.value = subjectSelect.value;
+      };
+
+      const toggleFn = () => {
+        if (mainToggle.checked) {
+          mainSection.style.display = 'block';
+          if (nameInput && (nameInput.value === "" || nameInput.value.startsWith("Atv:"))) {
+            nameInput.value = "Atv: " + (topicInput.value || "");
+          }
+          syncHiddenFields();
+        } else {
+          mainSection.style.display = 'none';
+        }
+      };
+
+      mainToggle.addEventListener('change', toggleFn);
+      if (dateInput) dateInput.addEventListener('change', syncHiddenFields);
+      if (classroomSelect) classroomSelect.addEventListener('change', syncHiddenFields);
+      if (subjectSelect) subjectSelect.addEventListener('change', syncHiddenFields);
+
+      if (topicInput) {
+        topicInput.addEventListener('input', () => {
+          if (mainToggle.checked && nameInput && nameInput.value.startsWith("Atv:")) {
+            nameInput.value = "Atv: " + topicInput.value;
+          }
+        });
+      }
+      toggleFn();
+    }
+  }
+
+  document.addEventListener("turbo:load", setupAllPageScripts);
+  document.addEventListener("DOMContentLoaded", setupAllPageScripts);
+</script>

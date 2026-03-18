@@ -1,0 +1,108 @@
+<% content_for :title, "Nova Turma | Maestro" %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <%# --- CABEÇALHO --- %>
+    <div class="text-center mb-4">
+      <div class="icon-shape bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 60px; height: 60px;">
+        <i class="bx bx-group fs-2"></i>
+      </div>
+      <h2 class="fw-bold text-dark">Configurar Nova Turma</h2>
+      <p class="text-muted">Conecte um curso a uma série e defina a seção.</p>
+    </div>
+
+    <%# --- CARD DO FORMULÁRIO --- %>
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="card-body p-5">
+        <%= form_with(model: @classroom, local: true) do |f| %>
+          
+          <%# Erros de Validação %>
+          <% if @classroom.errors.any? %>
+            <div class="alert alert-danger border-0 rounded-3 mb-4">
+              <ul class="mb-0 small">
+                <% @classroom.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <%# Seleção de Curso %>
+          <div class="mb-4">
+            <%= f.label :course_id, "Curso Acadêmico", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-0"><i class="bx bx-book-bookmark text-primary"></i></span>
+              <%= f.collection_select :course_id, Course.all, :id, :name, 
+                  { prompt: "Selecione o curso..." }, 
+                  { class: "form-select bg-light border-0 py-3", required: true } %>
+            </div>
+          </div>
+
+          <div class="row">
+            <%# Seleção de Série (Grade) %>
+            <div class="col-md-7 mb-4">
+              <%= f.label :grade_id, "Série / Ano", class: "form-label small fw-bold text-muted text-uppercase" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="bx bx-layer text-warning"></i></span>
+                <%= f.collection_select :grade_id, Grade.all, :id, :name, 
+                    { prompt: "Série..." }, 
+                    { class: "form-select bg-light border-0 py-3", required: true } %>
+              </div>
+            </div>
+
+            <%# Seleção de Seção (Section) %>
+            <div class="col-md-5 mb-4">
+              <%= f.label :section_id, "Turma / Letra", class: "form-label small fw-bold text-muted text-uppercase" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="bx bx-font text-info"></i></span>
+                <%= f.collection_select :section_id, Section.all, :id, :name, 
+                    { prompt: "Turma..." }, 
+                    { class: "form-select bg-light border-0 py-3", required: true } %>
+              </div>
+            </div>
+          </div>
+
+          <%# Botões de Ação %>
+          <div class="d-grid gap-2 mt-4">
+            <%= f.submit "Criar Turma Agora", class: "btn btn-primary btn-lg rounded-pill fw-bold shadow-sm py-3" %>
+            <%= link_to "Cancelar e Voltar", classrooms_path, class: "btn btn-link text-muted text-decoration-none small" %>
+          </div>
+
+        <% end %>
+      </div>
+    </div>
+
+    <%# --- DICA NO RODAPÉ --- %>
+    <div class="mt-4 text-center">
+      <div class="card bg-info-subtle border-0 rounded-4 p-3">
+        <p class="mb-0 small text-info-emphasis">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          <strong>Dica:</strong> Se não encontrar a série ou turma na lista, cadastre-as primeiro na página de <strong>Cursos</strong>.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  body { background-color: #f0f2f5; }
+  
+  .form-select:focus {
+    box-shadow: none;
+    background-color: #fff !important;
+    border: 2px solid #0d6efd !important;
+  }
+
+  .input-group-text {
+    font-size: 1.2rem;
+  }
+
+  .btn-primary {
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3) !important;
+  }
+</style>

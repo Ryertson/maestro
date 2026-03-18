@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  activity_type: MyString
+  student_delivery_date: 2026-02-16
+  teacher_delivery_date: 2026-02-16
+  status: MyString
+  grade: 9.99
+
+two:
+  name: MyString
+  activity_type: MyString
+  student_delivery_date: 2026-02-16
+  teacher_delivery_date: 2026-02-16
+  status: MyString
+  grade: 9.99

@@ -1,0 +1,48 @@
+<tr id="<%= dom_id lesson %>">
+  <td class="px-4 fw-bold text-dark"><%= lesson.topic_name %></td>
+  
+  <td>
+    <%# Lógica das etiquetas coloridas baseada no Enum %>
+    <% 
+      badge_class = case lesson.status
+                    when "pronto" then "bg-success text-white"
+                    when "preparando" then "bg-warning text-dark"
+                    when "arquivado" then "bg-secondary text-white"
+                    else "bg-light text-dark border"
+                    end
+    %>
+    <span class="badge rounded-pill <%= badge_class %>" style="min-width: 80px;">
+      <%= lesson.status.titleize %>
+    </span>
+  </td>
+
+  <td><%= lesson.week %></td>
+  
+  <td><%= lesson.date&.strftime("%d/%m/%Y") %></td>
+
+  <td class="small text-muted">
+    <% if lesson.classroom.present? %>
+      <span class="fw-bold text-secondary"><%= lesson.classroom.course.name %></span> | 
+      <%= lesson.classroom.grade.name %> - <%= lesson.classroom.section.name %>
+    <% else %>
+      <span class="text-danger">Não vinculada</span>
+    <% end %>
+  </td>
+
+  <td class="text-center">
+    <div class="d-flex justify-content-center gap-2">
+      <%# Botão de Editar %>
+      <%= link_to edit_lesson_path(lesson), class: "btn btn-sm btn-light text-primary shadow-sm", title: "Editar Tópico" do %>
+        <i class="bi bi-pencil-square"></i>
+      <% end %>
+
+      <%# Botão de Excluir com Confirmação %>
+      <%= link_to lesson_path(lesson), 
+                  data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita." }, 
+                  class: "btn btn-sm btn-light text-danger shadow-sm", 
+                  title: "Excluir Tópico" do %>
+        <i class="bi bi-trash"></i>
+      <% end %>
+    </div>
+  </td>
+</tr>

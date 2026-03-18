@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <title><%= content_for(:title) || "Assistente Pedagógico IA" %></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+
+  <style>
+    body { font-family: 'Outfit', sans-serif; background-color: #f8f9fa; }
+    
+    .sidebar-link.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-left: 4px solid #fff;
+      font-weight: 600;
+    }
+
+    .sidebar-item { list-style: none; }
+    
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 1.5rem;
+    }
+
+    .flash-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1060;
+      max-width: 350px;
+      width: 100%;
+    }
+
+    .flash-message {
+      animation: slideInRight 0.5s ease-out forwards;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .flash-exit {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Cores Padronizadas Maestro IA */
+    .text-purple { color: #6f42c1 !important; }
+    .icon-points { color: #6f42c1; } 
+    .user-icon-custom { color: #6f42c1; }
+
+    /* --- ESTILOS DO MODAL DE BOAS-VINDAS NEON --- */
+    .welcome-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 17, 23, 0.9);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .welcome-card {
+      background: #1e1e2d;
+      border: 2px solid #00f3ff;
+      border-radius: 30px;
+      padding: 40px;
+      text-align: center;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+      animation: welcomeZoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .welcome-icon-box { font-size: 60px; margin-bottom: 15px; }
+    
+    .neon-text-cyan {
+      color: #00f3ff;
+      text-shadow: 0 0 15px rgba(0, 243, 255, 0.8);
+    }
+
+    .welcome-title {
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .welcome-desc {
+      color: #a2a3b7;
+      font-size: 15px;
+      margin-bottom: 25px;
+    }
+
+    .btn-neon-start {
+      background: linear-gradient(45deg, #00c6ff, #00f3ff);
+      border: none;
+      padding: 12px 35px;
+      border-radius: 50px;
+      color: #0d1117;
+      font-weight: 800;
+      transition: 0.3s;
+      box-shadow: 0 5px 15px rgba(0, 243, 255, 0.4);
+    }
+
+    .btn-neon-start:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(0, 243, 255, 0.6);
+    }
+
+    @keyframes welcomeZoomIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <%# --- MODAL DE BOAS-VINDAS (DISPARADO PELO FLASH) --- %>
+  <% if flash[:welcome_user] %>
+    <div id="welcomeModal" class="welcome-overlay">
+      <div class="welcome-card shadow-lg">
+        <div class="welcome-icon-box">
+          <i class='bx bxs-graduation neon-text-cyan'></i>
+        </div>
+        <h2 class="welcome-title">BEM-VINDO AO MAESTRO!</h2>
+        <p class="welcome-desc">
+          Sua conta foi configurada com sucesso. <br>
+          A tecnologia agora é sua maior aliada no ensino.
+        </p>
+        <button onclick="closeWelcomeModal()" class="btn-neon-start">VAMOS COMEÇAR</button>
+      </div>
+    </div>
+  <% end %>
+
+  <div id="flash-messages" class="flash-container">
+    <% if notice %>
+      <div class="flash-message alert alert-success shadow-lg border-0 border-start border-success border-5 d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+        <div class="small fw-bold"><%= notice %></div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+    <% end %>
+
+    <% if alert %>
+      <div class="flash-message alert alert-danger shadow-lg border-0 border-start border-danger border-5 d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <div class="small fw-bold"><%= alert %></div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="wrapper">
+    <aside id="sidebar">
+      <div class="d-flex justify-content-between p-4">
+        <div class="sidebar-logo">
+          <a href="/" class="text-decoration-none text-white fw-bold">MAESTRO</a>
+        </div>
+        <button class="toggle-btn border-0" type="button">
+          <i id="icon" class="bx bx-chevrons-right"></i>
+        </button>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="sidebar-item">
+          <a href="/" class="sidebar-link <%= 'active' if current_page?(root_path) %>">
+            <i class="bx bx-grid-alt"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= lessons_path %>" class="sidebar-link <%= 'active' if current_page?(lessons_path) %>">
+            <i class="bx bx-calendar-event"></i>
+            <span>Planejamento</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= activities_path %>" class="sidebar-link <%= 'active' if current_page?(activities_path) %>">
+            <i class="bx bx-task"></i>
+            <span>Atividades</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= student_points_path %>" class="sidebar-link <%= 'active' if controller_name == 'student_points' %>">
+            <i class="bx bx-trending-up icon-points"></i>
+            <span>Mapa de Pontuação</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= courses_path %>" class="sidebar-link <%= 'active' if current_page?(courses_path) %>">
+            <i class="bx bx-book-bookmark"></i>
+            <span>Cursos</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= classrooms_path %>" class="sidebar-link <%= 'active' if current_page?(classrooms_path) %>">
+            <i class="bx bx-group"></i>
+            <span>Turmas</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= teachers_path %>" class="sidebar-link <%= 'active' if controller_name == 'teachers' %>">
+            <i class="bx bx-id-card"></i>
+            <span>Corpo Docente</span>
+          </a>
+        </li>
+
+        <li class="sidebar-item">
+          <a href="<%= students_path %>" class="sidebar-link <%= 'active' if current_page?(students_path) %>">
+            <i class="bx bx-user-check"></i>
+            <span>Frequência</span>
+          </a>
+        </li>
+
+        <% if professor_signed_in? && current_professor&.admin? %>
+          <li class="sidebar-header pt-4 px-4 small text-uppercase fw-bold text-white-50" style="font-size: 0.65rem;">Gestão Superior</li>
+          <li class="sidebar-item">
+            <a href="<%= academic_settings_path %>" class="sidebar-link <%= 'active' if current_page?(academic_settings_path) %>">
+              <i class="bx bx-cog text-warning"></i>
+              <span>Configurações Acad.</span>
+            </a>
+          </li>
+        <% end %>
+      </ul>
+
+      <div class="sidebar-footer">
+        <% if professor_signed_in? %>
+          <%= link_to destroy_professor_session_path, data: { turbo_method: :delete }, class: "sidebar-link text-danger border-0 bg-transparent w-100 text-start" do %>
+            <i class="bx bx-log-out"></i>
+            <span>Sair do Sistema</span>
+          <% end %>
+        <% end %>
+      </div>
+    </aside>
+
+    <div class="main">
+      <nav class="navbar navbar-expand px-4 py-3">
+        <form action="#" class="d-none d-sm-inline-block">
+          <div class="input-group input-group-navbar border rounded-pill px-2">
+            <input type="text" class="form-control border-0 bg-transparent" placeholder="Pesquisar no Maestro..." aria-label="Search">
+            <button class="btn border-0" type="button">
+              <i class="bx bx-search-alt"></i>
+            </button>
+          </div>
+        </form>
+        <div class="navbar-collapse collapse">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item dropdown">
+              <% if professor_signed_in? %>
+                <a href="#" data-bs-toggle="dropdown" class="nav-icon pe-md-0 d-flex align-items-center text-decoration-none">
+                  <div class="text-end me-2 d-none d-md-block">
+                    <span class="d-block text-dark fw-bold" style="line-height: 1;"><%= current_professor&.email&.split('@')&.first&.capitalize %></span>
+                    <% if current_professor&.admin? %>
+                      <small class="text-purple fw-bold" style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px;">Admin Master</small>
+                    <% end %>
+                  </div>
+                  <i class="bx bxs-user-circle user-icon-custom" style="font-size: 35px;"></i>
+                </a>
+                
+                <div class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow mt-3">
+                  <div class="dropdown-header text-center">
+                    <strong><%= current_professor&.email %></strong>
+                  </div>
+                  <div class="dropdown-divider"></div>
+                  <a href="#" class="dropdown-item"><i class="bx bx-user me-2"></i>Meu Perfil</a>
+                  
+                  <% if current_professor&.admin? %>
+                    <div class="dropdown-divider"></div>
+                    <a href="<%= academic_settings_path %>" class="dropdown-item text-purple fw-bold">
+                      <i class="bx bx-cog me-2"></i>Painel do Admin
+                    </a>
+                  <% end %>
+                  
+                  <div class="dropdown-divider"></div>
+                  <%= link_to destroy_professor_session_path, data: { turbo_method: :delete }, class: "dropdown-item text-danger" do %>
+                    <i class="bx bx-log-out-circle me-2"></i><span>Sair</span>
+                  <% end %>
+                </div>
+              <% else %>
+                <%= link_to "Entrar", new_professor_session_path, class: "btn btn-sm btn-purple px-4 rounded-pill text-white" %>
+              <% end %>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <main class="content px-3 py-4">
+        <div class="container-fluid">
+          <%= yield %>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    /* Lógica do Modal de Boas-vindas */
+    function closeWelcomeModal() {
+      const modal = document.getElementById('welcomeModal');
+      if (modal) {
+        modal.style.transition = 'opacity 0.4s ease';
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 400);
+      }
+    }
+
+    function setupSidebar() {
+      const btn = document.querySelector(".toggle-btn");
+      const sidebar = document.querySelector("#sidebar");
+      const icon = document.querySelector("#icon");
+      
+      if (btn && sidebar) {
+        btn.addEventListener("click", function(e) {
+          e.preventDefault();
+          sidebar.classList.toggle("expand");
+          if (icon) {
+            icon.className = sidebar.classList.contains("expand") ? "bx bx-chevrons-left" : "bx bx-chevrons-right";
+          }
+        });
+      }
+    }
+
+    function setupFlashMessages() {
+      const messages = document.querySelectorAll('.flash-message');
+      messages.forEach(msg => {
+        setTimeout(() => {
+          msg.classList.add('flash-exit');
+          setTimeout(() => msg.remove(), 500);
+        }, 4000);
+      });
+    }
+
+    document.addEventListener("turbo:load", () => {
+      setupSidebar();
+      setupFlashMessages();
+    });
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      setupSidebar();
+      setupFlashMessages();
+    });
+  </script>
+</body>
+</html>

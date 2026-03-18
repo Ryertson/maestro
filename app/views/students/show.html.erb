@@ -1,0 +1,223 @@
+<div class="container-fluid py-4" style="background-color: #f8f9fa; min-height: 100vh;">
+  
+  <%# --- CABEÇALHO E NAVEGAÇÃO --- %>
+  <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><%= link_to "Turmas", classrooms_path, class: "text-decoration-none" %></li>
+          <li class="breadcrumb-item active"><%= @student.classroom&.display_name %></li>
+        </ol>
+      </nav>
+      <h2 class="fw-bold text-dark d-flex align-items-center mb-0">
+        <i class="bx bx-user-circle text-primary me-2"></i> <%= @student.name %>
+      </h2>
+      <p class="text-muted small mb-0">Ficha de acompanhamento individual e histórico de notas.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <%= link_to edit_student_path(@student), class: "btn btn-white border shadow-sm rounded-pill px-3 fw-bold btn-sm" do %>
+        <i class="bx bx-edit-alt"></i> Editar
+      <% end %>
+      <%= link_to "Voltar", :back, class: "btn btn-light border shadow-sm rounded-pill px-3 fw-bold btn-sm" %>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <%# --- COLUNA DA ESQUERDA: RESUMO E FREQUÊNCIA --- %>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 text-center">
+          <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+            <i class="bx bx-user text-primary" style="font-size: 2.5rem;"></i>
+          </div>
+          <h5 class="fw-bold mb-1"><%= @student.name %></h5>
+          <span class="badge bg-light text-dark border rounded-pill px-3 mb-3"><%= @student.classroom&.display_name %></span>
+          
+          <hr class="my-4 opacity-50">
+          
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="p-3 border rounded-3 bg-light">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Total de Atividades</small>
+                <span class="h4 fw-bold mb-0"><%= @activities.count %></span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded-3 bg-primary bg-opacity-10">
+                <small class="text-primary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Pontos Acumulados</small>
+                <span class="h4 fw-bold text-primary mb-0"><%= @student.student_activities.sum(:points) %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# --- MONITOR DE FREQUÊNCIA CORRIGIDO --- %>
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0">Frequência Geral</h6>
+            <% status_freq = @percentual_presenca >= 75 ? 'success' : 'danger' %>
+            <span class="badge bg-<%= status_freq %>-subtle text-<%= status_freq %> border border-<%= status_freq %>-subtle rounded-pill px-2">
+              <%= @percentual_presenca %>% Presença
+            </span>
+          </div>
+          
+          <div class="row align-items-center">
+            <div class="col-5">
+              <div style="position: relative; height: 100px; width: 100%;">
+                <canvas id="attendanceDonutChart"></canvas>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="d-flex flex-column gap-2">
+                <div class="p-2 rounded-3 bg-light border-start border-success border-3">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">Presenças</small>
+                  <span class="fw-bold text-success"><%= @total_aulas - @faltas_count %></span> 
+                  <small class="text-muted">aulas</small>
+                </div>
+                <div class="p-2 rounded-3 bg-light border-start border-danger border-3">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">Faltas</small>
+                  <span class="fw-bold text-danger"><%= @faltas_count %></span>
+                  <small class="text-muted">faltas</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <small class="text-muted" style="font-size: 0.75rem;">
+              <i class="bx bx-info-circle"></i> Baseado em <strong><%= @total_aulas %></strong> aulas totais.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <%# BOTÃO DE EXCLUIR %>
+      <div class="card border-0 shadow-sm rounded-4 border-start border-danger border-4">
+        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+          <span class="small text-muted">Zona Crítica</span>
+          <%= button_to @student, method: :delete, data: { confirm: "Tem certeza que deseja excluir este aluno?" }, class: "btn btn-outline-danger btn-sm rounded-pill border-0" do %>
+            <i class="bx bx-trash"></i> Excluir Aluno
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# --- COLUNA DA DIREITA: TABELA --- %>
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 pt-4 ps-4">
+          <h5 class="fw-bold mb-0">Desempenho em Atividades</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-4 py-3 small text-uppercase text-muted">Atividade</th>
+                  <th class="small text-uppercase text-muted">Data</th>
+                  <th class="text-center small text-uppercase text-muted">Status</th>
+                  <th class="text-end pe-4 small text-uppercase text-muted">Nota / Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @activities.any? %>
+                  <% @activities.each do |activity| %>
+                    <% submission = @submissions[activity.id] %>
+                    <tr>
+                      <td class="ps-4">
+                        <span class="fw-bold text-dark"><%= activity.name %></span>
+                        <div class="small text-muted"><%= activity.activity_type %></div>
+                      </td>
+                      <td class="small"><%= activity.date&.strftime("%d/%m/%Y") %></td>
+                      <td class="text-center">
+                        <% if submission %>
+                          <% status_color = case submission.status
+                             when 'Entregue' then 'success'
+                             when 'Entregue com Atraso' then 'warning'
+                             when 'Não Entregue' then 'danger'
+                             else 'secondary'
+                             end %>
+                          <span class="badge bg-<%= status_color %>-subtle text-<%= status_color %> border border-<%= status_color %>-subtle rounded-pill px-3">
+                            <%= submission.status %>
+                          </span>
+                        <% else %>
+                          <span class="badge bg-light text-muted border rounded-pill px-3">Pendente</span>
+                        <% end %>
+                      </td>
+                      <td class="text-end pe-4 fw-bold">
+                        <% if submission&.points %>
+                          <span class="text-primary"><%= submission.points %></span>
+                        <% else %>
+                          <span class="text-muted">--</span>
+                        <% end %>
+                        <span class="text-muted small fw-normal">/ <%= activity.points %></span>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% else %>
+                  <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                      <i class="bx bx-info-circle fs-4 d-block mb-2"></i>
+                      Nenhuma atividade vinculada a esta turma ainda.
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Função para carregar o gráfico
+  function renderStudentChart() {
+    const ctx = document.getElementById('attendanceDonutChart');
+    if (!ctx) return;
+
+    // Destruir se já existir para evitar duplicidade
+    if (window.myStudentChart) { window.myStudentChart.destroy(); }
+
+    window.myStudentChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Presença', 'Faltas'],
+        datasets: [{
+          data: [<%= @percentual_presenca %>, <%= @percentual_faltas %>],
+          backgroundColor: ['#198754', '#dc3545'],
+          borderWidth: 0,
+          borderRadius: 2
+        }]
+      },
+      options: {
+        cutout: '75%',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        }
+      }
+    });
+  }
+
+  // Executa no carregamento inicial e em navegações Turbo
+  document.addEventListener("turbo:load", renderStudentChart);
+  // Fallback para garantir que renderize se o evento turbo falhar
+  document.addEventListener("DOMContentLoaded", renderStudentChart);
+</script>
+
+<style>
+  .btn-white { background: #fff; color: #333; }
+  .btn-white:hover { background: #f8f9fa; color: #000; }
+  .table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.02); }
+  .bg-success-subtle { background-color: #d1e7dd; }
+  .bg-danger-subtle { background-color: #f8d7da; }
+  .text-success { color: #0f5132 !important; }
+  .text-danger { color: #842029 !important; }
+  .rounded-4 { border-radius: 1rem !important; }
+</style>

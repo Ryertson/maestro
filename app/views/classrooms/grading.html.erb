@@ -1,0 +1,294 @@
+<div class="container-fluid py-4">
+  <%# --- CABEÇALHO --- %>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><%= link_to "Turmas", classrooms_path, class: "text-decoration-none" %></li>
+          <li class="breadcrumb-item active">
+            <%= @classroom&.grade&.name %> <%= @classroom&.section&.name %>
+          </li>
+        </ol>
+      </nav>
+      <h2 class="fw-bold text-dark mb-0">
+        <i class="bx bx-edit-alt text-primary me-2"></i>Lançamento de Notas
+      </h2>
+      
+      <div class="mt-2 d-flex align-items-center">
+        <span class="text-muted small me-2">Disciplina:</span>
+        <% 
+          # LÓGICA ATUALIZADA: Prioriza a disciplina do professor logado vinda do controller
+          current_subject = @current_subject 
+          if current_subject.nil? && @my_subjects&.any?
+            current_subject = params[:subject_id].present? ? @my_subjects.find { |s| s.id.to_s == params[:subject_id] } : @my_subjects.first
+            current_subject ||= @my_subjects.first
+          end
+        %>
+
+        <% if (@my_subjects || []).size > 1 %>
+          <div class="dropdown d-inline-block">
+            <button class="btn btn-sm btn-outline-primary dropdown-toggle fw-bold rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+              <%= current_subject&.name || "Selecionar Disciplina" %>
+            </button>
+            <ul class="dropdown-menu shadow border-0 rounded-3">
+              <% @my_subjects.each do |subject| %>
+                <li>
+                  <%= link_to subject.name, request.params.merge(subject_id: subject.id), class: "dropdown-item #{'active' if subject == current_subject}" %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% else %>
+          <strong class="text-primary"><%= current_subject&.name || "Geral (Não vinculada)" %></strong>
+        <% end %>
+        <span class="mx-2 text-muted">|</span>
+        <span class="text-muted small">Turma: <strong><%= @classroom.grade.name %> <%= @classroom.section.name %></strong></span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <%= link_to classroom_path(@classroom), class: "btn btn-light rounded-pill px-4 border shadow-sm" do %>
+        <i class="bx bx-arrow-back me-1"></i> Voltar
+      <% end %>
+    </div>
+  </div>
+
+  <% if @my_subjects.blank? && current_subject.nil? %>
+    <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
+      <i class="bx bx-error me-2"></i> <strong>Atenção:</strong> Nenhuma disciplina encontrada. Vincule disciplinas a este curso ou ao professor para habilitar o lançamento.
+    </div>
+  <% end %>
+
+  <%# --- TABELA DE NOTAS --- %>
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="grading-table">
+        <thead class="bg-light">
+          <tr>
+            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted" style="width: 350px;">Estudante</th>
+            <% 4.times do |i| %>
+              <th class="text-center text-uppercase small fw-bold text-muted">Bimestre <%= i + 1 %></th>
+            <% end %>
+            <th class="text-center text-uppercase small fw-bold text-muted">Média Final</th>
+            <th class="pe-4 text-end text-uppercase small fw-bold text-muted">Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (@students || []).each do |student| %>
+            <tr class="student-row" data-student-id="<%= student.id %>">
+              <td class="ps-4">
+                <div class="d-flex align-items-center">
+                  <div class="avatar-circle me-3 bg-primary text-white fw-bold">
+                    <%= student.name.first %>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark"><%= student.name.upcase %></div>
+                    <div class="text-muted small">RA: <%= student.try(:registration_number) || "2026-#{student.id}" %></div>
+                  </div>
+                </div>
+              </td>
+              
+              <% 4.times do |i| %>
+                <% period = i + 1 %>
+                <% 
+                   # 1. Tenta buscar a nota manual gravada na tabela Grades
+                   current_grade = @grades.find { |g| g.student_id == student.id && g.period == period && g.subject_id == current_subject&.id } 
+                   
+                   # 2. Lógica de Proteção: Busca do Mapa de Pontos filtrando por Período e Categoria
+                   val_to_display = current_grade&.value
+                   if val_to_display.nil? && current_subject.present?
+                     # Chamamos o método no student.rb
+                     calculated_avg = student.average_for(@classroom.id, current_subject&.id, period) rescue nil
+                     
+                     # PROTEÇÃO CONTRA ERRO DE COMPARAÇÃO: Verificamos se é um número antes de comparar
+                     if calculated_avg.is_a?(Numeric) && calculated_avg >= 0
+                       val_to_display = calculated_avg
+                     end
+                   end
+                %>
+                <td class="text-center px-2">
+                  <input type="number" step="0.1" min="0" max="10" 
+                         class="form-control form-control-sm text-center mx-auto border-light-subtle rounded-3 grade-input" 
+                         style="width: 75px; height: 38px; font-weight: 500;" 
+                         placeholder="-"
+                         data-period="<%= period %>"
+                         data-student-id="<%= student.id %>"
+                         data-classroom-id="<%= @classroom.id %>"
+                         data-subject-id="<%= current_subject&.id %>"
+                         value="<%= val_to_display %>"
+                         <%= 'disabled' if current_subject.nil? %>>
+                </td>
+              <% end %>
+
+              <td class="text-center">
+                <span class="fw-bold fs-5 final-avg text-muted">--</span>
+              </td>
+
+              <td class="pe-4 text-end">
+                <span class="badge status-badge bg-light text-muted border rounded-pill px-3">Pendente</span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-circle {
+    width: 35px; height: 35px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+  }
+  .student-row:hover { background-color: #fbfcfe !important; }
+  .grade-input { transition: all 0.2s; }
+  .grade-input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    background-color: #fff;
+    transform: scale(1.05);
+    z-index: 10;
+  }
+  .saving { border-color: #ffc107 !important; background-color: #fffef0; }
+  .saved { border-color: #198754 !important; background-color: #f0fff4; animation: pulse-green 1s; }
+  .save-error { border-color: #dc3545 !important; background-color: #fff5f5; }
+  
+  @keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+  }
+</style>
+
+<script>
+document.addEventListener('turbo:load', () => {
+  const rows = document.querySelectorAll('.student-row');
+  const table = document.getElementById('grading-table');
+
+  if (table) {
+    table.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      if (!active.classList.contains('grade-input')) return;
+
+      const currentTD = active.closest('td');
+      const currentTR = active.closest('tr');
+      const colIndex = Array.from(currentTR.children).indexOf(currentTD);
+
+      switch(e.key) {
+        case 'ArrowRight':
+          const nextInput = currentTD.nextElementSibling?.querySelector('input');
+          if (nextInput) nextInput.focus();
+          break;
+        case 'ArrowLeft':
+          const prevInput = currentTD.previousElementSibling?.querySelector('input');
+          if (prevInput) prevInput.focus();
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          const downInput = currentTR.nextElementSibling?.children[colIndex]?.querySelector('input');
+          if (downInput) downInput.focus();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          const upInput = currentTR.previousElementSibling?.children[colIndex]?.querySelector('input');
+          if (upInput) upInput.focus();
+          break;
+      }
+    });
+  }
+
+  const updateUI = (row) => {
+    const inputs = row.querySelectorAll('.grade-input');
+    const avgDisplay = row.querySelector('.final-avg');
+    const statusBadge = row.querySelector('.status-badge');
+    
+    let sum = 0;
+    let count = 0;
+
+    inputs.forEach(input => {
+      let val = parseFloat(input.value);
+      if (!isNaN(val)) {
+        sum += val;
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      // Média aritmética simples dos 4 bimestres para a média final da linha
+      const average = (sum / 4).toFixed(1); 
+      avgDisplay.innerText = average.replace('.', ',');
+      
+      statusBadge.className = 'badge status-badge border rounded-pill px-3';
+      
+      if (parseFloat(average) >= 6.0) {
+        avgDisplay.className = 'fw-bold fs-5 final-avg text-success';
+        statusBadge.innerText = 'Aprovado';
+        statusBadge.classList.add('bg-success', 'text-white');
+      } else {
+        avgDisplay.className = 'fw-bold fs-5 final-avg text-danger';
+        statusBadge.innerText = 'Reprovado';
+        statusBadge.classList.add('bg-danger', 'text-white');
+      }
+    } else {
+      avgDisplay.innerText = '--';
+      avgDisplay.className = 'fw-bold fs-5 final-avg text-muted';
+      statusBadge.innerText = 'Pendente';
+      statusBadge.className = 'badge status-badge bg-light text-muted border rounded-pill px-3';
+    }
+  };
+
+  const performSave = (input) => {
+    const subjectId = input.dataset.subjectId;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    if (!subjectId || subjectId === "" || subjectId === "null") {
+      input.classList.add('save-error');
+      return;
+    }
+
+    input.classList.remove('saved', 'save-error');
+    input.classList.add('saving');
+
+    const payload = {
+      grade: {
+        student_id: input.dataset.studentId,
+        period: input.dataset.period,
+        classroom_id: input.dataset.classroomId,
+        subject_id: subjectId,
+        value: input.value
+      }
+    };
+
+    fetch('/grades', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(json => {
+      input.classList.remove('saving');
+      if (json.id || json.status === 'success') {
+        input.classList.add('saved');
+        setTimeout(() => input.classList.remove('saved'), 2000);
+      } else {
+        input.classList.add('save-error');
+      }
+    })
+    .catch(() => {
+      input.classList.remove('saving');
+      input.classList.add('save-error');
+    });
+  };
+
+  rows.forEach(row => {
+    updateUI(row);
+    row.querySelectorAll('.grade-input').forEach(input => {
+      input.addEventListener('input', () => updateUI(row));
+      input.addEventListener('change', () => performSave(input));
+    });
+  });
+});
+</script>

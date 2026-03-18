@@ -1,0 +1,176 @@
+<% if notice %>
+  <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> <%= notice %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% end %>
+
+<% content_for :title, "Corpo Docente | Maestro" %>
+
+<div class="container-fluid py-4">
+  <%# --- CABEÇALHO --- %>
+  <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+    <div>
+      <h1 class="fw-bold text-dark mb-0" style="letter-spacing: -1px; font-family: 'Inter', sans-serif;">Corpo Docente</h1>
+      <p class="text-muted small mb-0">Gestão de professores e atribuições de aulas</p>
+    </div>
+    <%= link_to new_teacher_path, class: "btn btn-primary rounded-pill px-4 shadow-sm fw-bold" do %>
+      <i class="bi bi-person-plus-fill me-2"></i> Novo Professor
+    <% end %>
+  </div>
+
+  <%# --- CARDS DE RESUMO GERAL --- %>
+  <div class="row g-3 mb-5">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-primary-subtle text-primary rounded-3 p-3 me-3">
+            <i class="bi bi-people-fill fs-4"></i>
+          </div>
+          <div>
+            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Total de Professores</small>
+            <h4 class="fw-bold mb-0"><%= @teachers.count %></h4>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-success-subtle text-success rounded-3 p-3 me-3">
+            <i class="bi bi-journal-check fs-4"></i>
+          </div>
+          <div>
+            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Turmas Atendidas</small>
+            <h4 class="fw-bold mb-0">
+              <%= Classroom.joins(:classroom_subjects).where.not(classroom_subjects: { teacher_id: nil }).distinct.count %>
+            </h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# --- GRID DE PROFESSORES --- %>
+  <div class="row g-4">
+    <% if @teachers.any? %>
+      <% @teachers.each do |teacher| %>
+        <div class="col-md-6 col-xl-4">
+          <div class="card border-0 shadow-sm rounded-4 h-100 teacher-card">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-start justify-content-between mb-3">
+                <div class="avatar-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm">
+                  <%= teacher.initials %>
+                </div>
+                <div class="dropdown">
+                  <button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                    <li><%= link_to edit_teacher_path(teacher), class: 'dropdown-item' do %>
+                      <i class="bi bi-pencil me-2"></i> Editar Perfil
+                    <% end %></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><%= button_to teacher, method: :delete, data: { turbo_confirm: 'Excluir registro do professor?' }, class: 'dropdown-item text-danger' do %>
+                      <i class="bi bi-trash me-2"></i> Remover
+                    <% end %></li>
+                  </ul>
+                </div>
+              </div>
+
+              <h5 class="fw-bold text-dark mb-1"><%= teacher.name %></h5>
+              <p class="text-muted small mb-3"><i class="bi bi-envelope me-1"></i> <%= teacher.email %></p>
+
+              <%# --- NOVO: VÍNCULO DE LOGIN (ACESSO AO SISTEMA) --- %>
+              <div class="mb-3">
+                <label class="small text-muted text-uppercase fw-bold d-block mb-2" style="font-size: 0.6rem;">Acesso ao Sistema</label>
+                <% if teacher.professor.present? %>
+                  <div class="d-flex align-items-center justify-content-between bg-purple-subtle p-2 rounded-3 border border-purple-light">
+                    <small class="text-purple fw-bold overflow-hidden text-nowrap" style="text-overflow: ellipsis; max-width: 180px;">
+                      <i class="bi bi-person-check-fill me-1"></i><%= teacher.professor.email %>
+                    </small>
+                    
+                    <%# Usando link_to com turbo_method: :get para garantir que a nova rota funcione imediatamente %>
+                    <%= link_to unlink_login_teacher_path(teacher), 
+                                data: { turbo_confirm: "Tem certeza que deseja desvincular o login de #{teacher.name}?" }, 
+                                class: "btn btn-link btn-sm text-danger p-0 ms-2 text-decoration-none" do %>
+                      <i class="bi bi-x-circle-fill"></i>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <%= form_with(model: teacher, url: link_login_teacher_path(teacher), method: :patch, local: true) do |f| %>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-link-45deg"></i></span>
+                      <%= f.collection_select :professor_id, 
+                          Professor.where.not(id: Teacher.where.not(professor_id: nil).pluck(:professor_id)), 
+                          :id, :email, 
+                          { prompt: "Vincular login..." }, 
+                          { class: "form-select border-start-0 shadow-none", style: "font-size: 0.75rem;", onchange: "this.form.submit()" } %>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+
+              <%# --- INFO DE TURMAS --- %>
+              <div class="bg-light rounded-4 p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Turmas Alocadas</span>
+                  <span class="badge bg-white text-dark border-light-subtle border small px-2 rounded-pill shadow-xs">
+                    <%= teacher.classrooms.count %>
+                  </span>
+                </div>
+                <div class="d-flex flex-wrap gap-1">
+                  <% if teacher.classroom_subjects.any? %>
+                    <% teacher.classroom_subjects.includes(:classroom, :subject).each do |cs| %>
+                      <span class="badge bg-primary-subtle text-primary border-0 fw-semibold" style="font-size: 0.65rem;" title="<%= cs.subject.name %>">
+                        <i class="bi bi-people me-1"></i>
+                        <%= cs.classroom.display_name %>: <%= cs.subject.name %>
+                      </span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted fst-italic" style="font-size: 0.7rem;">Nenhuma turma vinculada</span>
+                  <% end %>
+                </div>
+              </div>
+
+              <%# --- BOTÕES DE AÇÃO --- %>
+              <div class="d-flex gap-2">
+                <%= link_to teacher_path(teacher), class: "btn btn-outline-dark flex-grow-1 rounded-pill fw-bold btn-sm py-2" do %>
+                  Perfil
+                <% end %>
+
+                <%= link_to lessons_path(teacher_id: teacher.id), class: "btn btn-primary flex-grow-1 rounded-pill fw-bold btn-sm py-2" do %>
+                  <i class="bi bi-calendar-event me-1"></i> Aulas
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="col-12 text-center py-5">
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+          <i class="bi bi-person-badge text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">Nenhum professor cadastrado ainda.</h5>
+          <div class="mt-3">
+            <%= link_to "Começar Cadastro", new_teacher_path, class: "btn btn-primary rounded-pill px-4 shadow-sm fw-bold" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .teacher-card { transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.05) !important; }
+  .teacher-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important; }
+  .avatar-circle { width: 52px; height: 52px; border-radius: 16px; }
+  .icon-shape { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+  .dropdown-menu { border-radius: 12px; padding: 0.5rem; }
+  .dropdown-item { border-radius: 8px; font-size: 0.85rem; }
+  .bg-primary-subtle { background-color: #e7f1ff !important; color: #0d6efd !important; }
+  .bg-purple-subtle { background-color: #f3e8ff !important; }
+  .text-purple { color: #6b21a8 !important; }
+  .border-purple-light { border-color: #d8b4fe !important; }
+  .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+</style>

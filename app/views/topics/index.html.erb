@@ -1,0 +1,74 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Topics" %>
+
+<h1>Topics</h1>
+
+<div id="topics">
+  <% @topics.each do |topic| %>
+    <%= render topic %>
+    <p>
+      <%= link_to "Show this topic", topic %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New topic", new_topic_path %>
+
+<h2 class="fw-bold mb-4">Agenda Semanal</h2>
+
+<div class="row g-3 mb-5">
+  <% ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"].each_with_index do |dia, index| %>
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0" style="background-color: rgba(59, 125, 221, 0.1); border-radius: 15px;">
+        <div class="card-header bg-transparent border-0 text-center fw-bold text-primary">
+          <%= dia %>
+        </div>
+        <div class="card-body p-2">
+          <% # Filtra os tópicos do dia atual (index + 1) %>
+          <% @topics.where(day_of_week: index + 1).order(:schedule).each do |topic| %>
+            <div class="p-2 mb-2 bg-white rounded shadow-sm" style="font-size: 0.85rem;">
+              <div class="fw-bold text-dark"><%= topic.title %></div>
+              <div class="text-muted">
+                <%= topic.schedule %>º horário - 
+                <%= ["", "07:30", "08:20", "09:30", "10:20", "11:10", "13:20", "14:10", "15:20", "16:10"][topic.schedule] %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<hr>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="fw-bold">Todos os Tópicos</h2>
+  <%= link_to "Novo Tópico", new_topic_path, class: "btn btn-primary rounded-pill" %>
+</div>
+
+<div class="card shadow border-0">
+  <div class="card-body">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tópico</th>
+          <th>Dia</th>
+          <th>Horário</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @topics.each do |topic| %>
+          <tr>
+            <td><%= topic.title %></td>
+            <td><%= ["", "Segunda", "Terça", "Quarta", "Quinta", "Sexta"][topic.day_of_week] %></td>
+            <td><%= topic.schedule %>º horário</td>
+            <td><%= link_to 'Editar', edit_topic_path(topic), class: "btn btn-sm btn-outline-secondary" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

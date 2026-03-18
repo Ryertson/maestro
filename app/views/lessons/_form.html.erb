@@ -1,0 +1,175 @@
+<%= form_with(model: lesson, class: "row g-4") do |form| %>
+
+  <% if lesson.errors.any? %>
+    <div class="alert alert-danger">
+      <h6 class="fw-bold mb-2">
+        <%= pluralize(lesson.errors.count, "erro") %> impediram o salvamento:
+      </h6>
+      <ul class="mb-0">
+        <% lesson.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# --- Campos da Aula --- %>
+  <div class="col-md-4">
+    <%= form.label :status, "Status da Aula", class: "form-label fw-semibold" %>
+    <%= form.select :status, 
+        Lesson.statuses.keys.map { |s| [s.titleize, s] }, 
+        { prompt: "Selecione o Status" }, 
+        { class: "form-select shadow-sm" } %>
+  </div>
+
+  <div class="col-md-2">
+    <%= form.label :week, "Semana", class: "form-label fw-semibold" %>
+    <%= form.number_field :week, class: "form-control shadow-sm" %>
+  </div>
+
+  <div class="col-md-6">
+    <%= form.label :date, "Data da Aula", class: "form-label fw-semibold" %>
+    <%= form.date_field :date, class: "form-control shadow-sm", id: "lesson_date_field" %>
+  </div>
+
+  <div class="col-md-6">
+    <%= form.label :classroom_id, "Vincular à Turma", class: "form-label fw-semibold" %>
+    <%= form.collection_select :classroom_id, 
+          @available_classrooms, :id, :full_name_info, 
+          { prompt: "Escolha a Turma..." }, 
+          { class: "form-select shadow-sm", id: "select-classroom" } %>
+  </div>
+
+  <div class="col-md-6">
+    <%= form.label :subject_id, "Disciplina / Matéria", class: "form-label fw-semibold" %>
+    <%= form.collection_select :subject_id, 
+          @available_subjects, :id, :name, 
+          { prompt: "Escolha a Disciplina..." }, 
+          { class: "form-select shadow-sm", id: "select-subject" } %>
+  </div>
+
+  <div class="col-12">
+    <%= form.label :topic_name, "Assunto da Aula (Tópico)", class: "form-label fw-semibold" %>
+    <%= form.text_field :topic_name, 
+          class: "form-control shadow-sm", 
+          placeholder: "Ex: Classificação do Carbono",
+          id: "lesson_topic_field" %>
+  </div>
+
+  <%# --- Interruptor de Atividade --- %>
+  <div class="col-12">
+    <div class="form-check form-switch mt-2">
+      <%= form.check_box :has_activity, 
+            class: "form-check-input js-activity-toggle", 
+            id: "check-has-activity" %>
+      <%= form.label :has_activity, "Criar atividade vinculada para esta aula?", 
+            class: "form-check-label fw-bold text-primary" %>
+    </div>
+  </div>
+
+  <%# --- Seção Dinâmica da Atividade (ATUALIZADA) --- %>
+  <div id="activity-section" class="col-12 border rounded p-4 shadow-sm" style="display: none; background-color: #f8f9fa; border-left: 5px solid #0d6efd !important;">
+    <h6 class="mb-3 text-primary text-uppercase fw-bold" style="font-size: 0.8rem;">
+      <i class="bi bi-pencil-square me-1"></i> Configuração da Atividade Obrigatória
+    </h6>
+    
+    <%= form.fields_for :activities, (lesson.activities.first || lesson.activities.build) do |a| %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <%= a.label :name, "Nome da Atividade", class: "form-label fw-semibold" %>
+          <%= a.text_field :name, class: "form-control", id: "activity_name_field" %>
+        </div>
+
+        <div class="col-md-3">
+          <%= a.label :activity_type, "Tipo", class: "form-label fw-semibold" %>
+          <%= a.select :activity_type, 
+              ["Avaliação", "Trabalho", "Visto", "Redação", "Relatório Experimental", "Relatório", "Apresentação", "Apresentação em Grupo", "Lista de Exercícios", "Avaliação Parcial", "Avaliação Global"], 
+              { prompt: "Selecione..." }, 
+              { class: "form-select", id: "activity_type_field" } %>
+        </div>
+
+        <div class="col-md-3">
+          <%= a.label :points, "Pontuação", class: "form-label fw-semibold" %>
+          <%= a.number_field :points, step: 0.1, class: "form-control", value: 10.0 %>
+        </div>
+
+        <%# ADICIONADO: Campo de Data de Entrega para a Inteligência de Prazos %>
+        <div class="col-md-6">
+          <%= a.label :due_date, "Data Limite de Entrega", class: "form-label fw-semibold text-danger" %>
+          <%= a.date_field :due_date, class: "form-control border-danger shadow-sm", id: "activity_due_date_field" %>
+          <small class="text-muted">Essa data define a urgência (ampulheta) no portal do aluno.</small>
+        </div>
+
+        <%# Campos ocultos para sincronizar dados da aula com a atividade %>
+        <%= a.hidden_field :date, id: "activity_date_hidden" %>
+        <%= a.hidden_field :subject_id, id: "activity_subject_hidden" %>
+        <%= a.hidden_field :classroom_id, id: "activity_classroom_hidden" %>
+        <%= a.hidden_field :status, value: "pendente" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="col-12 text-end mt-4">
+    <%= link_to "Cancelar", lessons_path, class: "btn btn-light border me-2" %>
+    <%= form.submit lesson.new_record? ? "Cadastrar Aula e Atividade" : "Salvar Alterações", 
+          class: "btn btn-primary px-4 py-2 shadow-sm fw-bold" %>
+  </div>
+
+<% end %>
+
+<script>
+  function setupActivityUI() {
+    const checkbox = document.querySelector('.js-activity-toggle');
+    const section = document.getElementById('activity-section');
+    const topicField = document.getElementById('lesson_topic_field');
+    const dateField = document.getElementById('lesson_date_field');
+    const classroomSelect = document.getElementById('select-classroom');
+    const subjectSelect = document.getElementById('select-subject');
+    
+    const actNameField = document.getElementById('activity_name_field');
+    const actDueDateField = document.getElementById('activity_due_date_field'); // Novo
+    const actDateHidden = document.getElementById('activity_date_hidden');
+    const actClassroomHidden = document.getElementById('activity_classroom_hidden');
+    const actSubjectHidden = document.getElementById('activity_subject_hidden');
+
+    if (!checkbox || !section) return;
+
+    const syncFields = () => {
+      if (actDateHidden && dateField) actDateHidden.value = dateField.value;
+      if (actClassroomHidden && classroomSelect) actClassroomHidden.value = classroomSelect.value;
+      if (actSubjectHidden && subjectSelect) actSubjectHidden.value = subjectSelect.value;
+      
+      // Se a data de entrega estiver vazia, sugere a mesma data da aula
+      if (actDueDateField && actDueDateField.value === "" && dateField) {
+        actDueDateField.value = dateField.value;
+      }
+    };
+
+    const toggle = () => {
+      if (checkbox.checked) {
+        section.style.display = 'block';
+        section.querySelectorAll('input, select').forEach(el => el.disabled = false);
+        
+        syncFields();
+
+        if (actNameField && actNameField.value === "" && topicField) {
+          actNameField.value = "Atv: " + topicField.value;
+        }
+      } else {
+        section.style.display = 'none';
+        section.querySelectorAll('input, select').forEach(el => el.disabled = true);
+      }
+    };
+
+    checkbox.addEventListener('change', toggle);
+
+    if (dateField) dateField.addEventListener('change', syncFields);
+    if (classroomSelect) classroomSelect.addEventListener('change', syncFields);
+    if (subjectSelect) subjectSelect.addEventListener('change', syncFields);
+
+    toggle();
+  }
+
+  document.addEventListener("turbo:load", setupActivityUI);
+  document.addEventListener("DOMContentLoaded", setupActivityUI);
+</script>

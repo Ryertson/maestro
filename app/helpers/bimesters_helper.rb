@@ -1,0 +1,2 @@
+module BimestersHelper
+end

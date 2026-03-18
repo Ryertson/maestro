@@ -1,0 +1,253 @@
+<div class="login-page-container">
+  <div class="login-content-wrapper unificado">
+    
+    <%# --- 1. CARD DO PROFESSOR (ESQUERDA) --- %>
+    <div class="login-card shadow-lg border-purple">
+      <h2 class="login-title text-purple">PROFESSOR</h2>
+
+      <%= form_for(resource, as: :professor, url: professor_session_path) do |f| %>
+        <div class="input-group-neon">
+          <%= f.label :email, "E-mail Institucional", class: "neon-label" %>
+          <%= f.email_field :email, autofocus: true, placeholder: "usuario@escola.com", class: "neon-input" %>
+        </div>
+
+        <div class="input-group-neon">
+          <%= f.label :password, "Senha", class: "neon-label" %>
+          <%= f.password_field :password, placeholder: "Digite sua senha", class: "neon-input" %>
+        </div>
+
+        <div class="d-grid mt-4">
+          <%= f.submit "ACESSAR MAESTRO", class: "btn-neon-purple" %>
+        </div>
+      <% end %>
+
+      <%# Link de Cadastro para Professor %>
+      <div class="text-center mt-4 border-top border-secondary pt-3" style="border-opacity: 0.1;">
+        <span class="text-muted small">Não possui uma conta?</span><br>
+        <%= link_to "SOLICITAR ACESSO DOCENTE", new_professor_registration_path, class: "signup-link-purple" %>
+      </div>
+    </div>
+
+    <%# --- 2. SEÇÃO CENTRAL DE LOGOS --- %>
+    <div class="logos-section-central">
+      <div class="logo-box">
+        <%= image_tag "escudo_escola.png", class: "img-fluid neon-glow-white", alt: "Escudo Escola" %>
+      </div>
+      <div class="divider-vertical">
+        <span class="divider-text">OU</span>
+      </div>
+      <div class="logo-box">
+        <%= image_tag "logo_maestro.png", class: "img-fluid neon-glow-blue", alt: "Logo Maestro" %>
+      </div>
+    </div>
+
+    <%# --- 3. CARD DO ALUNO (DIREITA) --- %>
+    <div class="login-card shadow-lg border-blue">
+      <h2 class="login-title text-blue">ALUNO</h2>
+
+      <%= form_for(StudentUser.new, as: :student_user, url: student_user_session_path) do |f| %>
+        <div class="input-group-neon">
+          <%= f.label :email, "E-mail do Aluno", class: "neon-label" %>
+          <%= f.email_field :email, placeholder: "aluno@escola.com", class: "neon-input" %>
+        </div>
+
+        <div class="input-group-neon">
+          <%= f.label :password, "Senha", class: "neon-label" %>
+          <%= f.password_field :password, placeholder: "Sua senha de acesso", class: "neon-input" %>
+        </div>
+
+        <div class="d-grid mt-4">
+          <%= f.submit "ENTRAR NO PORTAL", class: "btn-neon-blue" %>
+        </div>
+      <% end %>
+
+      <%# Link de Cadastro para Aluno %>
+      <div class="text-center mt-4 border-top border-secondary pt-3" style="border-opacity: 0.1;">
+        <span class="text-muted small">Primeiro acesso ao portal?</span><br>
+        <%= link_to "CRIAR MEU LOGIN DE ALUNO", new_student_user_registration_path, class: "signup-link-blue" %>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  /* Fundo da Página Estilo Deep Dark */
+  .login-page-container {
+    background-color: #0d1117;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .login-content-wrapper.unificado {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  /* Seção das Logos Centralizada */
+  .logos-section-central {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-width: 200px;
+  }
+
+  .logo-box img {
+    max-height: 120px;
+    object-fit: contain;
+  }
+
+  .divider-vertical {
+    height: 100px;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, #00f3ff, #6f42c1, transparent);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .divider-text {
+    background: #0d1117;
+    color: #fff;
+    padding: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+  }
+
+  /* Efeitos Neon */
+  .neon-glow-blue { filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.6)); }
+  .neon-glow-white { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)); }
+
+  /* Cards de Login */
+  .login-card {
+    background-color: #1e1e2d;
+    padding: 40px;
+    border-radius: 20px;
+    width: 350px;
+    transition: transform 0.3s;
+  }
+
+  .login-card:hover { transform: translateY(-5px); }
+
+  .border-purple { border: 1px solid rgba(111, 66, 193, 0.3); }
+  .border-blue { border: 1px solid rgba(0, 243, 255, 0.3); }
+
+  .login-title {
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+
+  .text-purple { color: #6f42c1; text-shadow: 0 0 10px rgba(111, 66, 193, 0.5); }
+  .text-blue { color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+
+  /* Estilo dos Inputs */
+  .input-group-neon { margin-bottom: 20px; }
+  .neon-label {
+    display: block;
+    color: #a2a3b7;
+    font-size: 11px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .neon-input {
+    width: 100%;
+    background-color: #2b2b40 !important;
+    border: 1px solid #3f4254;
+    border-radius: 10px;
+    padding: 12px 15px;
+    color: #fff !important;
+    transition: all 0.3s;
+    outline: none;
+  }
+
+  .neon-input:focus {
+    border-color: #00f3ff;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+  }
+
+  /* Botão Neon Azul (Aluno) */
+  .btn-neon-blue {
+    background: linear-gradient(45deg, #00c6ff, #00f3ff);
+    border: none;
+    border-radius: 10px;
+    color: #121212;
+    padding: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 243, 255, 0.3);
+    cursor: pointer;
+  }
+
+  /* Botão Neon Púrpura (Professor) */
+  .btn-neon-purple {
+    background: linear-gradient(45deg, #6f42c1, #a17cf3);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    padding: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+    cursor: pointer;
+  }
+
+  .btn-neon-blue:hover, .btn-neon-purple:hover {
+    transform: scale(1.02);
+    filter: brightness(1.2);
+  }
+
+  /* Novos Estilos para os links de Cadastro */
+  .signup-link-purple {
+    color: #6f42c1;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    letter-spacing: 1px;
+    transition: 0.3s;
+  }
+
+  .signup-link-purple:hover {
+    color: #a17cf3;
+    text-shadow: 0 0 8px rgba(111, 66, 193, 0.6);
+  }
+
+  .signup-link-blue {
+    color: #00f3ff;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    letter-spacing: 1px;
+    transition: 0.3s;
+  }
+
+  .signup-link-blue:hover {
+    color: #fff;
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+  }
+
+  /* Responsividade */
+  @media (max-width: 992px) {
+    .login-content-wrapper.unificado { flex-direction: column; gap: 30px; }
+    .logos-section-central { order: -1; flex-direction: row; }
+    .divider-vertical { display: none; }
+    .login-card { width: 100%; max-width: 400px; }
+  }
+</style>

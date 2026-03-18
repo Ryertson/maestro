@@ -1,0 +1,104 @@
+<%# app/views/teachers/show.html.erb %>
+<div class="container py-4">
+  <%# --- CABEÇALHO DO PERFIL --- %>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <%= link_to teachers_path, class: "text-decoration-none small d-block mb-1" do %>
+        <i class="bx bx-left-arrow-alt"></i> Voltar para Corpo Docente
+      <% end %>
+      <h2 class="fw-bold mb-0">Assistente Pedagógico IA</h2>
+      <p class="text-muted">Perfil Profissional: <%= @teacher.name %></p>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <%= link_to edit_teacher_path(@teacher), class: "btn btn-light rounded-pill px-4 shadow-sm border" do %>
+        <i class="bx bx-edit-alt me-1"></i> Editar Dados
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <%# --- COLUNA DA ESQUERDA: INFO BÁSICA --- %>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 text-center p-4 h-100">
+        <div class="avatar-xl bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 shadow" style="width: 100px; height: 100px; font-size: 2.5rem;">
+          <%= @teacher.initials %>
+        </div>
+        <h4 class="fw-bold mb-1"><%= @teacher.name %></h4>
+        <p class="text-muted small mb-4"><%= @teacher.email %></p>
+        
+        <div class="border-top pt-3 mt-2 text-start">
+          <label class="small fw-bold text-muted text-uppercase d-block mb-2">Áreas de Atuação</label>
+          <div class="d-grid gap-2">
+            <div class="p-3 bg-light rounded-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold">Disciplinas</span>
+                <span class="badge bg-dark rounded-pill"><%= @teacher.subjects.count %></span>
+              </div>
+              <%# LISTAGEM DAS DISCIPLINAS SALVAS NO PERFIL %>
+              <div class="d-flex flex-wrap gap-1">
+                <% if @teacher.subjects.any? %>
+                  <% @teacher.subjects.each do |subject| %>
+                    <span class="badge bg-white text-dark border fw-normal" style="font-size: 0.7rem;">
+                      <%= subject.name %>
+                    </span>
+                  <% end %>
+                <% else %>
+                  <span class="text-muted small italic">Geral (Não vinculada)</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# --- COLUNA DA DIREITA: TURMAS E RESPONSABILIDADES --- %>
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0">Turmas sob Responsabilidade</h5>
+          <span class="badge bg-primary text-white rounded-pill px-3 py-2">
+            <%= @teacher.classrooms.count %> Turmas
+          </span>
+        </div>
+
+        <div class="card-body px-4">
+          <% if @teacher.classroom_subjects.any? %>
+            <div class="list-group list-group-flush">
+              <% @teacher.classroom_subjects.includes(:classroom, :subject).each do |cs| %>
+                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center border-light">
+                  <div class="d-flex align-items-center">
+                    <div class="icon-shape bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                      <i class="bx bx-group fs-4"></i>
+                    </div>
+                    <div>
+                      <h6 class="fw-bold mb-0 text-dark"><%= cs.classroom.display_name %></h6>
+                      <small class="text-muted"><%= cs.subject.name %> • <%= cs.classroom.course&.name %></small>
+                    </div>
+                  </div>
+                  
+                  <%= link_to grading_classroom_path(cs.classroom, subject_id: cs.subject_id), class: "btn btn-sm btn-outline-success rounded-pill px-3" do %>
+                    <i class="bx bx-spreadsheet me-1"></i> Diário
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-5">
+              <i class="bi bi-folder-x fs-1 text-light-emphasis mb-3 d-block"></i>
+              <p class="text-muted mb-0">Nenhuma turma vinculada a este professor.</p>
+              <small class="text-muted">Vincule disciplinas às turmas para que elas apareçam aqui.</small>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-primary-subtle { background-color: #e7f1ff !important; color: #0d6efd !important; }
+  .list-group-item { transition: background 0.2s; }
+  .list-group-item:hover { background-color: #fafafa; }
+</style>

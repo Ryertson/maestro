@@ -1,0 +1,90 @@
+<%= form_with(model: student, local: true) do |f| %>
+  <% if student.errors.any? %>
+    <div class="alert alert-danger border-0 rounded-4 mb-4 shadow-sm">
+      <div class="d-flex align-items-center mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <h6 class="mb-0 fw-bold"><%= pluralize(student.errors.count, "erro") %> impediram o salvamento:</h6>
+      </div>
+      <ul class="mb-0 small">
+        <% student.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row g-3">
+    <%# --- NOME COMPLETO --- %>
+    <div class="col-12 mb-2">
+      <%= f.label :name, "Nome Completo do Aluno", class: "form-label small fw-bold text-muted text-uppercase" %>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-0"><i class="bi bi-person text-primary"></i></span>
+        <%= f.text_field :name, class: "form-control bg-light border-0 py-2", placeholder: "Ex: Alessandro de Andrade", required: true %>
+      </div>
+    </div>
+
+    <%# --- CURSO (Substituiu Matrícula) --- %>
+    <div class="col-12 mb-2">
+      <%= f.label :course, "Curso", class: "form-label small fw-bold text-muted text-uppercase" %>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-0"><i class="bi bi-book text-muted"></i></span>
+        <%= f.text_field :course, class: "form-control bg-light border-0 py-2", placeholder: "Ex: Agroecologia / Informática", required: true %>
+      </div>
+    </div>
+
+    <%# --- SÉRIE (Substituiu E-mail) --- %>
+    <div class="col-md-8 mb-2">
+      <%= f.label :grade, "Série", class: "form-label small fw-bold text-muted text-uppercase" %>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-0"><i class="bi bi-layers text-muted"></i></span>
+        <%= f.text_field :grade, class: "form-control bg-light border-0 py-2", placeholder: "Ex: 1ª Série", required: true %>
+      </div>
+    </div>
+
+    <%# --- TURMA (Campo Novo) --- %>
+    <div class="col-md-4 mb-2">
+      <%= f.label :section, "Turma", class: "form-label small fw-bold text-muted text-uppercase" %>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-0"><i class="bi bi-door-open text-warning"></i></span>
+        <%= f.collection_select :classroom_id, Classroom.all, :id, :full_name,
+          { prompt: "Selecione a turma" },
+          { class: "form-select bg-light border-0 py-2", required: true } %>
+      </div>
+    </div>
+
+    <%# --- STATUS ATIVO --- %>
+    <div class="col-12 mb-2">
+      <div class="form-check form-switch mb-2 ms-2">
+        <%= f.check_box :active, class: "form-check-input", id: "flexSwitchCheckChecked", checked: true %>
+        <%= f.label :active, "Aluno Ativo", class: "form-check-label small fw-bold text-muted text-uppercase", for: "flexSwitchCheckChecked" %>
+      </div>
+    </div>
+
+    <%# --- BOTÃO DE SALVAR --- %>
+    <div class="col-12 mt-4">
+      <%= f.submit student.new_record? ? "Finalizar Matrícula" : "Atualizar Dados", 
+          class: "btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm" %>
+    </div>
+  </div>
+<% end %>
+
+<style>
+  .input-group-text {
+    border-top-left-radius: 12px !important;
+    border-bottom-left-radius: 12px !important;
+  }
+  .form-control, .form-select {
+    border-top-right-radius: 12px !important;
+    border-bottom-right-radius: 12px !important;
+    transition: all 0.3s ease;
+  }
+  .form-control:focus, .form-select:focus {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    border: 1px solid #0d6efd !important;
+  }
+  .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+  }
+</style>
