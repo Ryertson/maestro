@@ -61,6 +61,7 @@
                 </td>
                 
                 <% @activities.each do |activity| %>
+                  <%# Buscamos o ponto na coleção já carregada via .includes no Controller %>
                   <% score_record = student.student_points.find { |sp| sp.activity_id == activity.id } %>
                   <% current_val = score_record&.points || 0 %>
                   
@@ -75,10 +76,11 @@
                   </td>
                 <% end %>
                 
-                <%# AQUI ENTRA A SUA NOVA LÓGICA DE MÉDIA %>
+                <%# Coluna de Média Final: Forçamos a passagem dos IDs das atividades atuais %>
                 <td class="text-center fw-bold bg-light-blue border-start shadow-sm">
-                  <span class="h6 mb-0 fw-bold text-primary js-total-<%= student.id %>">
-                    <%= student.calcular_nota_com_pesos(@activities.map(&:id)) %>
+                  <% media_atual = student.calcular_nota_com_pesos(@activities.map(&:id)) %>
+                  <span class="h6 mb-0 fw-bold js-total-<%= student.id %> <%= media_atual >= 6.0 ? 'text-success' : 'text-danger' %>">
+                    <%= media_atual %>
                   </span>
                 </td>
               </tr>
@@ -106,6 +108,16 @@
   .js-point-input:focus { border-color: #6f42c1; box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.15); background-color: #fff !important; }
   .save-success { border-color: #2fb344 !important; background-color: #f0fff4 !important; }
   .save-error { border-color: #d63939 !important; background-color: #fff5f5 !important; }
+  
+  .update-pulse {
+    animation: pulse-blue 1s;
+  }
+  
+  @keyframes pulse-blue {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
 </style>
 
 <script>
@@ -137,12 +149,22 @@
             this.classList.remove('save-error');
             this.value = data.points;
             
-            // O servidor precisará retornar a nova média calculada no JSON para atualizar em tempo real
             const totalSpan = document.querySelector(`.js-total-${studentId}`);
-            if(totalSpan && data.nova_media) {
-              totalSpan.innerText = data.nova_media;
-              totalSpan.classList.add('text-success');
-              setTimeout(() => totalSpan.classList.remove('text-success'), 2000);
+            if(totalSpan && data.nova_media !== undefined) {
+              const novaMedia = parseFloat(data.nova_media);
+              totalSpan.innerText = novaMedia.toFixed(2);
+              
+              // Ajusta a cor dinamicamente
+              if (novaMedia >= 6.0) {
+                totalSpan.classList.add('text-success');
+                totalSpan.classList.remove('text-danger', 'text-primary');
+              } else {
+                totalSpan.classList.add('text-danger');
+                totalSpan.classList.remove('text-success', 'text-primary');
+              }
+              
+              totalSpan.classList.add('update-pulse');
+              setTimeout(() => totalSpan.classList.remove('update-pulse'), 1000);
             }
 
             setTimeout(() => this.classList.remove('save-success'), 1500);

@@ -44,6 +44,51 @@
       </div>
     <% else %>
 
+      <%# --- SEÇÃO RPG: PERFIL DO ALQUIMISTA --- %>
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="content-card-purple p-4 shadow-lg border-rpg-gold">
+            <div class="row align-items-center">
+              <div class="col-md-4 border-end border-secondary">
+                <div class="d-flex align-items-center">
+                  <div class="lvl-hex me-3">
+                    <span class="lvl-number"><%= @student.level %></span>
+                  </div>
+                  <div>
+                    <h4 class="text-white fw-bold mb-0"><%= @student.name %></h4>
+                    <span class="badge bg-purple-dim text-purple-neon border border-purple-neon px-3">
+                      <i class="bx bxs-crown me-1"></i><%= @student.title %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-5 px-4">
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="label-neon-small">Progresso do Nível</span>
+                  <span class="label-neon-small text-purple-neon"><%= @student.xp %> / <%= @student.xp_needed_for_next_level %> XP</span>
+                </div>
+                <div class="progress-neon" style="height: 12px;">
+                  <div class="progress-bar-purple" style="width: <%= @student.rpg_progress_percentage %>%"></div>
+                </div>
+              </div>
+              <div class="col-md-3 text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <% @student.badges.limit(4).each do |badge| %>
+                    <div class="badge-icon-mini" title="<%= badge.name %>: <%= badge.description %>">
+                      <i class="bi <%= badge.icon %>"></i>
+                    </div>
+                  <% end %>
+                  <% if @student.badges.count > 4 %>
+                    <div class="badge-icon-mini bg-secondary">+<%= @student.badges.count - 4 %></div>
+                  <% end %>
+                </div>
+                <small class="text-white-50 mt-2 d-block">Medalhas Conquistadas</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <%# --- SEÇÃO 1: FILTROS DE PERÍODO --- %>
       <div class="content-card-purple p-3 mb-4 shadow-lg">
         <div class="row align-items-center g-3">
@@ -106,7 +151,7 @@
         <% end %>
       </div>
 
-      <%# --- SEÇÃO 3: GRÁFICO E STATUS DE ENTREGA --- %>
+      <%# --- SEÇÃO 3: GRÁFICO E RANKING --- %>
       <div class="row g-4 mb-4">
         <div class="col-lg-8">
           <div class="content-card-purple h-100 p-4 shadow-lg">
@@ -145,20 +190,22 @@
               </div>
             </div>
 
-            <div class="alert-neon-info p-3 mt-auto">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <i class="bx bx-info-circle me-2 text-purple-neon"></i>
-                  <span class="text-white-50 small">Total contabilizado:</span>
+            <%# --- RANKING RÁPIDO NO LADO --- %>
+            <div class="mt-auto border-top border-secondary pt-3">
+              <h6 class="label-neon-small text-purple-neon mb-3">Ranking da Turma</h6>
+              <% (Student.where(classroom_id: @classroom.id).order(total_xp: :desc).limit(3)).each_with_index do |top_s, idx| %>
+                <div class="d-flex align-items-center mb-2">
+                  <span class="badge bg-dark-dim me-2"><%= idx + 1 %>º</span>
+                  <small class="text-white flex-grow-1 text-truncate"><%= top_s.name.split.first %></small>
+                  <small class="text-success fw-bold"><%= top_s.total_xp %> XP</small>
                 </div>
-                <span class="text-white fw-bold"><strong><%= @total_atv %></strong> ativ.</span>
-              </div>
+              <% end %>
             </div>
           </div>
         </div>
       </div>
 
-      <%# --- SEÇÃO 4: INSIGHTS DA IA & QUICK WINS (SUGESTÃO 3) --- %>
+      <%# --- SEÇÃO 4: INSIGHTS DA IA & QUICK WINS --- %>
       <div class="ai-insight-card p-4 shadow-lg mb-4">
         <div class="row align-items-center">
           <div class="col-md-auto mb-3 mb-md-0 text-center">
@@ -174,21 +221,21 @@
               <% elsif (@media_aluno || 0) < 6 %>
                 Desempenho acadêmico abaixo do esperado. Recomendado reforço em <strong><%= @subject&.name %></strong>.
               <% else %>
-                Desempenho exemplar! Ótimo momento para reforçar o engajamento positivo.
+                Desempenho exemplar! Ótimo momento para reforçar o engajamento positivo com o título de <strong><%= @student.title %></strong>.
               <% end %>
             </div>
           </div>
           <div class="col-md-auto mt-3 mt-md-0 d-flex gap-2">
             <% if (@freq_mensal || 0) < 75 %>
-              <button class="btn-quick-win win-danger" onclick="alert('Enviando alerta de frequência para os responsáveis...')">
+              <button class="btn-quick-win win-danger" onclick="alert('Enviando alerta de frequência...')">
                 <i class="bx bx-bell me-1"></i> Alerta Pais
               </button>
             <% elsif (@media_aluno || 0) < 6 %>
-              <button class="btn-quick-win win-warning" onclick="alert('Gerando roteiro de estudos personalizado...')">
+              <button class="btn-quick-win win-warning" onclick="alert('Gerando roteiro de estudos...')">
                 <i class="bx bx-list-check me-1"></i> Plano de Reforço
               </button>
             <% else %>
-              <button class="btn-quick-win win-success" onclick="alert('Enviando parabéns ao aluno!')">
+              <button class="btn-quick-win win-success" onclick="alert('Parabenizando o aluno!')">
                 <i class="bx bx-medal me-1"></i> Parabenizar
               </button>
             <% end %>
@@ -248,9 +295,58 @@
     --danger-glow: rgba(255, 49, 49, 0.4);
     --warning-neon: #ff9100;
     --lavender-light: #d1d1f0;
+    --rpg-gold: #ffcc00;
   }
 
   .teacher-dashboard-neon { background: var(--bg-dark-master); color: #fff; font-family: 'Inter', sans-serif; }
+
+  /* --- ESTILIZAÇÃO DE SELECTS E OPTIONS (CORREÇÃO DE VISIBILIDADE) --- */
+  .form-select-neon { 
+    background-color: rgba(255,255,255,0.1); 
+    border: 1px solid rgba(188,19,254,0.3); 
+    color: #fff !important; 
+    border-radius: 10px; 
+    padding: 0.5rem; 
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .form-select-neon option {
+    background-color: var(--card-bg); /* Fundo escuro para as opções */
+    color: #fff; /* Texto branco nas opções */
+  }
+
+  .form-select-neon:focus {
+    background-color: var(--card-bg);
+    border-color: var(--purple-neon);
+    box-shadow: 0 0 10px var(--purple-glow);
+    color: #fff;
+    outline: none;
+  }
+
+  /* --- RPG CUSTOM STYLES --- */
+  .border-rpg-gold { border: 1px solid rgba(255, 204, 0, 0.3) !important; box-shadow: 0 0 20px rgba(255, 204, 0, 0.1); }
+  
+  .lvl-hex {
+    background: var(--purple-neon);
+    width: 60px; height: 60px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 15px var(--purple-glow);
+  }
+  .lvl-number { font-size: 1.5rem; font-weight: 900; color: #fff; }
+
+  .badge-icon-mini {
+    width: 35px; height: 35px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--purple-neon);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--rpg-gold);
+    font-size: 1.1rem;
+    transition: 0.3s;
+  }
+  .badge-icon-mini:hover { transform: scale(1.2); background: var(--purple-neon); color: #fff; }
 
   /* --- QUICK WINS BUTTONS --- */
   .btn-quick-win {
@@ -277,7 +373,6 @@
 
   .content-card-purple { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; }
   .text-purple-neon { color: var(--purple-neon) !important; text-shadow: 0 0 10px var(--purple-glow); }
-  .form-select-neon { background-color: rgba(255,255,255,0.1); border: 1px solid rgba(188,19,254,0.3); color: #fff; border-radius: 10px; padding: 0.5rem; width: 100%; }
   .label-neon-small { text-transform: uppercase; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; color: var(--lavender-light); }
   
   .btn-period { border: none; background: transparent; color: var(--lavender-light); padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }

@@ -1,0 +1,18 @@
+=> 
+[32m#<Student:0x0000750b998e7d70[0m
+ id: [34m[1m3779[0m,
+ active: [36m[1mtrue[0m,
+ classroom: [36m[1mnil[0m,
+ course: [31m[1m"[0m[31mAgroecologia[0m[31m[1m"[0m,
+ created_at: [31m[1m"[0m[31m2026-02-21 20:12:14.214374000 +0000[0m[31m[1m"[0m,
+ email: [36m[1mnil[0m,
+ grade: [31m[1m"[0m[31m1ª Série[0m[31m[1m"[0m,
+ name: [31m[1m"[0m[31mANIELLY AUGUSTINHO DOS SANTOS[0m[31m[1m"[0m,
+ updated_at: [31m[1m"[0m[31m2026-02-22 01:19:40.742376000 +0000[0m[31m[1m"[0m,
+ classroom_id: [34m[1m2[0m,
+ section: [31m[1m"[0m[31mA[0m[31m[1m"[0m,
+ student_user_id: [36m[1mnil[0m,
+ xp: [34m[1m0[0m,
+ level: [34m[1m1[0m,
+ title: [31m[1m"[0m[31mIniciante[0m[31m[1m"[0m,
+ total_xp: [34m[1m0[0m[32m>[0m

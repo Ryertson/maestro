@@ -8,12 +8,9 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # 3. ÁREA DO ESTUDANTE (Portal Exclusivo - Dark Neon)
-  # Namespace garante que os controllers fiquem em app/controllers/student_portal/
   namespace :student_portal, path: 'meu_portal' do
-    # Root do portal do aluno
     root to: 'dashboards#show', as: :root 
     
-    # Recursos do Aluno
     resources :activities, only: [:index, :show]
     resources :attendances, only: [:index]
     resources :grades, only: [:index]
@@ -30,6 +27,9 @@ Rails.application.routes.draw do
   resources :subjects, only: [:create]
   resources :bimesters, only: [:index, :create, :update, :destroy]
   resources :terms, only: [:update]
+  
+  # NOVO: Gestão de Datas Importantes (Provas, Feriados, Reuniões)
+  resources :academic_events, except: [:show]
 
   # 6. Corpo Docente (Cadastro de Professores e Atribuições)
   resources :teachers do
@@ -42,6 +42,12 @@ Rails.application.routes.draw do
   end
   
   resources :professors, only: [:index, :show, :edit, :update]
+
+  resources :academic_settings do
+    member do
+      patch :reset_password
+    end
+  end
 
   # 7. Estrutura Escolar e Turmas
   resources :grades, only: [:create]

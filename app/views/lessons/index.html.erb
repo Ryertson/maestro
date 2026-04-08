@@ -281,13 +281,35 @@
     <div class="card-body p-0 overflow-auto">
       <div class="calendar-container-fixed">
         <%= month_calendar(events: @lessons_list, attribute: :date, header: { class: "d-none" }) do |date, lessons| %>
+          <%# Lógica de Prioridade: Evento Acadêmico > Bimestre %>
+          <% academic_event = @academic_events[date]&.first %>
           <% active_term = @terms.find { |t| date >= t.start_date && date <= t.end_date } %>
-          <div class="calendar-day-cell" style="<%= "background-color: #{active_term.color}15 !important;" if active_term %>">
+          
+          <% 
+            bg_style = ""
+            text_class = ""
+            if academic_event
+              bg_style = "background-color: #{academic_event.color} !important;"
+              # Texto branco para cores escuras, preto para amarelo (#fff9c4)
+              text_class = (academic_event.color == "#fff9c4" || academic_event.color == "yellow") ? "text-dark" : "text-white"
+            elsif active_term
+              bg_style = "background-color: #{active_term.color}15 !important;"
+            end
+          %>
+
+          <div class="calendar-day-cell" style="<%= bg_style %>">
             <div class="text-end mb-1">
-              <span class="small fw-bold <%= 'bg-primary text-white rounded-circle d-inline-block text-center shadow-sm' if date == Date.today %>" style="<%= 'width: 24px; height: 24px; line-height: 24px;' if date == Date.today %>">
+              <span class="small fw-bold <%= text_class unless date == Date.today %> <%= 'bg-primary text-white rounded-circle d-inline-block text-center shadow-sm' if date == Date.today %>" style="<%= 'width: 24px; height: 24px; line-height: 24px;' if date == Date.today %>">
                 <%= date.day %>
               </span>
             </div>
+
+            <% if academic_event %>
+              <div class="fw-bold text-uppercase text-center <%= text_class %> mb-1" style="font-size: 0.55rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<%= academic_event.title %>">
+                <%= academic_event.title %>
+              </div>
+            <% end %>
+
             <div class="lessons-wrapper">
               <% lessons.each do |lesson| %>
                 <div class="badge-calendar-lesson" 

@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  event_date: 2026-03-18
+  event_type: MyString
+  color: MyString
+
+two:
+  title: MyString
+  event_date: 2026-03-18
+  event_type: MyString
+  color: MyString

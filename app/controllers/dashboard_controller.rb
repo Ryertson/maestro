@@ -138,6 +138,8 @@ class DashboardController < ApplicationController
     end
   end
 
+  @top_alchemists = Student.order(total_xp: :desc).limit(5)
+
   private
 
   def calcular_frequencia_isolada(student, subject, data_inicio)

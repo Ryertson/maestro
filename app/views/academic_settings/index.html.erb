@@ -1,28 +1,29 @@
-<h1>AcademicSettings#index</h1>
-<div class="container py-4">
+<div class="teacher-dashboard-neon container-fluid py-4 min-vh-100">
   <%# --- HEADER --- %>
-  <div class="d-flex align-items-center mb-4">
-    <div class="icon-shape bg-primary text-white rounded-4 p-3 me-3 shadow-sm">
-      <i class="bi bi-gear-wide-connected fs-4"></i>
+  <div class="d-flex align-items-center mb-5 px-3">
+    <div class="lvl-hex me-3">
+      <span class="lvl-number"><i class="bi bi-gear-wide-connected"></i></span>
     </div>
     <div>
-      <h2 class="fw-bold mb-0">Configurações Acadêmicas</h2>
-      <p class="text-muted mb-0">Gerencie áreas do conhecimento e disciplinas do Maestro</p>
+      <h2 class="fw-bold mb-0 text-white">Configurações Acadêmicas</h2>
+      <p class="text-purple-neon mb-0" style="font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;">
+        Gerencie áreas do conhecimento e acessos do Maestro
+      </p>
     </div>
   </div>
 
   <div class="row g-4">
     <%# --- COLUNA DA ESQUERDA: LISTAGEM --- %>
-    <div class="col-md-8">
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-nested me-2 text-primary"></i>Estrutura Atual</h5>
+    <div class="col-lg-8">
+      <div class="content-card-purple shadow-lg overflow-hidden mb-4">
+        <div class="card-header bg-transparent py-3 border-bottom border-white-08">
+          <h5 class="mb-0 fw-bold text-white"><i class="bi bi-list-nested me-2 text-purple-neon"></i>Estrutura Atual</h5>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light">
-                <tr class="small fw-bold text-muted text-uppercase">
+            <table class="table table-dark table-hover align-middle mb-0">
+              <thead>
+                <tr class="label-neon-small text-lavender">
                   <th class="px-4 py-3">Área / Disciplina</th>
                   <th>Cor Identificadora</th>
                   <th class="text-center">Qtd. Disciplinas</th>
@@ -31,30 +32,30 @@
               </thead>
               <tbody>
                 <% @knowledge_areas.each do |area| %>
-                  <tr class="bg-light-subtle">
+                  <tr class="bg-purple-dim">
                     <td class="px-4 py-3">
                       <div class="d-flex align-items-center">
-                        <div style="width: 12px; height: 12px; background-color: <%= area.color %>; border-radius: 3px;" class="me-2 shadow-sm"></div>
-                        <span class="fw-bold text-dark"><%= area.name %></span>
+                        <div style="width: 14px; height: 14px; background-color: <%= area.color %>; border-radius: 3px; box-shadow: 0 0 10px <%= area.color %>;" class="me-2"></div>
+                        <span class="fw-bold text-white"><%= area.name %></span>
                       </div>
                     </td>
-                    <td><code><%= area.color %></code></td>
-                    <td class="text-center"><span class="badge bg-secondary rounded-pill"><%= area.subjects.count %></span></td>
+                    <td><code class="text-purple-neon"><%= area.color %></code></td>
+                    <td class="text-center"><span class="badge bg-purple-neon rounded-pill"><%= area.subjects.count %></span></td>
                     <td class="text-end px-4">
                       <div class="btn-group btn-group-sm">
-                        <button class="btn btn-white border shadow-sm"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-white border shadow-sm text-danger"><i class="bi bi-trash"></i></button>
+                        <button class="badge-icon-mini" style="background: transparent;"><i class="bi bi-pencil"></i></button>
+                        <button class="badge-icon-mini text-danger" style="background: transparent;"><i class="bi bi-trash"></i></button>
                       </div>
                     </td>
                   </tr>
                   <% area.subjects.each do |subject| %>
                     <tr>
-                      <td class="px-5 py-2 text-muted">
-                        <i class="bi bi-arrow-return-right me-2 opacity-50"></i><%= subject.name %>
+                      <td class="px-5 py-2 text-white-50">
+                        <i class="bi bi-arrow-return-right me-2 opacity-50 text-purple-neon"></i><%= subject.name %>
                       </td>
                       <td colspan="2"></td>
                       <td class="text-end px-4">
-                        <button class="btn btn-link btn-sm text-danger p-0 border-0"><i class="bi bi-x-circle"></i></button>
+                        <button class="btn btn-link btn-sm text-danger-neon p-0 border-0"><i class="bi bi-x-circle"></i></button>
                       </td>
                     </tr>
                   <% end %>
@@ -64,50 +65,199 @@
           </div>
         </div>
       </div>
+
+      <%# --- NOVO QUADRO: GESTÃO DE ACESSOS (SÓ PARA ADMIN) --- %>
+      <div class="content-card-purple p-4 shadow-lg border-purple-neon border-rpg-gold">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+          <div>
+            <h5 class="fw-bold text-white mb-0">
+              <i class="bx bx-group text-purple-neon me-2"></i>Controle de Acessos: Docentes
+            </h5>
+            <small class="text-lavender opacity-75 small">Login e status dos professores cadastrados</small>
+          </div>
+          <span class="badge-icon-mini win-success" style="width: auto; padding: 0 15px; font-size: 0.7rem;">
+            <i class="bx bx-lock-alt me-1"></i> ADMIN MASTER
+          </span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0">
+            <thead>
+              <tr class="label-neon-small text-lavender">
+                <th>Professor</th>
+                <th>E-mail (Login)</th>
+                <th>Status</th>
+                <th class="text-center">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @all_professors.each do |prof| %>
+                <tr class="border-bottom border-white-08">
+                  <td>
+                    <div class="fw-bold text-white"><%= prof.name %></div>
+                    <small class="text-muted small">ECIT Dom Marcelo</small>
+                  </td>
+                  <td>
+                    <code class="text-purple-neon" style="background: rgba(188, 19, 254, 0.1); padding: 2px 6px; border-radius: 4px;">
+                      <%= prof.email %>
+                    </code>
+                  </td>
+                  <td>
+                    <% if prof.respond_to?(:last_sign_in_at) && prof.last_sign_in_at.present? %>
+                      <span class="text-success-neon small"><i class="bx bx-check-double me-1"></i>Ativo</span>
+                    <% else %>
+                      <span class="text-warning-neon small"><i class="bx bx-hourglass me-1"></i>Pendente</span>
+                    <% end %>
+                  </td>
+                  <td class="text-center">
+                    <%# BOTÃO DE RESET ATUALIZADO COM ROTA REAL %>
+                    <%= button_to reset_password_academic_setting_path(prof), 
+                                   method: :patch, 
+                                   form: { data: { turbo_confirm: "Deseja resetar a senha de #{prof.name} para o padrão do sistema?" } },
+                                   class: "btn-quick-win win-warning py-1 px-2 border-0", 
+                                   style: "font-size: 0.65rem;" do %>
+                      <i class="bx bx-refresh me-1"></i> Resetar
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <%# --- COLUNA DA DIREITA: FORMULÁRIOS --- %>
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <%# Card: Nova Área %>
-      <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-4">
-          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle me-2 text-primary"></i>Nova Área</h6>
-          <%= form_with model: @new_area, url: knowledge_areas_path do |f| %>
-            <div class="mb-3">
-              <%= f.label :name, "Nome da Área", class: "form-label small fw-bold text-muted" %>
-              <%= f.text_field :name, class: "form-control form-control-sm", placeholder: "Ex: Ciências da Natureza" %>
-            </div>
-            <div class="mb-3">
-              <%= f.label :color, "Cor da Área", class: "form-label small fw-bold text-muted" %>
-              <%= f.color_field :color, class: "form-control form-control-color w-100", value: "#0d6efd" %>
-            </div>
-            <%= f.submit "Criar Área", class: "btn btn-primary btn-sm w-100 fw-bold rounded-pill" %>
-          <% end %>
-        </div>
+      <div class="content-card-purple shadow-lg p-4 mb-4 border-rpg-gold">
+        <h6 class="fw-bold text-white mb-3"><i class="bi bi-plus-circle me-2 text-purple-neon"></i>Nova Área</h6>
+        <%= form_with model: @new_area, url: knowledge_areas_path do |f| %>
+          <div class="mb-3">
+            <%= f.label :name, "Nome da Área", class: "label-neon-small mb-2 d-block" %>
+            <%= f.text_field :name, class: "form-control form-select-neon", placeholder: "Ex: Ciências da Natureza" %>
+          </div>
+          <div class="mb-3">
+            <%= f.label :color, "Cor da Área", class: "label-neon-small mb-2 d-block" %>
+            <%= f.color_field :color, class: "form-control form-control-color w-100 bg-transparent border-white-08", style: "height: 45px;", value: "#bc13fe" %>
+          </div>
+          <%= f.submit "Criar Área", class: "btn-period active w-100 py-2" %>
+        <% end %>
       </div>
 
       <%# Card: Nova Disciplina %>
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-4">
-          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-journal-plus me-2 text-success"></i>Nova Disciplina</h6>
-          <%= form_with model: @new_subject, url: subjects_path do |f| %>
-            <div class="mb-3">
-              <%= f.label :knowledge_area_id, "Vincular à Área", class: "form-label small fw-bold text-muted" %>
-              <%= f.collection_select :knowledge_area_id, KnowledgeArea.all, :id, :name, { prompt: "Selecione..." }, { class: "form-select form-select-sm" } %>
-            </div>
-            <div class="mb-3">
-              <%= f.label :name, "Nome da Disciplina", class: "form-label small fw-bold text-muted" %>
-              <%= f.text_field :name, class: "form-control form-control-sm", placeholder: "Ex: Biologia" %>
-            </div>
-            <%= f.submit "Adicionar Disciplina", class: "btn btn-success btn-sm w-100 fw-bold rounded-pill" %>
-          <% end %>
-        </div>
+      <div class="content-card-purple shadow-lg p-4 border-rpg-gold">
+        <h6 class="fw-bold text-white mb-3"><i class="bi bi-journal-plus me-2 text-success-neon"></i>Nova Disciplina</h6>
+        <%= form_with model: @new_subject, url: subjects_path do |f| %>
+          <div class="mb-3">
+            <%= f.label :knowledge_area_id, "Vincular à Área", class: "label-neon-small mb-2 d-block" %>
+            <%= f.collection_select :knowledge_area_id, KnowledgeArea.all, :id, :name, { prompt: "Selecione..." }, { class: "form-select form-select-neon" } %>
+          </div>
+          <div class="mb-3">
+            <%= f.label :name, "Nome da Disciplina", class: "label-neon-small mb-2 d-block" %>
+            <%= f.text_field :name, class: "form-control form-select-neon", placeholder: "Ex: Biologia" %>
+          </div>
+          <%= f.submit "Adicionar Disciplina", class: "btn-quick-win win-success w-100 py-2 justify-content-center text-dark" %>
+        <% end %>
       </div>
     </div>
   </div>
 </div>
 
 <style>
-  .icon-shape { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
-  .table-hover tbody tr:hover { background-color: rgba(0,0,0,0.02); }
+  /* --- VARIÁVEIS DE DESIGN MAESTRO --- */
+  :root {
+    --purple-neon: #bc13fe;
+    --success-neon: #00f3ff;
+    --danger-neon: #ff3131;
+    --card-bg: rgba(30, 30, 45, 0.95);
+    --success-glow: rgba(0, 243, 255, 0.3);
+    --danger-glow: rgba(255, 49, 49, 0.3);
+  }
+
+  /* --- ESTILOS ORIGINAIS MANTIDOS --- */
+  .border-white-08 { border-color: rgba(255, 255, 255, 0.08) !important; }
+  .form-select-neon::placeholder { color: rgba(255,255,255,0.3); font-size: 0.8rem; }
+  
+  .form-select-neon option {
+    background-color: var(--card-bg);
+    color: #fff;
+  }
+
+  /* Ajuste para o botão do Rails não quebrar o alinhamento na tabela */
+  form { display: inline; }
+
+  /* --- CONFIGURAÇÕES DAS FLASH MESSAGES NEON --- */
+  .flash-container {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 10000;
+    max-width: 380px;
+    width: 100%;
+  }
+
+  .alert-neon-flash {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 18px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(12px);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: all 0.5s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+
+  .flash-success-neon {
+    border: 1px solid var(--success-neon);
+    box-shadow: 0 0 15px var(--success-glow);
+  }
+
+  .flash-danger-neon {
+    border: 1px solid var(--danger-neon);
+    box-shadow: 0 0 15px var(--danger-glow);
+  }
+
+  .flash-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 1.4rem;
+  }
+
+  .bg-success-glow { background: rgba(0, 243, 255, 0.1); color: var(--success-neon); }
+  .bg-danger-glow { background: rgba(255, 49, 49, 0.1); color: var(--danger-neon); }
+
+  .flash-text-content b {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    display: block;
+    opacity: 0.7;
+    margin-bottom: 2px;
+  }
+
+  .flash-text-content span { 
+    font-size: 0.9rem; 
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  /* Animação de Saída */
+  .flash-exit {
+    opacity: 0 !important;
+    transform: translateX(120%) scale(0.9) !important;
+  }
+
+  @keyframes slideInRight {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
 </style>

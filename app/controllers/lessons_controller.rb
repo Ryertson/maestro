@@ -34,6 +34,7 @@ class LessonsController < ApplicationController
     # 4. BIMESTRES e Ordenação para a Tabela
     @terms = Term.order(:start_date)
     @lessons_list = @lessons.includes(:subject, classroom: [:course, :grade]).order(date: :desc)
+    @academic_events = AcademicEvent.all.group_by(&:event_date)
     
     # 5. Variáveis para o Formulário de Cadastro Rápido e Calendário
     @lesson = Lesson.new

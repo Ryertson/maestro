@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_08_165013) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_25_132421) do
+  create_table "academic_events", force: :cascade do |t|
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.date "event_date"
+    t.string "event_type"
+    t.string "title"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "activities", force: :cascade do |t|
     t.string "activity_type"
     t.string "category"
@@ -45,6 +54,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_165013) do
     t.index ["classroom_id"], name: "index_attendances_on_classroom_id"
     t.index ["lesson_id"], name: "index_attendances_on_lesson_id"
     t.index ["student_id"], name: "index_attendances_on_student_id"
+  end
+
+  create_table "badges", force: :cascade do |t|
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "icon"
+    t.string "name"
+    t.datetime "updated_at", null: false
   end
 
   create_table "bimesters", force: :cascade do |t|
@@ -175,6 +193,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_165013) do
     t.index ["student_id"], name: "index_student_activities_on_student_id"
   end
 
+  create_table "student_badges", force: :cascade do |t|
+    t.integer "badge_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "granted_at"
+    t.integer "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["badge_id"], name: "index_student_badges_on_badge_id"
+    t.index ["student_id"], name: "index_student_badges_on_student_id"
+  end
+
   create_table "student_points", force: :cascade do |t|
     t.integer "activity_id", null: false
     t.datetime "created_at", null: false
@@ -207,10 +235,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_165013) do
     t.datetime "created_at", null: false
     t.string "email"
     t.string "grade"
+    t.integer "level", default: 1
     t.string "name"
     t.string "section"
     t.integer "student_user_id"
+    t.string "title", default: "Iniciante"
+    t.integer "total_xp", default: 0
     t.datetime "updated_at", null: false
+    t.integer "xp", default: 0
     t.index ["classroom_id"], name: "index_students_on_classroom_id"
     t.index ["student_user_id"], name: "index_students_on_student_user_id"
   end
@@ -308,6 +340,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_165013) do
   add_foreign_key "lessons", "teachers"
   add_foreign_key "student_activities", "activities"
   add_foreign_key "student_activities", "students"
+  add_foreign_key "student_badges", "badges"
+  add_foreign_key "student_badges", "students"
   add_foreign_key "student_points", "activities"
   add_foreign_key "student_points", "students"
   add_foreign_key "student_users", "students"
