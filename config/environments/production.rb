@@ -37,9 +37,6 @@ Rails.application.configure do
   # Active Job (fila simples)
   config.active_job.queue_adapter = :async
 
-  # Action Cable (resolve erro do cable)
-  config.action_cable.adapter = :async
-
   # Mailer
   config.action_mailer.default_url_options = { host: "example.com" }
 
