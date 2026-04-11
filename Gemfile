@@ -16,7 +16,7 @@ gem "pg", group: :production
 
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
-gem "solid_cache"
+# gem "solid_cache"
 
 gem "bootsnap", require: false
 gem "kamal", require: false
