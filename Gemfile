@@ -42,7 +42,6 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "cssbundling-rails"
 gem "devise", "~> 5.0"
 gem "roo", "~> 3.0"
 gem "simple_calendar", "~> 3.1"
