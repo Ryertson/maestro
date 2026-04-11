@@ -8,14 +8,8 @@ gem "turbo-rails"
 gem "stimulus-rails"
 gem "jbuilder"
 
-# Banco de dados: SQLite para o seu PC e PostgreSQL para a Internet (Render)
-group :development, :test do
-  gem "sqlite3", ">= 2.1"
-end
-
-group :production do
-  gem "pg"
-end
+gem "sqlite3", ">= 2.1", group: [:development, :test]
+gem "pg", group: :production
 
 # Use Active Model has_secure_password
 # gem "bcrypt", "~> 3.1.7"
