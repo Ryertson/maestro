@@ -1,0 +1,66 @@
+<div class="container-fluid px-4 py-4">
+  <%# --- CABEÇALHO ATUALIZADO COM BOTÃO DE RELATÓRIO --- %>
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+      <h1 class="text-white fw-bold h3 mb-1">
+        <i class="bi bi-exclamation-octagon-fill text-danger-neon me-2"></i>Atividades Perdidas
+      </h1>
+      <p class="text-white-50 small mb-0">Alunos com pendências de entrega ou notas não lançadas.</p>
+    </div>
+    
+    <%# BOTÃO PARA GERAR RELATÓRIO PDF / IMPRESSÃO %>
+    <%= link_to lost_activities_print_path, target: "_blank", class: "btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" do %>
+      <i class="bi bi-file-earmark-pdf-fill me-2"></i>GERAR RELATÓRIO PDF
+    <% end %>
+  </div>
+
+  <div class="row g-4">
+    <% @classrooms.each do |classroom| %>
+      <div class="col-xl-6">
+        <div class="glass-card border-glow-red h-100">
+          <div class="card-header bg-transparent border-bottom border-secondary p-4">
+            <h5 class="text-white fw-bold mb-0"><%= classroom.full_name_info %></h5>
+            <small class="text-danger-neon fw-bold" style="font-size: 0.7rem; text-transform: uppercase;">Pendências Críticas</small>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="table-responsive-scroll" style="max-height: 400px;">
+              <table class="table table-dark-neon table-hover align-middle mb-0">
+                <thead>
+                  <tr class="text-uppercase" style="font-size: 0.65rem;">
+                    <th class="ps-4">Estudante</th>
+                    <th>Atividade / Tipo</th>
+                    <th class="text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% classroom.students.each do |student| %>
+                    <%# Buscamos apenas atividades que não foram entregues ou estão pendentes %>
+                    <% lost = student.student_activities.where(activity_id: classroom.activities.pluck(:id), status: ['Não Entregue', 'Pendente']) %>
+                    
+                    <% lost.each do |sa| %>
+                      <tr>
+                        <td class="ps-4">
+                          <span class="text-white small fw-bold"><%= student.name.upcase %></span>
+                        </td>
+                        <td>
+                          <div class="text-white small mb-0"><%= sa.activity.name %></div>
+                          <small class="text-white-50" style="font-size: 0.7rem;"><%= sa.activity.activity_type %></small>
+                        </td>
+                        <td class="text-center">
+                          <span class="badge-status-neon badge-neon-red py-2 px-3">
+                            <i class="bi bi-x-circle me-1"></i> EM FALTA
+                          </span>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

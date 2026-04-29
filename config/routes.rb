@@ -92,6 +92,7 @@ Rails.application.routes.draw do
     
     member do
       get :grading
+      # Rota atualizada para permitir a mudança de status individual por aluno
       patch :update_status
       patch :mark_as_corrected
     end
@@ -113,5 +114,10 @@ Rails.application.routes.draw do
   # 12. Funções Auxiliares e AJAX
   post 'update_student_points', to: 'student_points#update_score'
   post 'toggle_view_mode', to: 'professors#toggle_view_mode'
+
+  get 'resultados', to: 'reports#results', as: :results_report
+  get 'export_recuperacao/:classroom_id', to: 'reports#export_recuperacao', as: :export_recuperacao
+  get 'atividades_perdidas', to: 'reports#lost_activities', as: :lost_activities_report
+  get 'atividades_perdidas_print', to: 'reports#lost_activities_print', as: :lost_activities_print
 
 end

@@ -5,25 +5,27 @@
       <%= link_to activities_path, class: "text-decoration-none small text-muted mb-2 d-block" do %>
         <i class="bi bi-arrow-left"></i> Voltar para Atividades
       <% end %>
-      <h1 class="fw-bold text-secondary mb-0"><%= @activity.name %></h1>
-      <p class="text-muted">
-        Turma: <span class="badge bg-dark"><%= @activity.classroom.full_name_info %></span> | 
+      <h1 class="fw-bold text-white mb-0"><%= @activity.name %></h1>
+      <p class="text-white-50">
+        Turma: <span class="badge bg-dark border border-secondary text-white"><%= @activity.classroom.full_name_info %></span> | 
         Prazo: <span class="text-info fw-bold"><%= @activity.teacher_delivery_date&.strftime("%d/%m/%Y") || 'Sem data' %></span>
       </p>
     </div>
     <div class="btn-group">
-      <%= link_to 'Editar Atividade', edit_activity_path(@activity), class: "btn btn-outline-secondary" %>
+      <%= link_to edit_activity_path(@activity), class: "btn btn-outline-purple-neon" do %>
+        <i class="bi bi-pencil me-1"></i> Editar Atividade
+      <% end %>
     </div>
   </div>
 
   <%# --- QUADRO DE ENTREGAS --- %>
-  <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: #1e1e2d;">
-    <div class="card-header bg-dark border-secondary py-3">
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden glass-card">
+    <div class="card-header bg-transparent border-bottom border-secondary py-3">
       <h5 class="text-white mb-0 fw-bold">Controle de Entregas</h5>
     </div>
     <div class="table-responsive">
-      <table class="table table-dark table-hover align-middle mb-0">
-        <thead class="table-dark">
+      <table class="table table-dark-neon table-hover align-middle mb-0">
+        <thead>
           <tr>
             <th class="ps-4">Estudante</th>
             <th class="text-center">Status de Entrega</th>
@@ -33,36 +35,47 @@
           </tr>
         </thead>
         <tbody>
+          <%# Buscamos as atividades dos estudantes vinculadas a esta atividade específica %>
           <% @activity.student_activities.includes(:student).order('students.name').each do |sa| %>
             <tr id="row-sa-<%= sa.id %>">
-              <td class="ps-4 fw-bold text-white-50">
+              <td class="ps-4 fw-bold text-white">
                 <%= sa.student.name.upcase %>
               </td>
               <td class="text-center">
-                <span id="badge-status-<%= sa.id %>" class="badge rounded-pill <%= status_class(sa.status) %> p-2 px-3">
+                <%# O ID no span permite que o Turbo encontre este elemento se usarmos AJAX no futuro %>
+                <span id="badge-status-<%= sa.id %>" class="badge-status-neon <%= sa.status == 'Entregue' ? 'badge-neon-green' : (sa.status == 'Não Entregue' ? 'badge-neon-red' : 'badge-neon-purple') %> p-2 px-3">
+                  <%# Mapeamento de Ícones conforme seu pedido anterior %>
+                  <i class="bi <%= sa.status == 'Entregue' ? 'bi-check-circle-fill' : (sa.status == 'Não Entregue' ? 'bi-x-circle' : 'bi-hourglass-split') %> me-1"></i>
                   <%= sa.status %>
-                <% if sa.status == 'Entregue' && sa.delivered_at.present? && @activity.teacher_delivery_date.present? && sa.delivered_at > @activity.teacher_delivery_date %>
-                  <small class="d-block text-warning" style="font-size: 0.6rem;">Com Atraso</small>
-                <% end %>
+
+                  <%# Verificação de Atraso %>
+                  <% if sa.status == 'Entregue' && sa.delivered_at.present? && @activity.teacher_delivery_date.present? && sa.delivered_at > @activity.teacher_delivery_date %>
+                    <small class="d-block text-warning" style="font-size: 0.55rem; text-transform: uppercase; margin-top: 2px;">Com Atraso</small>
+                  <% end %>
                 </span>
               </td>
-              <td class="text-center text-muted">
+              <td class="text-center text-white-50">
                 <%= sa.delivered_at&.strftime("%d/%m/%Y") || '-' %>
               </td>
-              <td class="text-center fw-bold text-info">
+              <td class="text-center fw-bold text-purple-neon">
                 <%= sa.points || '0.0' %>
               </td>
               <td class="text-end pe-4">
                 <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    Alterar Status
+                  <%# Adicionamos a borda neon para combinar com o resto do sistema %>
+                  <button class="btn btn-sm btn-outline-purple-neon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-pencil-square me-1"></i> Alterar Status
                   </button>
-                  <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg">
+                  <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border-secondary">
                     <% ['Pendente', 'Entregue', 'Não Entregue'].each do |status| %>
                       <li>
-                        <%# Ajuste para o controller que criaremos %>
-                        <%= link_to status, update_status_activity_path(@activity, student_activity_id: sa.id, new_status: status), 
-                            method: :patch, remote: true, class: "dropdown-item fw-bold" %>
+                        <%# CORREÇÃO CRÍTICA: data: { turbo_method: :patch } garante que o Rails 7 aceite o comando %>
+                        <%= link_to update_status_activity_path(@activity, student_activity_id: sa.id, new_status: status), 
+                            data: { turbo_method: :patch, turbo: false }, 
+                            class: "dropdown-item fw-bold #{status == 'Entregue' ? 'text-success' : (status == 'Não Entregue' ? 'text-danger' : 'text-purple-neon')}" do %>
+                          <i class="bi <%= status == 'Entregue' ? 'bi-check-circle' : (status == 'Não Entregue' ? 'bi-x-circle' : 'bi-hourglass') %> me-2"></i>
+                          <%= status %>
+                        <% end %>
                       </li>
                     <% end %>
                   </ul>
@@ -77,8 +90,23 @@
 </div>
 
 <style>
-  .badge.bg-pending { background-color: #6c757d; }
-  .badge.bg-success { background-color: #198754; }
-  .badge.bg-danger { background-color: #dc3545; }
-  .table-hover tbody tr:hover { background-color: rgba(255,255,255,0.05) !important; }
+  /* Mantendo consistência com o tema Maestro Neon Dark */
+  .badge-status-neon {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+  }
+  
+  .table-dark-neon tbody tr:hover { 
+    background-color: rgba(188, 19, 254, 0.05) !important; 
+  }
+
+  /* Estilos específicos para o dropdown do Maestro */
+  .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 </style>

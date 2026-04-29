@@ -1,135 +1,153 @@
-<% content_for :title, "Gestão de Turmas" %>
+<% content_for :title, "Gestão de Turmas | Maestro" %>
 
-<div class="d-flex justify-content-between align-items-center mb-4 px-2">
-  <div>
-    <h1 class="fw-bold text-dark mb-0" style="letter-spacing: -1px;">Turmas e Agrupamentos</h1>
-    <p class="text-muted small mb-0">Visualização geral das turmas e cursos vinculados</p>
-  </div>
-  <div>
-    <%= link_to new_classroom_path, class: "btn btn-dark rounded-pill px-4 fw-bold shadow-sm" do %>
-      <i class="bi bi-plus-circle me-2"></i>Criar Nova Turma
-    <% end %>
-  </div>
-</div>
-
-<%# --- CARDS DE RESUMO RÁPIDO --- %>
-<div class="row g-4 mb-4">
-  <div class="col-md-4">
-    <div class="card p-4 shadow-sm border-0 bg-white rounded-4 h-100 border-start border-primary border-4">
-      <span class="small fw-bold text-muted text-uppercase d-block mb-1">Total de Turmas</span>
-      <span class="fs-1 fw-bold text-dark"><%= @classrooms.count %></span>
+<div class="container-fluid px-4 py-4">
+  <%# --- 1. CABEÇALHO MAESTRO --- %>
+  <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+    <div>
+      <h1 class="text-white fw-bold h3 mb-1">
+        <i class="bi bi-people-fill text-purple-neon me-2"></i>Turmas e Agrupamentos
+      </h1>
+      <p class="text-white-50 small mb-0">Visualização geral das turmas e cursos vinculados ao sistema.</p>
+    </div>
+    <div>
+      <%= link_to new_classroom_path, class: "btn btn-outline-purple-neon px-4 fw-bold" do %>
+        <i class="bi bi-plus-circle me-2"></i>Criar Nova Turma
+      <% end %>
     </div>
   </div>
-  <div class="col-md-8">
-    <div class="card p-4 shadow-sm border-0 bg-white rounded-4 h-100">
-      <span class="small fw-bold text-muted text-uppercase d-block mb-1">Dica de Gestão</span>
-      <p class="text-muted mb-0 small">As turmas vinculam uma **Série** (ex: 1º Ano) a um **Curso** (ex: Informática) e uma **Seção** (ex: Turma A). Isso organiza automaticamente seus diários de classe e frequências.</p>
+
+  <%# --- 2. CARDS DE RESUMO (GLASSMORPHISM) --- %>
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="glass-card p-4 border-glow-blue h-100">
+        <span class="label-neon-small mb-2" style="color: var(--neon-blue);">Total de Turmas</span>
+        <div class="fs-1 fw-bold text-white" style="text-shadow: 0 0 15px var(--neon-blue-glow);">
+          <%= @classrooms.count %>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="glass-card p-4 h-100 border-secondary" style="background: rgba(255,255,255,0.02);">
+        <span class="label-neon-small mb-2" style="color: var(--neon-orange);">Dica de Gestão</span>
+        <p class="text-white-50 mb-0 small mt-2">
+          As turmas vinculam uma **Série** (ex: 1º Ano) a um **Curso** (ex: Informática) e uma **Seção** (ex: Turma A). Isso organiza automaticamente seus diários de classe e frequências.
+        </p>
+      </div>
     </div>
   </div>
-</div>
 
-<%# --- GRADE DE TURMAS --- %>
-<div class="row g-4" id="classrooms">
-  <% if @classrooms.any? %>
-    <% @classrooms.each do |classroom| %>
-      <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-shadow transition-all">
-          <div class="card-body p-4">
+  <%# --- 3. GRADE DE TURMAS (ESTILO MAESTRO) --- %>
+  <div class="row g-4" id="classrooms">
+    <% if @classrooms.any? %>
+      <% @classrooms.each do |classroom| %>
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-card p-4 h-100 border-glow-purple">
+            
+            <%# Topo do Card: Ícone e Badge Status %>
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <div class="icon-shape bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                <i class="bx bx-group fs-3"></i>
+              <div class="icon-neon-box-blue shadow-sm">
+                <i class="bi bi-person-video3 fs-4 text-white"></i>
               </div>
-              <span class="badge bg-success-subtle text-success rounded-pill px-3">Ativa</span>
+              <span class="badge-status-neon badge-neon-green">Ativa</span>
             </div>
 
-            <h5 class="fw-bold text-dark mb-1">
+            <%# Informações Principais %>
+            <h5 class="fw-bold text-white mb-1">
               <%= classroom.display_name %>
             </h5>
-            <p class="text-muted small mb-2">
-              <i class="bi bi-mortarboard me-1"></i> <%= classroom.course&.name || "Curso não definido" %>
+            <p class="text-white-50 small mb-3">
+              <i class="bi bi-mortarboard me-1 text-purple-neon"></i> <%= classroom.course&.name || "Curso não definido" %>
             </p>
 
-            <%# --- EXIBIÇÃO DAS DISCIPLINAS VINCULADAS (PÍLULAS) --- %>
-            <div class="mb-3 d-flex flex-wrap gap-1">
+            <%# --- EXIBIÇÃO DAS DISCIPLINAS (PÍLULAS NEON) --- %>
+            <div class="mb-4 d-flex flex-wrap gap-2">
               <% if classroom.classroom_subjects.any? %>
                 <% classroom.classroom_subjects.limit(3).each do |cs| %>
-                  <span class="badge bg-light text-muted border fw-normal" style="font-size: 0.65rem; border-color: #eee !important;">
+                  <span class="badge border border-secondary text-white-50 fw-normal" style="font-size: 0.65rem; background: rgba(255,255,255,0.03);">
                     <%= cs.subject.name.truncate(12) %>
                   </span>
                 <% end %>
                 
                 <% if classroom.classroom_subjects.count > 3 %>
-                  <span class="badge bg-light text-primary border fw-bold" style="font-size: 0.65rem; border-color: #e7f1ff !important;">
+                  <span class="badge border border-purple-neon text-purple-neon fw-bold" style="font-size: 0.65rem; background: rgba(188, 19, 254, 0.05);">
                     +<%= classroom.classroom_subjects.count - 3 %>
                   </span>
                 <% end %>
               <% else %>
-                <span class="text-muted" style="font-size: 0.65rem; font-style: italic;">Nenhuma disciplina vinculada</span>
+                <span class="text-white-50 small opacity-50" style="font-style: italic;">Nenhuma disciplina vinculada</span>
               <% end %>
             </div>
 
-            <div class="border-top pt-3 mt-auto d-flex align-items-center gap-2">
-              <%# BOTÃO DETALHES %>
-              <%= link_to classroom, class: "btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" do %>
+            <%# Rodapé do Card com Ações %>
+            <div class="border-top border-secondary pt-3 mt-auto d-flex align-items-center gap-2" style="border-opacity: 0.1;">
+              <%# BOTÃO DETALHES AZUL NEON %>
+              <%= link_to classroom, class: "btn btn-sm btn-outline-blue-neon px-3 fw-bold" do %>
                 <i class="bi bi-eye me-1"></i> Detalhes
               <% end %>
 
-              <%# BOTÃO DISCIPLINAS LILÁS %>
-              <%= link_to classroom_subjects_path(classroom_id: classroom.id), class: "btn btn-sm btn-outline-lilac rounded-pill px-3 fw-bold bg-white shadow-sm" do %>
-                <i class="bx bx-book-bookmark me-1"></i> Disciplinas
+              <%# BOTÃO DISCIPLINAS ROXO NEON %>
+              <%= link_to classroom_subjects_path(classroom_id: classroom.id), class: "btn btn-sm btn-outline-purple-neon px-3 fw-bold" do %>
+                <i class="bi bi-book me-1"></i> Disciplinas
               <% end %>
               
-              <div class="dropdown ms-auto">
-                <button class="btn btn-sm btn-light rounded-circle" data-bs-toggle="dropdown">
-                  <i class="bi bi-three-dots-vertical"></i>
+              <%# Menu Dropdown %>
+              <div class="dropdown ms-auto" data-turbo="false">
+                <button class="btn btn-sm btn-link text-white-50 p-0" data-bs-toggle="dropdown">
+                  <i class="bi bi-three-dots-vertical fs-5"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                  <li><%= link_to 'Editar', edit_classroom_path(classroom), class: "dropdown-item small" %></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><%= button_to 'Excluir', classroom, method: :delete, data: { confirm: 'Tem certeza?' }, class: "dropdown-item small text-danger" %></li>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary rounded-3">
+                  <li><%= link_to 'Editar', edit_classroom_path(classroom), class: "dropdown-item small fw-bold" %></li>
+                  <li><hr class="dropdown-divider border-secondary"></li>
+                  <li><%= button_to 'Excluir', classroom, method: :delete, data: { confirm: 'Tem certeza?' }, class: "dropdown-item small text-danger fw-bold" %></li>
                 </ul>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    <% end %>
-  <% else %>
-    <div class="col-12 text-center py-5">
-      <div class="card border-0 shadow-sm rounded-4 p-5">
-        <i class="bi bi-people fs-1 text-muted mb-3"></i>
-        <h5 class="text-muted">Nenhuma turma cadastrada ainda.</h5>
-        <p class="small text-muted mb-4">Comece criando sua primeira turma para organizar seus alunos.</p>
-        <div class="d-flex justify-content-center">
-          <%= link_to "Criar Nova Turma", new_classroom_path, class: "btn btn-primary rounded-pill px-4" %>
+      <% end %>
+    <% else %>
+      <%# --- ESTADO VAZIO --- %>
+      <div class="col-12 text-center py-5">
+        <div class="glass-card border-glow-purple p-5">
+          <i class="bi bi-people text-purple-neon fs-1 mb-3 d-block"></i>
+          <h5 class="text-white fw-bold">Nenhuma turma cadastrada ainda.</h5>
+          <p class="small text-white-50 mb-4">Comece criando sua primeira turma para organizar seus alunos.</p>
+          <div class="d-flex justify-content-center">
+            <%= link_to "Criar Nova Turma", new_classroom_path, class: "btn btn-outline-purple-neon px-4" %>
+          </div>
         </div>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 </div>
 
 <style>
-  .btn-outline-lilac {
-    color: #6610f2;
-    border: 1px solid #6610f2;
-    transition: all 0.3s ease;
+  /* Caixa de Ícone com Brilho Azul */
+  .icon-neon-box-blue {
+    background: linear-gradient(135deg, var(--neon-blue), #1a73e8);
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px var(--neon-blue-glow);
   }
-  .btn-outline-lilac:hover {
-    background-color: #6610f2 !important;
-    color: white !important;
-    transform: translateY(-1px);
+
+  /* Botão Azul Neon customizado para os cards */
+  .btn-outline-blue-neon {
+    background: transparent;
+    border: 1px solid var(--neon-blue);
+    color: white;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    transition: 0.3s;
   }
-  .hover-shadow:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
-  }
-  .transition-all {
-    transition: all 0.3s ease;
-  }
-  .icon-shape {
-    flex-shrink: 0;
-  }
-  .gap-2 {
-    gap: 0.5rem;
+
+  .btn-outline-blue-neon:hover {
+    background: var(--neon-blue);
+    box-shadow: 0 0 15px var(--neon-blue-glow);
+    color: #000;
   }
 </style>

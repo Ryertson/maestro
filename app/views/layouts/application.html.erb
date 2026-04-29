@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= stylesheet_link_tag "style", "data-turbo-track": "reload" %>
   <%= javascript_importmap_tags %>
 
   <style>
@@ -252,6 +252,22 @@
           <a href="<%= student_points_path %>" class="sidebar-link <%= 'active' if controller_name == 'student_points' %>">
             <i class="bx bx-trending-up icon-points"></i>
             <span>Mapa de Pontuação</span>
+          </a>
+        </li>
+
+        <%# --- ITEM: RESULTADOS --- %>
+        <li class="sidebar-item">
+          <a href="<%= results_report_path %>" class="sidebar-link <%= 'active' if current_page?(results_report_path) %>">
+            <i class="bx bx-trophy"></i>
+            <span>Resultados</span>
+          </a>
+        </li>
+
+        <%# --- NOVO ITEM ADICIONADO: ATIVIDADES PERDIDAS --- %>
+        <li class="sidebar-item">
+          <a href="<%= lost_activities_report_path %>" class="sidebar-link <%= 'active' if current_page?(lost_activities_report_path) %>">
+            <i class="bx bx-error-alt" style="color: var(--danger-neon) !important;"></i>
+            <span>Atividades Perdidas</span>
           </a>
         </li>
 

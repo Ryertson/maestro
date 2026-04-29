@@ -1,0 +1,797 @@
+/* ==========================================================================
+   1. CONFIGURAÇÕES GLOBAIS E TEMA NEON (O CORAÇÃO)
+   ========================================================================== */
+:root {
+  /* Cores de Fundo */
+  --bg-dark-master: #0a0a0f;    /* Fundo profundo da página */
+  --card-bg: #141421;           /* Fundo dos cards e modais */
+  
+  /* Cores Neon Originais */
+  --purple-neon: #bc13fe;       /* Roxo principal vibrante */
+  --purple-glow: rgba(188, 19, 254, 0.4);
+  --success-neon: #39ff14;      /* Verde neon para "Pronto" */
+  --danger-neon: #ff3131;       /* Vermelho neon para "Excluir" */
+  --warning-neon: #ff9100;      /* Laranja neon para "Pendente" */
+  
+  /* NOVAS CORES (Inspiradas no Anexo 2) */
+  --neon-green: #24ff70;
+  --neon-green-glow: rgba(36, 255, 112, 0.3);
+  --neon-orange: #ff6b24;
+  --neon-orange-glow: rgba(255, 107, 36, 0.3);
+  --neon-blue: #24b6ff;
+  --neon-blue-glow: rgba(36, 182, 255, 0.3);
+
+  /* Glassmorphism Settings */
+  --glass-bg: rgba(20, 20, 33, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Cores de Texto */
+  --lavender: #d1d1f0;          /* Texto secundário/Labels */
+  --white-neon: #ffffff;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* Corrigido de box-box-sizing para box-sizing */
+}
+
+body {
+  font-family: 'Outfit', serif;
+  background-color: var(--bg-dark-master);
+  color: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+li {
+  list-style: none;
+}
+
+/* ==========================================================================
+   2. ESTRUTURA DE LAYOUT (SIDEBAR & MAIN)
+   ========================================================================== */
+.wrapper {
+  display: flex;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  transition: all 0.25s ease-in-out;
+  background-color: var(--bg-dark-master);
+}
+
+#sidebar {
+  width: 90px;
+  min-width: 90px;
+  transition: all 0.25s ease-in-out;
+  background-color: #0b0f19;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(188, 19, 254, 0.1);
+}
+
+#sidebar.expand {
+  width: 260px;
+  min-width: 260px;
+}
+
+#sidebar:not(.expand) .sidebar-logo,
+#sidebar:not(.expand) a.sidebar-link span {
+  display: none;
+}
+
+.toggle-btn {
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  border-radius: 0.425rem;
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #323c55;
+  cursor: pointer;
+  border: none;
+}
+
+#sidebar.expand .sidebar-logo,
+#sidebar.expand a.sidebar-link span {
+  animation: fadeIn .25s ease;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.sidebar-logo a {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  padding: 0.7rem 0;
+  flex: 1 1 auto;
+  z-index: 10;
+}
+
+a.sidebar-link {
+  padding: .625rem 1.625rem;
+  color: #fff;
+  display: block;
+  white-space: nowrap;
+  font-weight: 700;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.sidebar-link i {
+  font-size: 1.1rem;
+  margin-right: .75rem;
+}
+
+a.sidebar-link:hover {
+  background-color: rgba(188, 19, 254, 0.1);
+  border-left: 3px solid var(--purple-neon);
+  color: #fff;
+}
+
+a.sidebar-link:hover i, 
+.sidebar-link.active i {
+  color: var(--purple-neon);
+  text-shadow: 0 0 10px var(--purple-glow);
+}
+
+.sidebar-link.active {
+  background-color: rgba(188, 19, 254, 0.15);
+  border-left: 3px solid var(--purple-neon) !important;
+}
+
+/* ==========================================================================
+   3. COMPONENTES DO DASHBOARD (AULAS & GESTÃO)
+   ========================================================================== */
+
+.content-card-purple {
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.form-select-neon, .form-control-neon {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(188, 19, 254, 0.3) !important;
+  color: white !important;
+  border-radius: 10px;
+  padding: 0.6rem;
+  transition: all 0.3s ease;
+}
+
+.form-select-neon:focus, .form-control-neon:focus {
+  border-color: var(--purple-neon) !important;
+  box-shadow: 0 0 12px var(--purple-glow) !important;
+  outline: none;
+}
+
+.text-purple-neon {
+  color: var(--purple-neon) !important;
+  text-shadow: 0 0 10px var(--purple-glow);
+}
+
+.label-neon-small {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--lavender);
+  display: block;
+}
+
+.btn-outline-purple-neon {
+  background: transparent;
+  border: 2px solid var(--purple-neon);
+  color: white;
+  border-radius: 50px;
+  font-weight: bold;
+  padding: 0.5rem 1.5rem;
+  transition: 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-outline-purple-neon:hover {
+  background: var(--purple-neon);
+  box-shadow: 0 0 20px var(--purple-glow);
+  color: white;
+}
+
+.table-dark-neon {
+  --bs-table-bg: transparent;
+  color: #fff;
+}
+
+.table-dark-neon thead {
+  background: rgba(188, 19, 254, 0.1);
+  color: var(--purple-neon);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.table-dark-neon td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 0.5rem;
+}
+
+.badge-neon-purple {
+  background: rgba(188, 19, 254, 0.2);
+  color: var(--purple-neon);
+  border: 1px solid var(--purple-neon);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.progress-neon {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.progress-bar-purple {
+  background: linear-gradient(90deg, #8a2be2, var(--purple-neon));
+  box-shadow: 0 0 15px var(--purple-glow);
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+/* ==========================================================================
+   4. NOVOS ESTILOS GLASSMORPHISM & HOVER GLOW (ANEXO 2)
+   ========================================================================== */
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Efeitos de Brilho na Borda (Hover) */
+.glass-card:hover {
+  transform: translateY(-5px);
+}
+
+.border-glow-green:hover {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 20px var(--neon-green-glow);
+}
+
+.border-glow-orange:hover {
+  border-color: var(--neon-orange);
+  box-shadow: 0 0 20px var(--neon-orange-glow);
+}
+
+.border-glow-blue:hover {
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 20px var(--neon-blue-glow);
+}
+
+.border-glow-purple:hover {
+  border-color: var(--purple-neon);
+  box-shadow: 0 0 20px var(--purple-glow);
+}
+
+/* Estilo para os inputs dentro do modo Glass */
+.form-control-glass {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+}
+
+.form-control-glass:focus {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--neon-blue) !important;
+  box-shadow: 0 0 10px var(--neon-blue-glow) !important;
+}
+
+/* --- Estilos Neon para Status de Atividades --- */
+.badge-status-neon {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+/* Azul Neon (Atividade Vinculada) */
+.badge-neon-blue {
+  background: rgba(36, 182, 255, 0.15);
+  color: #24b6ff;
+  border-color: #24b6ff;
+  box-shadow: 0 0 10px rgba(36, 182, 255, 0.4);
+}
+
+/* Vermelho Neon (Sem Atividade) */
+.badge-neon-red {
+  background: rgba(255, 49, 49, 0.15);
+  color: #ff3131;
+  border-color: #ff3131;
+  box-shadow: 0 0 10px rgba(255, 49, 49, 0.4);
+}
+
+/* Verde Neon (Corrigida) */
+.badge-neon-green {
+  background: rgba(36, 255, 112, 0.15);
+  color: #24ff70;
+  border-color: #24ff70;
+  box-shadow: 0 0 10px rgba(36, 255, 112, 0.4);
+}
+
+/* Laranja Neon (Pendente de Correção) */
+.badge-neon-orange {
+  background: rgba(255, 145, 0, 0.15);
+  color: #ff9100;
+  border-color: #ff9100;
+  box-shadow: 0 0 10px rgba(255, 145, 0, 0.4);
+}
+
+/* --- Tema Dark Neon para Calendário --- */
+
+/* Fundo da tabela e nomes dos dias (seg, ter, etc) */
+.calendar-dark-theme table {
+  background-color: #0a0a0b !important; /* Fundo bem escuro */
+  border-collapse: separate !important;
+  border-spacing: 2px;
+  width: 100%;
+}
+
+.calendar-dark-theme th {
+  background-color: #121214 !important;
+  color: #ffffff !important; /* Nomes dos dias em branco */
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 15px 0 !important;
+  text-align: center !important; /* Centraliza as siglas */
+  border: none !important;
+}
+
+/* Quadrados dos dias */
+.calendar-dark-theme td {
+  background-color: #121214 !important; /* Quadrado Dark */
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  height: 110px !important;
+  padding: 5px !important;
+  vertical-align: top;
+  transition: background 0.3s ease;
+}
+
+.calendar-dark-theme td:hover {
+  background-color: #1a1a1d !important;
+}
+
+/* Números das datas */
+.day-number {
+  color: #ffffff; /* Datas em branco */
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+/* Dia Atual com Roxo Neon */
+.today-neon {
+  color: #ffffff !important;
+  background: var(--purple-neon); /* Seu roxo neon */
+  border-radius: 6px;
+  box-shadow: 0 0 10px var(--purple-neon);
+}
+
+/* Ajuste nos cards de aulas dentro do calendário */
+.badge-calendar-lesson {
+  background: rgba(111, 66, 193, 0.2);
+  border-left: 3px solid var(--purple-neon);
+  color: #e0e0e0;
+  font-size: 0.65rem;
+  padding: 4px 6px;
+  margin-top: 3px;
+  border-radius: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Remove bordas extras do simple-calendar */
+.simple-calendar .prev-month, .simple-calendar .next-month {
+  background-color: #080809 !important;
+  opacity: 0.3;
+}
+
+/* --- Calendário com Grade Fixa e Truncate --- */
+
+.calendar-dark-theme table {
+  table-layout: fixed !important; /* Força colunas de tamanhos iguais */
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 2px;
+  background-color: #0a0a0b !important;
+}
+
+.calendar-dark-theme td {
+  background-color: #121214 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  height: 120px !important; /* Altura fixa padrão */
+  width: 14.28% !important; /* 100% dividido por 7 dias */
+  padding: 8px !important;
+  vertical-align: top;
+  overflow: hidden; /* Garante que nada saia do quadrado */
+}
+
+/* Container interno das lições para permitir scroll se houver muitas */
+.lessons-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 80px; /* Limita a área das etiquetas */
+  overflow-y: auto; /* Adiciona scroll interno discreto se necessário */
+  scrollbar-width: none; /* Esconde scroll no Firefox */
+}
+
+.lessons-wrapper::-webkit-scrollbar {
+  display: none; /* Esconde scroll no Chrome/Safari */
+}
+
+/* Estilo das Etiquetas (Cards de aula) */
+.badge-calendar-lesson {
+  background: rgba(111, 66, 193, 0.2);
+  border-left: 3px solid var(--purple-neon);
+  color: #e0e0e0;
+  font-size: 0.65rem;
+  padding: 4px 6px;
+  border-radius: 2px;
+  
+  /* Mágica do Truncate (Corta o texto com ...) */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  cursor: help; /* Muda o mouse para indicar que há mais info */
+  transition: all 0.2s ease;
+}
+
+.badge-calendar-lesson:hover {
+  background: rgba(111, 66, 193, 0.4);
+  color: #fff;
+}
+
+/* --- Glow Dinâmico nos Cards de Bimestre --- */
+
+/* 1º Bimestre (Roxo) */
+.border-glow-purple:hover {
+  box-shadow: 0 0 20px rgba(111, 66, 193, 0.6);
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+}
+
+/* 2º Bimestre (Azul) - Referência na imagem image_d0d0c0.png */
+.border-glow-blue:hover {
+  box-shadow: 0 0 20px rgba(36, 182, 255, 0.6);
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+}
+
+/* 3º Bimestre (Verde) */
+.border-glow-green:hover {
+  box-shadow: 0 0 20px rgba(36, 255, 112, 0.6);
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+}
+
+/* 4º Bimestre (Laranja/Amarelo) */
+.border-glow-orange:hover {
+  box-shadow: 0 0 20px rgba(255, 145, 0, 0.6);
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+}
+
+/* --- Estilização dos Selects e Inputs --- */
+.form-control-glass {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border-radius: 10px;
+}
+
+/* Altera o fundo da lista que abre (options) para dark */
+.form-control-glass option {
+  background-color: #121214 !important; /* Cor dark sólida */
+  color: white !important;
+}
+
+/* Estilo para quando o campo está em foco */
+.form-control-glass:focus {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--purple-neon) !important;
+  box-shadow: 0 0 10px rgba(111, 66, 193, 0.3) !important;
+  color: white !important;
+}
+
+/* --- Ajustes de Contraste e Visibilidade --- */
+
+/* Barra de Pesquisa e Lupa (image_d1493c.png) */
+.form-control-glass::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important; /* Placeholder em branco suave */
+}
+
+.form-control-glass {
+  color: white !important; /* Texto digitado em branco */
+}
+
+/* Ícone da Lupa dentro da busca */
+.bi-search, .input-group-text i {
+  color: white !important;
+}
+
+/* Títulos da Tabela (image_d14fa7.png) */
+.table-dark-neon thead th {
+  color: white !important; /* Muda os títulos "NOME DA AULA", "DATA", etc. para branco */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Labels dos Filtros e Campos (image_d0d0c0.png) */
+.label-neon-small {
+  color: white !important; /* Força os títulos dos filtros em branco */
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+/* Textos de apoio e datas na tabela */
+.text-white-50 {
+  color: rgba(255, 255, 255, 0.8) !important; /* Deixa o cinza bem mais claro, quase branco */
+}
+
+/* Container com scroll para o Banco de Aulas */
+.table-responsive-scroll {
+  max-height: 450px; /* Altura máxima antes de aparecer o scroll */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--purple-neon) transparent;
+}
+
+/* Estilização da barra de rolagem para Chrome/Safari/Edge */
+.table-responsive-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.table-responsive-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-responsive-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--purple-neon);
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--purple-glow);
+}
+
+/* Mantém o cabeçalho da tabela fixo enquanto você rola */
+.sticky-thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #121214 !important;
+}
+
+/* Cores específicas para as abas ativas */
+.nav-tabs-maestro .nav-link.active.tab-azul {
+  color: var(--neon-blue) !important;
+  border-bottom: 2px solid var(--neon-blue) !important;
+  text-shadow: 0 0 10px var(--neon-blue-glow);
+  background: rgba(36, 182, 255, 0.1) !important;
+}
+
+.nav-tabs-maestro .nav-link.active.tab-vermelha {
+  color: var(--danger-neon) !important;
+  border-bottom: 2px solid var(--danger-neon) !important;
+  text-shadow: 0 0 10px rgba(255, 49, 49, 0.4);
+  background: rgba(255, 49, 49, 0.1) !important;
+}
+
+/* Ajuste para o botão "Marcar como Corrigida" (Verde Neon Sólido) */
+.btn-concluir-verde {
+  background: var(--neon-green) !important;
+  color: #000 !important; /* Texto preto para leitura no brilho */
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  box-shadow: 0 0 15px var(--neon-green-glow);
+  transition: all 0.3s ease;
+}
+
+.btn-concluir-verde:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px var(--neon-green);
+}
+
+/* --- Cores Neon para Status de Entrega --- */
+
+/* Entregue: Verde Neon */
+.status-entregue {
+  background-color: rgba(36, 255, 112, 0.1) !important;
+  color: #24ff70 !important;
+  border: 1px solid #24ff70 !important;
+  box-shadow: 0 0 10px rgba(36, 255, 112, 0.3);
+}
+
+/* Não Entregue: Vermelho Neon */
+.status-nao-entregue {
+  background-color: rgba(255, 49, 49, 0.1) !important;
+  color: #ff3131 !important;
+  border: 1px solid #ff3131 !important;
+  box-shadow: 0 0 10px rgba(255, 49, 49, 0.3);
+}
+
+/* Pendente: Azul Neon */
+.status-pendente {
+  background-color: rgba(36, 182, 255, 0.1) !important;
+  color: #24b6ff !important;
+  border: 1px solid #24b6ff !important;
+  box-shadow: 0 0 10px rgba(36, 182, 255, 0.3);
+}
+
+/* Entregue com Atraso: Amarelo/Laranja Neon */
+.status-atraso {
+  background-color: rgba(255, 145, 0, 0.1) !important;
+  color: #ff9100 !important;
+  border: 1px solid #ff9100 !important;
+  box-shadow: 0 0 10px rgba(255, 145, 0, 0.3);
+}
+
+/* Centralização do texto no select */
+.form-control-glass.text-center-select {
+  text-align: center;
+  text-align-last: center; /* Garante centralização em alguns navegadores */
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* --- Estilos para o Mapa de Pontuação Neon --- */
+
+/* Badge da Média Final */
+.media-final-badge {
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 5px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  min-width: 50px;
+  text-align: center;
+}
+
+.media-alta { color: #24ff70; text-shadow: 0 0 10px rgba(36, 255, 112, 0.4); } /* Verde */
+.media-media { color: #24b6ff; text-shadow: 0 0 10px rgba(36, 182, 255, 0.4); } /* Azul */
+.media-baixa { color: #ff3131; text-shadow: 0 0 10px rgba(255, 49, 49, 0.4); } /* Vermelho */
+
+/* Cabeçalho da Atividade na Tabela */
+.th-activity-header {
+  font-size: 0.65rem !important;
+  line-height: 1.2;
+  text-align: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.type-label-small {
+  display: block;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+/* Coluna de Média Final */
+.col-media-final {
+  background: rgba(36, 182, 255, 0.1) !important;
+  border-left: 2px solid var(--neon-blue) !important;
+}
+
+/* Caixa de Ícone com Brilho Azul (Estilo Classrooms) */
+.icon-neon-box-blue {
+  background: linear-gradient(135deg, var(--neon-blue), #1a73e8);
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px var(--neon-blue-glow);
+}
+
+/* Botão Azul Neon para os cards */
+.btn-outline-blue-neon {
+  background: transparent;
+  border: 1px solid var(--neon-blue);
+  color: white;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: 0.3s;
+}
+
+.btn-outline-blue-neon:hover {
+  background: var(--neon-blue);
+  box-shadow: 0 0 15px var(--neon-blue-glow);
+  color: #000;
+}
+
+/* Badge extra pequeno para disciplinas */
+.x-small {
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+/* Botão de Relatório PDF (Destaque Neon Orange) */
+.btn-neon-orange {
+  background: var(--neon-orange) !important;
+  color: white !important;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 15px;
+  box-shadow: 0 0 15px var(--neon-orange-glow);
+  transition: all 0.3s ease;
+}
+
+.btn-neon-orange:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px var(--neon-orange);
+  filter: brightness(1.1);
+}
+
+/* Ajuste de centralização para os badges de aprovação no card */
+.badge-status-neon.w-75 {
+  margin: 0 auto;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+/* Cor específica para a aba de Corrigidas */
+.nav-tabs-maestro .nav-link.active.tab-roxa {
+  color: var(--purple-neon) !important;
+  border-bottom: 2px solid var(--purple-neon) !important;
+  text-shadow: 0 0 10px var(--purple-glow);
+  background: rgba(188, 19, 254, 0.1) !important;
+}
+
+/* Ajuste de brilho para a borda do card de corrigidas */
+.border-glow-purple {
+  border: 1px solid rgba(188, 19, 254, 0.3) !important;
+  box-shadow: 0 0 20px rgba(188, 19, 254, 0.15) !important;
+}

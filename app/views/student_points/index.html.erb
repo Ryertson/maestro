@@ -1,21 +1,26 @@
 <div class="container-fluid px-4 py-4">
-  <%# --- Cabeçalho --- %>
+  <%# --- 1. CABEÇALHO MAESTRO --- %>
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h1 class="h3 fw-bold text-dark mb-0">
-        <i class="bi bi-grid-3x3-gap me-2 text-purple"></i>Mapa de Pontuação
+      <h1 class="h3 fw-bold text-white mb-0">
+        <i class="bi bi-grid-3x3-gap me-2 text-purple-neon"></i>Mapa de Pontuação
       </h1>
-      <p class="text-muted small mb-0">Gestão de pontos por atividade e aproveitamento total (Média por Categorias)</p>
+      <p class="text-white-50 small mb-0">Gestão de pontos por atividade e aproveitamento total (Média por Categorias)</p>
     </div>
     
     <div class="d-flex gap-2">
-      <div class="dropdown">
-        <button class="btn btn-white border shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
-          <i class="bi bi-person-video3 me-2"></i><%= @current_classroom&.full_name_info || "Selecionar Turma" %>
+      <div class="dropdown" data-turbo="false">
+        <button class="btn btn-outline-purple-neon dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person-video3 me-2"></i>
+          <%= @current_classroom&.full_name_info || "Selecionar Turma" %>
         </button>
-        <ul class="dropdown-menu shadow border-0">
+        <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-secondary">
           <% @classrooms.each do |c| %>
-            <li><%= link_to c.full_name_info, student_points_path(classroom_id: c.id), class: "dropdown-item" %></li>
+            <li>
+              <%= link_to c.full_name_info, student_points_path(classroom_id: c.id), 
+                  class: "dropdown-item fw-bold #{'active bg-purple-neon' if c.id == @current_classroom&.id}",
+                  data: { turbo: false } %>
+            </li>
           <% end %>
         </ul>
       </div>
@@ -23,28 +28,31 @@
   </div>
 
   <% if @current_classroom %>
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-      <div class="table-responsive" style="max-height: 75vh;">
-        <table class="table table-hover align-middle mb-0 border-start-0 border-end-0">
-          <thead class="table-light sticky-top" style="z-index: 10;">
-            <tr>
-              <th class="ps-4 sticky-column bg-light border-end" style="min-width: 280px; z-index: 11;">
-                <span class="text-uppercase small fw-bold text-muted">Estudante</span>
+    <%# --- 2. MAPA DE PONTOS (GLASSMORPHISM) --- %>
+    <div class="glass-card border-glow-blue overflow-hidden">
+      <div class="table-responsive-scroll" style="max-height: 75vh;">
+        <table class="table table-dark-neon table-hover align-middle mb-0">
+          <thead class="sticky-thead">
+            <tr class="text-center">
+              <th class="ps-4 text-start sticky-column-dark border-end border-secondary" style="min-width: 280px; z-index: 11;">
+                <span class="label-neon-small">Estudante</span>
               </th>
+              
               <% @activities.each do |activity| %>
-                <th class="text-center border-end" style="min-width: 140px;">
-                  <div class="badge bg-purple-light text-purple mb-1" style="font-size: 0.65rem;">
+                <th class="text-center border-end border-secondary" style="min-width: 140px; background: rgba(255,255,255,0.02);">
+                  <div class="badge-status-neon badge-neon-purple mb-1" style="font-size: 0.6rem;">
                     <%= activity.activity_type %>
                   </div>
-                  <div class="text-truncate d-block small fw-bold text-dark" title="<%= activity.name %>">
+                  <div class="text-truncate d-block small fw-bold text-white" title="<%= activity.name %>">
                     <%= activity.name %>
                   </div>
-                  <div class="text-muted fw-normal" style="font-size: 0.7rem;">
-                    Data: <%= activity.date&.strftime("%d/%m") %> | Max: <span class="fw-bold"><%= activity.points %></span>
+                  <div class="text-white-50 fw-normal" style="font-size: 0.65rem;">
+                    <%= activity.date&.strftime("%d/%m") %> | <span class="text-purple-neon">Max: <%= activity.points %></span>
                   </div>
                 </th>
               <% end %>
-              <th class="text-center bg-primary text-white fw-bold shadow-sm" style="min-width: 120px;">
+
+              <th class="text-center col-media-final text-white fw-bold shadow-sm" style="min-width: 120px;">
                 MÉDIA FINAL
               </th>
             </tr>
@@ -53,34 +61,33 @@
           <tbody>
             <% @students.each do |student| %>
               <tr>
-                <td class="ps-4 fw-bold sticky-column bg-white border-end shadow-sm">
+                <td class="ps-4 fw-bold sticky-column-dark border-end border-secondary shadow-sm">
                   <div class="d-flex align-items-center">
-                    <div class="avatar-circle me-2"><%= student.name[0] %></div>
-                    <%= student.name %>
+                    <div class="avatar-circle-dark me-3"><%= student.name[0] %></div>
+                    <span class="text-white small text-uppercase"><%= student.name %></span>
                   </div>
                 </td>
                 
                 <% @activities.each do |activity| %>
-                  <%# Buscamos o ponto na coleção já carregada via .includes no Controller %>
-                  <% score_record = student.student_points.find { |sp| sp.activity_id == activity.id } %>
+                  <%# SUBSTITUIÇÃO REALIZADA: Busca direta no banco de dados para evitar inconsistência de cache %>
+                  <% score_record = student.student_points.find_by(activity_id: activity.id) %>
                   <% current_val = score_record&.points || 0 %>
-                  
-                  <td class="text-center p-2 border-end">
+
+                  <td class="text-center p-2 border-end border-secondary">
                     <input type="text" 
                            value="<%= score_record&.points %>" 
-                           class="form-control form-control-sm text-center js-point-input mx-auto"
+                           class="form-control form-control-glass text-center js-point-input mx-auto"
                            data-student="<%= student.id %>"
                            data-activity="<%= activity.id %>"
                            placeholder="0.0"
-                           style="width: 75px; border-radius: 8px; font-weight: 600; <%= 'background-color: #f1f3f5;' if current_val == 0 %>">
+                           style="width: 70px; font-weight: 700; color: <%= current_val > 0 ? 'var(--neon-blue)' : 'white' %>; <%= 'opacity: 0.5;' if current_val == 0 %>">
                   </td>
                 <% end %>
                 
-                <%# Coluna de Média Final: Forçamos a passagem dos IDs das atividades atuais %>
-                <td class="text-center fw-bold bg-light-blue border-start shadow-sm">
+                <td class="text-center col-media-final border-start border-secondary shadow-sm">
                   <% media_atual = student.calcular_nota_com_pesos(@activities.map(&:id)) %>
-                  <span class="h6 mb-0 fw-bold js-total-<%= student.id %> <%= media_atual >= 6.0 ? 'text-success' : 'text-danger' %>">
-                    <%= media_atual %>
+                  <span class="js-total-<%= student.id %> media-final-badge <%= media_atual >= 6.0 ? 'media-alta' : 'media-baixa' %>">
+                    <%= number_with_precision(media_atual, precision: 1) %>
                   </span>
                 </td>
               </tr>
@@ -90,33 +97,59 @@
       </div>
     </div>
   <% else %>
-    <div class="alert alert-info rounded-4 border-0 shadow-sm p-4 text-center">
-      <i class="bi bi-info-circle h1 d-block mb-3"></i>
-      <h5 class="fw-bold">Nenhuma turma selecionada</h5>
-      <p class="mb-0">Por favor, selecione uma turma no menu superior para visualizar o mapa de pontos.</p>
+    <div class="glass-card p-5 text-center border-glow-purple">
+      <i class="bi bi-info-circle-fill text-purple-neon h1 d-block mb-3"></i>
+      <h5 class="text-white fw-bold">Nenhuma turma selecionada</h5>
+      <p class="text-white-50 mb-0">Selecione uma turma no menu superior para carregar o Mapa de Pontos.</p>
     </div>
   <% end %>
 </div>
 
 <style>
-  .sticky-column { position: sticky; left: 0; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
-  .bg-purple-light { background-color: #f3f0ff; color: #6f42c1; }
-  .bg-light-blue { background-color: #f8fbff; }
-  .text-purple { color: #6f42c1 !important; }
-  .avatar-circle { width: 30px; height: 30px; background-color: #e9ecef; color: #495057; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
-  .js-point-input { transition: all 0.2s ease; border: 1px solid #dee2e6; }
-  .js-point-input:focus { border-color: #6f42c1; box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.15); background-color: #fff !important; }
-  .save-success { border-color: #2fb344 !important; background-color: #f0fff4 !important; }
-  .save-error { border-color: #d63939 !important; background-color: #fff5f5 !important; }
-  
-  .update-pulse {
-    animation: pulse-blue 1s;
+  .sticky-column-dark { 
+    position: sticky; 
+    left: 0; 
+    z-index: 5; 
+    background-color: #121214 !important; 
+    box-shadow: 5px 0 15px rgba(0,0,0,0.3);
   }
+
+  .avatar-circle-dark { 
+    width: 32px; 
+    height: 32px; 
+    background-color: rgba(188, 19, 254, 0.1); 
+    color: var(--purple-neon); 
+    border: 1px solid var(--purple-neon);
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 0.75rem; 
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--purple-glow);
+  }
+
+  .save-success { border-color: var(--neon-green) !important; box-shadow: 0 0 10px var(--neon-green-glow) !important; }
+  .save-error { border-color: var(--danger-neon) !important; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3) !important; }
   
-  @keyframes pulse-blue {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+  .media-final-badge {
+    font-weight: 800;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+  }
+  .media-alta { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green-glow); }
+  .media-baixa { color: var(--danger-neon); text-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
+
+  .col-media-final {
+    background: rgba(36, 182, 255, 0.05) !important;
+    border-left: 1px solid var(--neon-blue) !important;
+  }
+
+  .update-pulse { animation: pulse-neon 0.8s; }
+  @keyframes pulse-neon {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
   }
 </style>
 
@@ -152,19 +185,15 @@
             const totalSpan = document.querySelector(`.js-total-${studentId}`);
             if(totalSpan && data.nova_media !== undefined) {
               const novaMedia = parseFloat(data.nova_media);
-              totalSpan.innerText = novaMedia.toFixed(2);
+              totalSpan.innerText = novaMedia.toFixed(1);
               
-              // Ajusta a cor dinamicamente
               if (novaMedia >= 6.0) {
-                totalSpan.classList.add('text-success');
-                totalSpan.classList.remove('text-danger', 'text-primary');
+                totalSpan.className = `js-total-${studentId} media-final-badge media-alta update-pulse`;
               } else {
-                totalSpan.classList.add('text-danger');
-                totalSpan.classList.remove('text-success', 'text-primary');
+                totalSpan.className = `js-total-${studentId} media-final-badge media-baixa update-pulse`;
               }
               
-              totalSpan.classList.add('update-pulse');
-              setTimeout(() => totalSpan.classList.remove('update-pulse'), 1000);
+              setTimeout(() => totalSpan.classList.remove('update-pulse'), 800);
             }
 
             setTimeout(() => this.classList.remove('save-success'), 1500);

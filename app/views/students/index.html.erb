@@ -7,7 +7,6 @@
       <h1 class="fw-bold text-secondary mb-0">Gestão de Alunos e Frequência</h1>
       <p class="text-muted small">Dashboard de acompanhamento e diário de classe</p>
     </div>
-    <%# Somente Admins podem matricular novos alunos nesta tela %>
     <% if current_professor.admin? %>
       <%= link_to '➕ Matricular Alunos', new_student_path, class: "btn btn-primary shadow-sm rounded-pill px-4" %>
     <% end %>
@@ -84,7 +83,7 @@
     </div>
   </div>
 
-  <%# --- FILTROS AVANÇADOS --- %>
+  <%# --- FILTROS --- %>
   <div class="card mb-4 border-0 shadow-sm bg-dark text-white rounded-4">
     <div class="card-body p-4">
       <%= form_with url: request.path, method: :get, local: true, class: "row g-3 align-items-end" do |f| %>
@@ -92,22 +91,18 @@
           <%= f.label :month_year, "Mês/Ano", class: "form-label small opacity-75 fw-bold" %>
           <%= f.month_field :month_year, value: params[:month_year] || @selected_date.strftime("%Y-%m"), class: "form-control bg-secondary text-white border-0 shadow-sm", onchange: "this.form.submit()" %>
         </div>
-
         <div class="col-md-4">
-          <%= f.label :classroom_id, "Turma (Curso | Série - Turma)", class: "form-label small opacity-75 fw-bold" %>
-          <%# ATUALIZADO: Usando @available_classrooms para respeitar o vínculo do professor %>
+          <%= f.label :classroom_id, "Turma", class: "form-label small opacity-75 fw-bold" %>
           <%= f.collection_select :classroom_id, (@available_classrooms || Classroom.all), :id, :full_name_info, 
               { include_blank: "Escolha a Turma...", selected: @classroom_id }, 
               { class: "form-select bg-secondary text-white border-0 shadow-sm", onchange: "this.form.submit()" } %>
         </div>
-
         <div class="col-md-3">
           <%= f.label :student_id, "Aluno Específico", class: "form-label small opacity-75 fw-bold" %>
           <%= f.collection_select :student_id, (@students || []), :id, :name, 
               { include_blank: "Todos os Alunos", selected: params[:student_id] }, 
               { class: "form-select bg-secondary text-white border-0 shadow-sm", onchange: "this.form.submit()" } %>
         </div>
-
         <div class="col-md-2">
            <%= f.submit "Filtrar", class: "btn btn-info w-100 fw-bold rounded-3 text-white shadow-sm", style: "background-color: #00cae3; border: none; height: 38px;" %>
         </div>
@@ -132,15 +127,12 @@
     </div>
   </div>
 
-  <%# --- PLANILHA DE FREQUÊNCIA --- %>
+  <%# --- PLANILHA --- %>
   <div class="card border-0 shadow-sm overflow-hidden rounded-4" style="background-color: #1e1e2d;">
     <div class="table-responsive">
       <table class="table table-sm table-bordered border-secondary mb-0 text-center align-middle" style="color: #a2a3b7;">
         <thead>
-          <% 
-            inicio_mes = @start_of_month
-            fim_mes = @end_of_month
-          %>
+          <% inicio_mes = @start_of_month; fim_mes = @end_of_month %>
           <tr>
             <th rowspan="3" class="bg-dark text-white align-middle border-secondary px-3" style="min-width: 240px;">ESTUDANTE</th>
             <% (inicio_mes..fim_mes).group_by { |d| d.strftime("%U") }.each_with_index do |(week, days), index| %>
@@ -176,27 +168,23 @@
                 </td>
 
                 <% (inicio_mes..fim_mes).each do |day| %>
-                  <% 
-                    is_weekend = day.saturday? || day.sunday?
-                    has_lesson = @planned_dates.include?(day) 
-                  %>
+                  <% is_weekend = day.saturday? || day.sunday?; has_lesson = @planned_dates.include?(day) %>
                   <td class="p-1 border-secondary <%= 'bg-secondary bg-opacity-10' if is_weekend %>">
                     <% att = student.attendances.detect { |a| a.date == day } %>
-                    
-                    <% 
-                      status_slug = case att&.status&.to_s&.downcase&.strip
+                    <% status_slug = case att&.status&.to_s&.downcase&.strip
                                     when 'presente', 'present' then 'present'
                                     when 'faltou', 'absent' then 'absent'
                                     when 'atrasado', 'late' then 'late'
                                     when 'justificada', 'justified' then 'justified'
                                     else ''
-                                    end
-                    %>
+                                    end %>
                     
                     <div class="dropdown">
+                      <%# BOTÃO ATUALIZADO: Adicionado autocomplete off e removido comportamentos de foco travado %>
                       <button id="btn-<%= student.id %>-<%= day %>" 
                               class="btn btn-sm p-0 w-100 h-100 attendance-box border-secondary border p-<%= status_slug %> <%= 'opacity-25' unless has_lesson %>" 
-                              type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-height: 25px; min-width: 25px;">
+                              type="button" data-bs-toggle="dropdown" aria-expanded="false" 
+                              style="min-height: 25px; min-width: 25px;" autocomplete="off">
                         <% if att %>
                           <i class="bi <%= attendance_icon(status_slug) %> small text-white"></i>
                         <% elsif !has_lesson && !is_weekend %>
@@ -208,7 +196,8 @@
                         <% if has_lesson %>
                           <% ['present', 'absent', 'late', 'justified', 'clear'].each do |status| %>
                             <li>
-                              <%= form_with url: student_attendances_path(student), method: :post, local: false do |f| %>
+                              <%# FORM_WITH ATUALIZADO: data: { turbo: false } é a chave para o clique contínuo %>
+                              <%= form_with url: student_attendances_path(student), method: :post, local: false, data: { turbo: false } do |f| %>
                                 <%= hidden_field_tag :date, day %>
                                 <%= hidden_field_tag :status, status %>
                                 <%= hidden_field_tag :classroom_id, student.classroom_id %>
@@ -229,10 +218,7 @@
                         <% else %>
                           <li class="p-3 text-center">
                             <i class="bi bi-calendar-x text-warning d-block mb-2 fs-4"></i>
-                            <small class="text-white opacity-75">Nenhuma aula planejada para este dia.</small>
-                            <%= link_to lessons_path, class: "btn btn-xs btn-outline-info rounded-pill mt-2 py-1 px-2", style: "font-size: 10px;" do %>
-                              Planejar Aula
-                            <% end %>
+                            <small class="text-white opacity-75">Nenhuma aula planejada.</small>
                           </li>
                         <% end %>
                       </ul>
@@ -246,16 +232,7 @@
               </tr>
             <% end %>
           <% else %>
-            <tr>
-              <td colspan="50" class="p-5 text-muted bg-dark text-center py-5">
-                <i class="bi bi-person-badge fs-1 d-block mb-3 opacity-25"></i>
-                <% if @classroom_id.blank? %>
-                  Por favor, <strong>selecione uma turma</strong> acima para visualizar os alunos.
-                <% else %>
-                  Nenhum aluno encontrado para os filtros selecionados.
-                <% end %>
-              </td>
-            </tr>
+            <tr><td colspan="50" class="p-5 text-muted bg-dark text-center py-5">Selecione uma turma.</td></tr>
           <% end %>
         </tbody>
       </table>
@@ -269,15 +246,9 @@
   .attendance-box { background-color: #2b2b40; transition: all 0.2s ease; border-radius: 4px; }
   .attendance-box:hover { background-color: #3f4254; border-color: #00cae3 !important; transform: scale(1.1); }
   .dropdown-menu { border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important; background-color: #1e1e2d !important; min-width: 180px; }
-  .dropdown-item { font-size: 13px; color: inherit; transition: 0.2s; }
-  .dropdown-item:hover { background-color: rgba(255, 255, 255, 0.08) !important; color: white !important; padding-left: 20px; }
-  
-  .p-present, .p-presente { background-color: #198754 !important; border-color: #198754 !important; }
-  .p-absent, .p-faltou { background-color: #dc3545 !important; border-color: #dc3545 !important; }
-  .p-late, .p-atrasado { background-color: #ffc107 !important; border-color: #ffc107 !important; color: #000 !important; }
-  .p-justified, .p-justificada { background-color: #0dcaf0 !important; border-color: #0dcaf0 !important; }
-
-  tbody tr:hover { background-color: rgba(255, 255, 255, 0.05) !important; transition: background-color 0.2s ease; }
-  tbody tr:hover td:first-child { color: #00cae3 !important; background-color: #252538 !important; box-shadow: inset 4px 0 0 #00cae3; }
-  td:hover { background-color: rgba(255, 255, 255, 0.1) !important; outline: 1px solid #00cae3; }
+  .dropdown-item { font-size: 13px; color: inherit; transition: 0.2s; cursor: pointer; }
+  .p-present { background-color: #198754 !important; }
+  .p-absent { background-color: #dc3545 !important; }
+  .p-late { background-color: #ffc107 !important; color: #000 !important; }
+  .p-justified { background-color: #0dcaf0 !important; }
 </style>

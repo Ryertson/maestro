@@ -1,10 +1,10 @@
-<%# --- SISTEMA DE NOTIFICAÇÃO (TOAST) --- %>
+<%# --- SISTEMA DE NOTIFICAÇÃO (TOAST) MAESTRO --- %>
 <% if notice || alert %>
   <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
-    <div id="liveToast" class="toast show align-items-center text-white <%= notice ? 'bg-success' : 'bg-danger' %> border-0 rounded-4 shadow-lg" role="alert">
+    <div id="liveToast" class="toast show align-items-center text-white <%= notice ? 'bg-success' : 'bg-danger' %> border-0 rounded-4 shadow-lg glass-card" role="alert">
       <div class="d-flex">
         <div class="toast-body fw-bold">
-          <i class="bi <%= notice ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill' %> me-2"></i>
+          <i class="bi <%= notice ? 'bi-check-circle-fill text-neon-green' : 'bi-exclamation-triangle-fill text-danger-neon' %> me-2"></i>
           <%= notice || alert %>
         </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
@@ -17,69 +17,69 @@
 <%= form_with url: transfer_students_classroom_path(@classroom), method: :post, id: "transfer_students_form", data: { turbo: false } do |f| %>
 <% end %>
 
-<div class="row justify-content-center pb-5 text-dark">
+<div class="row justify-content-center pb-5">
   <div class="col-lg-12">
     
-    <%# --- CABEÇALHO --- %>
+    <%# --- 1. CABEÇALHO --- %>
     <div class="d-flex align-items-center justify-content-between mb-4">
       <div class="d-flex align-items-center">
-        <%= link_to classrooms_path, class: "btn btn-light rounded-circle me-3 shadow-sm" do %>
-          <i class="bi bi-arrow-left"></i>
+        <%= link_to classrooms_path, class: "btn btn-outline-purple-neon rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center", style: "width: 45px; height: 45px;" do %>
+          <i class="bi bi-arrow-left fs-5"></i>
         <% end %>
         <div>
-          <h2 class="fw-bold text-dark mb-0"><%= @classroom&.display_name %></h2>
-          <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-            <%= @classroom&.course&.name %>
+          <h2 class="fw-bold text-white mb-0"><%= @classroom&.display_name %></h2>
+          <span class="badge-status-neon badge-neon-blue mt-1">
+            <i class="bi bi-mortarboard-fill me-1"></i> <%= @classroom&.course&.name %>
           </span>
         </div>
       </div>
 
       <div class="d-flex gap-2">
-        <%= link_to activities_path(filter_course: @classroom&.course_id, filter_grade: @classroom&.grade_id), class: "btn btn-dark rounded-pill px-4 shadow-sm fw-bold" do %>
+        <%= link_to activities_path(filter_course: @classroom&.course_id, filter_grade: @classroom&.grade_id), class: "btn btn-outline-purple-neon rounded-pill px-4 shadow-sm fw-bold" do %>
           <i class="bi bi-graph-up-arrow me-2"></i>Painel de Desempenho
         <% end %>
-        <%= link_to grading_classroom_path(@classroom), class: "btn btn-primary rounded-pill px-4 shadow-sm fw-bold" do %>
+        <%= link_to grading_classroom_path(@classroom), class: "btn btn-outline-blue-neon rounded-pill px-4 shadow-sm fw-bold" do %>
           <i class="bi bi-pencil-square me-2"></i>Boletim Rápido
         <% end %>
       </div>
     </div>
 
-    <%# --- CARDS DE RESUMO --- %>
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <%# --- 2. CARDS DE RESUMO (Métricas Neon) --- %>
+    <div class="glass-card mb-4 border-glow-purple">
       <div class="card-body p-4">
         <div class="row text-center g-3">
-          <div class="col-md-3 border-end border-light">
-            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Série</small>
-            <span class="fs-6 fw-bold text-dark"><%= @classroom&.grade&.name %></span>
+          <div class="col-md-3 border-end border-secondary">
+            <small class="label-neon-small d-block mb-1">Série</small>
+            <span class="fs-6 fw-bold text-white"><%= @classroom&.grade&.name %></span>
           </div>
-          <div class="col-md-3 border-end border-light">
-            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Seção</small>
-            <span class="fs-6 fw-bold text-dark"><%= @classroom&.section&.name %></span>
+          <div class="col-md-3 border-end border-secondary">
+            <small class="label-neon-small d-block mb-1">Seção</small>
+            <span class="fs-6 fw-bold text-white"><%= @classroom&.section&.name %></span>
           </div>
-          <div class="col-md-3 border-end border-light">
-            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Alunos</small>
-            <span class="fs-6 fw-bold text-primary"><%= @classroom&.students&.count %></span>
+          <div class="col-md-3 border-end border-secondary">
+            <small class="label-neon-small d-block mb-1" style="color: var(--neon-blue);">Alunos</small>
+            <span class="fs-5 fw-bold text-white" style="text-shadow: 0 0 10px var(--neon-blue-glow);"><%= @classroom&.students&.count %></span>
           </div>
           <div class="col-md-3">
-            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Total de Aulas</small>
-            <span class="fs-6 fw-bold text-success"><%= @classroom&.lessons&.count %></span>
+            <small class="label-neon-small d-block mb-1" style="color: var(--neon-green);">Total de Aulas</small>
+            <span class="fs-5 fw-bold text-white" style="text-shadow: 0 0 10px var(--neon-green-glow);"><%= @classroom&.lessons&.count %></span>
           </div>
         </div>
       </div>
     </div>
 
-    <%# --- QUADRO DE GESTÃO E TABELA DE ALUNOS --- %>
-    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
-      <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-people-fill me-2"></i>Quadro de Entregas e Gestão</h6>
-        <div class="d-flex gap-2">
+    <%# --- 3. QUADRO DE GESTÃO E TABELA DE ALUNOS --- %>
+    <div class="glass-card mb-5 border-glow-blue overflow-hidden">
+      <div class="card-header bg-transparent py-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-white"><i class="bi bi-people-fill text-purple-neon me-2"></i>Quadro de Entregas e Gestão</h6>
+        <div class="d-flex gap-2 align-items-center">
           <%= select_tag :target_classroom_id, 
               options_from_collection_for_select(Classroom.where.not(id: @classroom&.id), :id, :display_name), 
               include_blank: "Transferir para...", 
-              class: "form-select form-select-sm shadow-sm", style: "width: 220px;", required: true,
+              class: "form-select form-control-glass", style: "width: 220px;", required: true,
               form: "transfer_students_form" %>
           
-          <button type="submit" form="transfer_students_form" class="btn btn-warning btn-sm px-3 shadow-sm fw-bold" onclick="return confirm('Deseja transferir os alunos selecionados?')">
+          <button type="submit" form="transfer_students_form" class="btn btn-neon-orange btn-sm px-3 shadow-sm fw-bold" onclick="return confirm('Deseja transferir os alunos selecionados?')">
             Transferir Selecionados
           </button>
         </div>
@@ -87,9 +87,9 @@
 
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr class="text-uppercase text-muted" style="font-size: 0.65rem;">
+          <table class="table table-dark-neon table-hover align-middle mb-0">
+            <thead class="sticky-thead">
+              <tr class="text-uppercase" style="font-size: 0.65rem;">
                 <th class="text-center" style="width: 50px;">
                   <input type="checkbox" id="selectAll" class="form-check-input">
                 </th>
@@ -101,8 +101,8 @@
                 <% current_activities = Activity.where(lesson_id: lesson_ids).order(date: :asc).limit(5) %>
                 <% if current_activities.any? %>
                   <% current_activities.each do |activity| %>
-                    <th class="text-center border-start p-2" title="<%= activity.name %>" data-bs-toggle="tooltip">
-                      <div class="vertical-header text-uppercase" style="font-size: 0.55rem;"><%= activity.name.truncate(10) %></div>
+                    <th class="text-center border-start border-secondary p-2" title="<%= activity.name %>" data-bs-toggle="tooltip">
+                      <div class="vertical-header text-white-50" style="font-size: 0.55rem;"><%= activity.name.truncate(10) %></div>
                     </th>
                   <% end %>
                 <% end %>
@@ -117,39 +117,39 @@
                       <%= check_box_tag "student_ids[]", student.id, false, class: "form-check-input student-checkbox", form: "transfer_students_form" %>
                     </td>
                     <td class="ps-4">
-                      <span class="small fw-bold text-dark"><%= student.name.upcase %></span>
+                      <span class="small fw-bold text-white"><%= student.name.upcase %></span>
                     </td>
                     <td class="px-3" style="width: 150px;">
                       <div class="d-flex align-items-center">
-                        <div class="progress flex-grow-1" style="height: 6px; background-color: #f0f0f0;">
+                        <div class="progress-neon flex-grow-1" style="height: 6px;">
                           <% freq = student.respond_to?(:activity_performance) ? student.activity_performance : 0 %>
-                          <div class="progress-bar <%= freq < 60 ? 'bg-danger' : 'bg-success' %>" style="width: <%= freq %>%"></div>
+                          <div class="progress-bar <%= freq < 60 ? 'bg-danger-neon' : 'bg-neon-green' %>" style="width: <%= freq %>%"></div>
                         </div>
-                        <span class="ms-2 fw-bold text-muted" style="font-size: 0.65rem;"><%= freq %>%</span>
+                        <span class="ms-2 fw-bold text-white-50" style="font-size: 0.65rem;"><%= freq %>%</span>
                       </div>
                     </td>
 
                     <% if current_activities.any? %>
                       <% current_activities.each do |activity| %>
-                        <td class="text-center border-start">
+                        <td class="text-center border-start border-secondary">
                           <% submission = student.student_activities.find_by(activity_id: activity.id) %>
                           <% if submission&.status == "Entregue" %>
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <i class="bi bi-check-circle-fill text-neon-green fs-5" style="filter: drop-shadow(0 0 5px var(--neon-green-glow));"></i>
                           <% elsif submission&.status == "Não Entregue" %>
-                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            <i class="bi bi-x-circle-fill text-danger-neon fs-5" style="filter: drop-shadow(0 0 5px rgba(255,49,49,0.4));"></i>
                           <% else %>
-                            <i class="bi bi-clock text-warning"></i>
+                            <i class="bi bi-clock-fill text-warning-neon fs-5" style="filter: drop-shadow(0 0 5px rgba(255,145,0,0.4));"></i>
                           <% end %>
                         </td>
                       <% end %>
                     <% end %>
 
                     <td class="text-end pe-4">
-                      <div class="d-flex justify-content-end gap-1">
-                        <%= link_to student_path(student), class: "btn btn-sm btn-light border shadow-sm", title: "Ver Ficha", data: { bs_toggle: "tooltip" } do %>
-                          <i class="bi bi-graph-up text-primary"></i>
+                      <div class="d-flex justify-content-end gap-2">
+                        <%= link_to student_path(student), class: "btn btn-sm btn-outline-blue-neon px-2", title: "Ver Ficha", data: { bs_toggle: "tooltip" } do %>
+                          <i class="bi bi-graph-up"></i>
                         <% end %>
-                        <%= button_to student_path(student), method: :delete, data: { turbo_confirm: "Atenção: Isso apagará os registros deste aluno. Deseja continuar?", bs_toggle: "tooltip" }, class: "btn btn-sm btn-light border shadow-sm text-danger", title: "Excluir" do %>
+                        <%= button_to student_path(student), method: :delete, data: { turbo_confirm: "Atenção: Isso apagará os registros deste aluno. Deseja continuar?", bs_toggle: "tooltip" }, class: "btn btn-sm btn-outline-danger-neon px-2", title: "Excluir" do %>
                           <i class="bi bi-trash"></i>
                         <% end %>
                       </div>
@@ -157,7 +157,7 @@
                   </tr>
                 <% end %>
               <% else %>
-                <tr><td colspan="10" class="text-center py-4 text-muted">Nenhum aluno nesta turma.</td></tr>
+                <tr><td colspan="10" class="text-center py-4 text-white-50">Nenhum aluno nesta turma.</td></tr>
               <% end %>
             </tbody>
           </table>
@@ -165,17 +165,17 @@
       </div>
     </div>
 
-    <%# --- PLANEJAMENTO DE AULAS --- %>
+    <%# --- 4. PLANEJAMENTO DE AULAS --- %>
     <div class="mb-5">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-book me-2 text-primary"></i>Planejamento de Aulas</h5>
-        <%= link_to lessons_path, class: "btn btn-outline-primary btn-sm rounded-pill px-3" do %>Ver Todo Planejamento<% end %>
+        <h5 class="fw-bold mb-0 text-white"><i class="bi bi-book-half me-2 text-purple-neon"></i>Planejamento de Aulas</h5>
+        <%= link_to lessons_path, class: "btn btn-outline-purple-neon btn-sm rounded-pill px-3" do %>Ver Todo Planejamento<% end %>
       </div>
 
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr class="text-uppercase text-muted" style="font-size: 0.65rem;">
+      <div class="glass-card border-glow-purple overflow-hidden">
+        <table class="table table-dark-neon table-hover align-middle mb-0">
+          <thead class="sticky-thead">
+            <tr class="text-uppercase" style="font-size: 0.65rem;">
               <th class="ps-4 py-3">Data</th>
               <th>Tópico / Conteúdo</th>
               <th>Status do Vínculo</th>
@@ -186,60 +186,56 @@
             <% if @classroom&.lessons&.any? %>
               <% @classroom.lessons.order(date: :desc).limit(10).each do |lesson| %>
                 <tr>
-                  <td class="ps-4 fw-bold text-secondary small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
-                  <td><span class="fw-bold text-dark small"><%= lesson.topic_name %></span></td>
+                  <td class="ps-4 fw-bold text-purple-neon small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
+                  <td><span class="fw-bold text-white small"><%= lesson.topic_name %></span></td>
                   <td>
-                    <%# Lógica de Vínculo com Atividade %>
                     <% activity = Activity.find_by(lesson_id: lesson.id) %>
-                    
                     <% if activity.present? %>
                       <div class="d-flex align-items-center gap-2">
                         <% if activity.status == "corrigida" %>
-                          <span class="badge bg-success-subtle text-success border border-success-subtle px-2" style="font-size: 0.6rem;">
+                          <span class="badge-status-neon badge-neon-green">
                             <i class="bi bi-check-circle-fill me-1"></i>CORRIGIDA
                           </span>
                         <% else %>
-                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2" style="font-size: 0.6rem;">
+                          <span class="badge-status-neon badge-neon-blue">
                             <i class="bi bi-link-45deg me-1"></i>VINCULADA
                           </span>
-                          
-                          <%# ALTERAÇÃO AQUI: Trocamos link_to por button_to para garantir o método PATCH %>
                           <%= button_to mark_as_corrected_activity_path(activity), 
-                                      method: :patch,
-                                      data: { turbo_confirm: "Marcar como corrigida?" }, 
-                                      class: "btn btn-sm btn-outline-success border-0 p-0 px-1 text-success bg-transparent",
-                                      title: "Concluir Correção" do %>
-                            <i class="bi bi-check2-all fs-5 fw-bold"></i>
+                              method: :patch,
+                              data: { turbo_confirm: "Marcar como corrigida?" }, 
+                              class: "btn btn-sm text-neon-green bg-transparent border-0 p-0 hover-scale",
+                              title: "Concluir Correção" do %>
+                            <i class="bi bi-check2-all fs-4 fw-bold"></i>
                           <% end %>
                         <% end %>
                       </div>
                     <% else %>
-                      <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2" style="font-size: 0.6rem;">
+                      <span class="badge-status-neon badge-neon-orange">
                         <i class="bi bi-exclamation-circle me-1"></i>PENDENTE
                       </span>
                     <% end %>
                   </td>
                   <td class="text-end pe-4">
-                    <%= link_to edit_lesson_path(lesson), class: "btn btn-sm btn-light border shadow-sm" do %>
-                      <i class="bi bi-pencil text-primary"></i>
+                    <%= link_to edit_lesson_path(lesson), class: "btn btn-sm btn-outline-purple-neon" do %>
+                      <i class="bi bi-pencil"></i>
                     <% end %>
                   </td>
                 </tr>
               <% end %>
             <% else %>
-              <tr><td colspan="4" class="text-center py-4 text-muted small">Nenhum aula registrada.</td></tr>
+              <tr><td colspan="4" class="text-center py-4 text-white-50 small">Nenhuma aula registrada.</td></tr>
             <% end %>
           </tbody>
         </table>
       </div>
     </div>
 
-    <%# --- AÇÕES DA TURMA --- %>
-    <div class="d-flex justify-content-between">
-      <%= link_to edit_classroom_path(@classroom), class: "btn btn-light border rounded-pill px-4 fw-bold" do %>
-        <i class="bi bi-gear me-2"></i>Editar Turma
+    <%# --- 5. AÇÕES DA TURMA --- %>
+    <div class="d-flex justify-content-between align-items-center">
+      <%= link_to edit_classroom_path(@classroom), class: "btn btn-outline-purple-neon rounded-pill px-4 fw-bold" do %>
+        <i class="bi bi-gear me-2"></i>Configurar Turma
       <% end %>
-      <%= button_to @classroom, method: :delete, data: { turbo_confirm: "Excluir TURMA permanentemente?" }, class: "btn btn-link text-danger text-decoration-none" do %>
+      <%= button_to @classroom, method: :delete, data: { turbo_confirm: "Excluir TURMA permanentemente?" }, class: "btn btn-link text-danger-neon text-decoration-none fw-bold" do %>
         <i class="bi bi-trash me-1"></i> Excluir Turma
       <% end %>
     </div>
@@ -247,10 +243,8 @@
   </div>
 </div>
 
-<%# --- SCRIPTS --- %>
 <script>
   document.addEventListener("turbo:load", function() {
-    // Lógica de Selecionar Todos os Checkboxes
     const selectAll = document.getElementById('selectAll');
     if (selectAll) {
       selectAll.addEventListener('change', function() {
@@ -260,7 +254,6 @@
       });
     }
 
-    // Inicialização de Tooltips do Bootstrap
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     if (typeof bootstrap !== 'undefined') {
       [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
@@ -268,14 +261,14 @@
   });
 </script>
 
-<%# --- ESTILOS ADICIONAIS --- %>
 <style>
-  .vertical-header { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; display: inline-block; color: #6c757d; }
-  .bg-success-subtle { background-color: #d1e7dd !important; color: #0f5132 !important; }
-  .bg-primary-subtle { background-color: #cfe2ff !important; color: #084298 !important; }
-  .bg-warning-subtle { background-color: #fff3cd !important; color: #664d03 !important; }
-  .grading-row:hover { background-color: #f8f9fa; }
+  .vertical-header { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; display: inline-block; }
+  .hover-scale:hover { transform: scale(1.2); transition: 0.2s; }
+  .btn-outline-danger-neon { border: 1px solid var(--danger-neon); color: var(--danger-neon); }
+  .btn-outline-danger-neon:hover { background: var(--danger-neon); color: white; box-shadow: 0 0 10px rgba(255,49,49,0.4); }
+  .bg-danger-neon { background-color: var(--danger-neon) !important; }
+  .text-danger-neon { color: var(--danger-neon) !important; }
   
-  /* Reset para o botão de correção não parecer um botão de formulário pesado */
-  form.button_to { display: inline; }
+  /* Reset button_to */
+  form.button_to { display: inline-block; }
 </style>

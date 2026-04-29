@@ -1,0 +1,114 @@
+<div class="container-fluid px-4 py-4">
+  <%# --- CABEÇALHO --- %>
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+      <h1 class="text-white fw-bold h3 mb-1">
+        <i class="bi bi-trophy-fill text-purple-neon me-2"></i>Resultados e Performance
+      </h1>
+      <p class="text-white-50 small mb-0">Visão geral de desempenho focada na Nota da Prova e situação final.</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <% if @classrooms.any? %>
+      <% @classrooms.each do |classroom| %>
+        <div class="col-xl-6">
+          <div class="glass-card border-glow-purple h-100">
+            <%# Topo do Card %>
+            <div class="card-header bg-transparent border-bottom border-secondary p-4 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="text-white fw-bold mb-0"><%= classroom.full_name_info %></h5>
+                <small class="text-white-50"><%= classroom.course&.name %></small>
+              </div>
+              
+              <%# Botão de Relatório PDF %>
+              <%= link_to export_recuperacao_path(classroom, format: :pdf), class: "btn btn-neon-orange btn-sm fw-bold shadow-sm" do %>
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>Relatório Recuperação
+              <% end %>
+            </div>
+
+            <div class="card-body p-0">
+              <div class="table-responsive-scroll" style="max-height: 400px;">
+                <table class="table table-dark-neon table-hover align-middle mb-0">
+                  <thead class="sticky-thead">
+                    <tr class="text-uppercase" style="font-size: 0.65rem;">
+                      <th class="ps-4">Estudante</th>
+                      <%# Nome da coluna alterado conforme solicitado %>
+                      <th class="text-center">Nota da Prova</th>
+                      <th class="text-center">Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% activity_ids = classroom.activities.pluck(:id) %>
+                    
+                    <% classroom.students.order(:name).each do |student| %>
+                      <%# Lógica para buscar a nota da "Avaliação" no Mapa de Pontos %>
+                      <% n_prova = student.nota_da_prova(activity_ids) %>
+                      
+                      <tr>
+                        <td class="ps-4">
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-circle-dark me-3" style="width: 30px; height: 30px; font-size: 0.7rem;">
+                              <%= student.name[0] %>
+                            </div>
+                            <span class="text-white small fw-bold text-uppercase"><%= student.name %></span>
+                          </div>
+                        </td>
+                        <td class="text-center">
+                          <%# Nota em BRANCO com brilho neon baseado na própria nota da prova %>
+                          <span class="fw-black fs-4" 
+                                style="font-weight: 900; color: #ffffff !important; text-shadow: 0 0 12px <%= n_prova >= 6 ? 'rgba(0, 243, 255, 0.8)' : 'rgba(255, 49, 49, 0.8)' %>;">
+                            <%= number_with_precision(n_prova, precision: 1) %>
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <div class="px-3">
+                            <%# ATUALIZAÇÃO: Situação baseada estritamente na nota da prova %>
+                            <% if n_prova >= 6 %>
+                              <span class="badge-status-neon badge-neon-green py-2.5 px-3 d-flex align-items-center justify-content-center w-100 fw-bold" style="min-width: 140px; font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <i class="bi bi-check-all me-2"></i> APROVADO
+                              </span>
+                            <% else %>
+                              <span class="badge-status-neon badge-neon-orange py-2.5 px-3 d-flex align-items-center justify-content-center w-100 fw-bold" style="min-width: 140px; font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <i class="bi bi-exclamation-triangle me-2"></i> RECUPERAÇÃO
+                              </span>
+                            <% end %>
+                          </div>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <%# Rodapé com Resumo Rápido atualizado para refletir a nova lógica baseada na prova %>
+            <div class="card-footer bg-transparent border-top border-secondary p-3 text-center">
+               <div class="row">
+                  <div class="col-6 border-end border-secondary">
+                     <small class="label-neon-small text-neon-green">Aprovados (Prova)</small>
+                     <div class="text-white fw-bold">
+                       <%= classroom.students.select { |s| s.nota_da_prova(activity_ids) >= 6 }.count %>
+                     </div>
+                  </div>
+                  <div class="col-6">
+                     <small class="label-neon-small text-neon-orange">Recuperação (Prova)</small>
+                     <div class="text-white fw-bold">
+                       <%= classroom.students.select { |s| s.nota_da_prova(activity_ids) < 6 }.count %>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="col-12 text-center py-5">
+        <div class="glass-card p-5 border-glow-purple">
+          <i class="bi bi-person-x text-white-50 fs-1 mb-3 d-block"></i>
+          <h5 class="text-white">Nenhuma turma vinculada ao seu perfil.</h5>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

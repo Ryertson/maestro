@@ -23,16 +23,26 @@
   // 2. Atualiza o Quadrado na Planilha
   var btn = document.getElementById("btn-" + studentId + "-" + date);
   if (btn) {
+    // Limpeza completa das classes de cor para evitar sobreposição
     btn.classList.remove('p-present', 'p-absent', 'p-late', 'p-justified', 'opacity-50');
-    if (statusRaw === "cleared") {
+    
+    if (statusRaw === "cleared" || statusSlug === "cleared") {
       btn.classList.add('opacity-50');
       btn.innerHTML = ''; 
     } else {
       btn.classList.add('p-' + statusSlug);
       btn.innerHTML = '<i class="bi ' + iconClass + ' small text-white"></i>';
     }
-    var bootstrapDropdown = bootstrap.Dropdown.getInstance(btn);
-    if (bootstrapDropdown) { bootstrapDropdown.hide(); }
+
+    // FECHAMENTO DO DROPDOWN SEM TRAVAR A INTERFACE
+    try {
+      var dropdownElement = bootstrap.Dropdown.getInstance(btn);
+      if (dropdownElement) { 
+        dropdownElement.hide(); 
+      }
+    } catch(e) {
+      console.log("Maestro: Dropdown já fechado ou inexistente.");
+    }
   }
 
   // 3. Atualiza o Contador de Faltas Individual (Coluna F)
@@ -57,19 +67,28 @@
     rate = possible > 0 ? (((presents + lates + justified).to_f / possible) * 100).round(1) : 0
   %>
 
-  // Injeta os novos valores nos Cards
-  document.getElementById("total-presents-card").innerHTML = "<%= presents %>";
-  document.getElementById("total-absents-card").innerHTML = "<%= absents %>";
-  document.getElementById("total-lates-card").innerHTML = "<%= lates %>";
-  document.getElementById("total-justified-card").innerHTML = "<%= justified %>";
+  // Injeta os novos valores nos Cards com proteção de existência
+  var cardPresents = document.getElementById("total-presents-card");
+  if(cardPresents) cardPresents.innerHTML = "<%= presents %>";
+
+  var cardAbsents = document.getElementById("total-absents-card");
+  if(cardAbsents) cardAbsents.innerHTML = "<%= absents %>";
+
+  var cardLates = document.getElementById("total-lates-card");
+  if(cardLates) cardLates.innerHTML = "<%= lates %>";
+
+  var cardJustified = document.getElementById("total-justified-card");
+  if(cardJustified) cardJustified.innerHTML = "<%= justified %>";
   
   // Atualiza a Porcentagem e a Barra
-  document.getElementById("attendance-rate-text").innerHTML = "<%= rate %>%";
+  var rateText = document.getElementById("attendance-rate-text");
+  if(rateText) rateText.innerHTML = "<%= rate %>%";
+
   var progressBar = document.getElementById("attendance-progress-bar");
   if (progressBar) {
     progressBar.style.width = "<%= rate %>%";
     progressBar.setAttribute("aria-valuenow", "<%= rate %>");
   }
 
-  console.log("Maestro: Atualização silenciosa concluída.");
+  console.log("Maestro: Clique processado com sucesso.");
 })();

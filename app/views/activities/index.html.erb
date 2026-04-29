@@ -1,310 +1,307 @@
-<div class="container-fluid py-4" style="background-color: #f8f9fa; min-height: 100vh;">
-  
-  <%# --- TÍTULO DA PÁGINA --- %>
-  <div class="mb-4 d-flex justify-content-between align-items-center">
-    <div>
-      <h2 class="fw-bold text-dark d-flex align-items-center mb-0">
-        <i class="bx bx-task text-purple me-2"></i> Central de Atividades & Avaliações
-      </h2>
-      <p class="text-muted small mb-0">Planeje, acompanhe entregas e lance notas em um só lugar.</p>
+<div class="container-fluid px-4 py-4">
+
+  <%# --- 1. CABEÇALHO --- %>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-white fw-bold h3 mb-0">Gestão de Atividades e Notas</h1>
+    <div class="glass-card px-3 py-2 d-flex align-items-center gap-2">
+      <span class="label-neon-small mb-0" style="color: var(--neon-orange);">
+        <i class="bi bi-lightning-fill"></i> Pendências Ativas
+      </span>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="togglePendencias">
+      </div>
     </div>
-    
-    <% if @active_activity %>
-      <%# --- INTERRUPTOR DO HEATMAP (DESTAQUE) --- %>
-      <div class="form-check form-switch bg-white shadow-sm border rounded-pill px-4 py-2">
-        <input class="form-check-input ms-0 me-2" type="checkbox" id="heatmapToggle">
-        <label class="form-check-label small fw-bold text-dark" for="heatmapToggle">
-          <i class="bx bxs-zap text-warning"></i> Destaque de Pendências
-        </label>
+  </div>
+
+  <%# --- 2. FORMULÁRIO DE NOVA ATIVIDADE --- %>
+  <div class="glass-card p-4 border-glow-purple mb-5">
+    <h5 class="text-purple-neon fw-bold mb-4">Planejar Nova Atividade</h5>
+    <%= form_with(model: @activity, local: true) do |f| %>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="label-neon-small mb-1">Turma Destino</label>
+          <%= f.collection_select :classroom_id, @available_classrooms, :id, :full_name_info, 
+              { prompt: "Selecionar Turma" }, { class: "form-select form-control-glass" } %>
+        </div>
+        <div class="col-md-3">
+          <label class="label-neon-small mb-1">Vincular à Aula</label>
+          <%= f.collection_select :lesson_id, @lessons_for_select, :id, :topic_name, 
+              { prompt: "Selecionar Aula" }, { class: "form-select form-control-glass" } %>
+        </div>
+        <div class="col-md-4">
+          <label class="label-neon-small mb-1">Título da Atividade</label>
+          <%= f.text_field :name, class: "form-control form-control-glass", placeholder: "Ex: Avaliação de Química" %>
+        </div>
+        <div class="col-md-2">
+          <label class="label-neon-small mb-1">Pontos (Valor)</label>
+          <%= f.text_field :points, class: "form-control form-control-glass", placeholder: "10.0" %>
+        </div>
+        <div class="col-md-3">
+          <label class="label-neon-small mb-1">Data de Entrega</label>
+          <%= f.date_field :date, class: "form-control form-control-glass" %>
+        </div>
+        <div class="col-md-3">
+          <label class="label-neon-small mb-1">Tipo de Atividade</label>
+          <%= f.select :activity_type, ["Prova", "Lista de Exercícios", "Trabalho", "Visto"], 
+              { prompt: "Tipo..." }, { class: "form-select form-control-glass" } %>
+        </div>
+        <div class="col-md-6 text-end">
+          <button type="submit" class="btn btn-outline-purple-neon px-5 fw-bold">
+            <i class="bi bi-plus-circle me-2"></i>Salvar Atividade no Banco
+          </button>
+        </div>
       </div>
     <% end %>
   </div>
 
-  <div class="row g-4">
-    <%# --- QUADRO 1: NOVA ATIVIDADE (ESQUERDA) --- %>
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-header bg-white border-0 pt-4 ps-4">
-          <h5 class="fw-bold mb-0">Nova Atividade</h5>
-        </div>
-        <div class="card-body p-4 overflow-auto" style="max-height: 750px;">
-          <%= form_with(model: @activity, local: true) do |f| %>
+  <%# --- 3. ABAS DE NAVEGAÇÃO (CORES PERSONALIZADAS) --- %>
+  <ul class="nav nav-tabs nav-tabs-maestro mb-4" id="activityTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active tab-azul" data-bs-toggle="tab" data-bs-target="#lancamento">
+        <i class="bi bi-pencil-fill me-2"></i>Atividade Atual
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link tab-vermelha" data-bs-toggle="tab" data-bs-target="#atividades-banco">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>Atividades Não Corrigidas
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link tab-roxa" data-bs-toggle="tab" data-bs-target="#atividades-concluidas">
+        <i class="bi bi-check-all me-2"></i>Atividades Corrigidas
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <%# --- ABA: ATIVIDADE ATUAL (LANÇAMENTO) --- %>
+    <div class="tab-pane fade show active" id="lancamento">
+      <% if @active_activity %>
+        <div class="glass-card p-4 border-glow-blue mb-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-white fw-bold mb-0">
+              Lançamento: <span style="color: var(--neon-blue);"><%= @active_activity.name %></span>
+            </h4>
             
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-muted text-uppercase">Turma</label>
-              <%= f.collection_select :classroom_id, Classroom.where(id: @my_classroom_ids), :id, :display_name, 
-                  { selected: @active_activity&.classroom_id || @my_classroom_ids.first }, 
-                  { class: "form-select rounded-3 border-light-subtle shadow-sm", required: true } %>
+            <%= button_to mark_as_corrected_activity_path(@active_activity), method: :patch, class: "btn-concluir-verde" do %>
+              <i class="bi bi-check-lg me-2"></i>Marcar como Corrigida
+            <% end %>
+          </div>
+
+          <%= form_tag save_submissions_activities_path, method: :post do %>
+            <%= hidden_field_tag :current_activity_id, @active_activity.id %>
+            
+            <div class="table-responsive-scroll" style="max-height: 500px;">
+              <table class="table table-dark-neon table-hover align-middle">
+                <thead class="sticky-thead">
+                  <tr>
+                    <th class="ps-4">Estudante</th>
+                    <th class="text-center">Turma</th>
+                    <th class="text-center">Status de Entrega</th>
+                    <th class="text-center" style="width: 150px;">Nota / Pontos</th>
+                    <th class="text-end pe-4">Detalhes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @students.each do |student| %>
+                    <% sa = @active_student_activities[student.id] %>
+                    <tr>
+                      <td class="ps-4 fw-bold text-white"><%= student.name.upcase %></td>
+                      <td class="text-center">
+                        <span class="badge border border-secondary text-white-50 small">
+                          <%= student.classroom.full_name_info %>
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <% status_class = case sa&.status
+                           when 'Entregue' then 'status-entregue'
+                           when 'Não Entregue' then 'status-nao-entregue'
+                           when 'Entregue com Atraso' then 'status-atraso'
+                           else 'status-pendente'
+                           end 
+                        %>
+                        <select name="statuses[<%= student.id %>]" 
+                                class="form-select form-control-glass text-center-select <%= status_class %> mx-auto" 
+                                style="width: 210px;"
+                                onchange="this.className='form-select form-control-glass text-center-select mx-auto ' + (this.value == 'Entregue' ? 'status-entregue' : this.value == 'Não Entregue' ? 'status-nao-entregue' : this.value == 'Entregue com Atraso' ? 'status-atraso' : 'status-pendente')">
+                          <option value="Pendente" <%= 'selected' if sa&.status == 'Pendente' %>>Pendente</option>
+                          <option value="Entregue" <%= 'selected' if sa&.status == 'Entregue' %>>Entregue</option>
+                          <option value="Entregue com Atraso" <%= 'selected' if sa&.status == 'Entregue com Atraso' %>>Entregue com Atraso</option>
+                          <option value="Não Entregue" <%= 'selected' if sa&.status == 'Não Entregue' %>>Não Entregue</option>
+                        </select>
+                      </td>
+                      <td class="text-center">
+                        <input type="number" name="student_points[<%= student.id %>]" 
+                               step="0.1" class="form-control form-control-glass text-center mx-auto" 
+                               value="<%= sa&.points %>" placeholder="0.0" style="width: 100px;">
+                      </td>
+                      <td class="text-end pe-4">
+                        <%= link_to activity_path(@active_activity, student_id: student.id), class: "text-purple-neon" do %>
+                          <i class="bi bi-eye-fill"></i>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-muted text-uppercase">Vincular à Aula (Planejamento)</label>
-              <%= f.collection_select :lesson_id, @lessons_for_select, :id, :topic_name, 
-                  { prompt: "Selecione uma aula..." }, 
-                  { class: "form-select rounded-3 border-light-subtle shadow-sm", required: true } %>
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-outline-purple-neon btn-lg px-5 fw-bold">
+                <i class="bi bi-cloud-arrow-up me-2"></i>Salvar Todos os Lançamentos
+              </button>
             </div>
-
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-muted text-uppercase">Título da Atividade</label>
-              <%= f.text_field :name, class: "form-control rounded-3 border-light-subtle shadow-sm", placeholder: "Ex: Relatório de Campo", required: true %>
-            </div>
-
-            <div class="row mb-3">
-              <div class="col-6">
-                <label class="form-label small fw-bold text-muted text-uppercase">Pontos (Valor Total)</label>
-                <%= f.number_field :points, step: 0.1, class: "form-control rounded-3 border-light-subtle shadow-sm", placeholder: "10.0", required: true %>
-              </div>
-              <div class="col-6">
-                <label class="form-label small fw-bold text-muted text-uppercase">Data de Entrega</label>
-                <%= f.date_field :date, class: "form-control rounded-3 border-light-subtle shadow-sm", value: Date.today, required: true %>
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label class="form-label small fw-bold text-muted text-uppercase">Tipo de Atividade</label>
-              <%= f.select :activity_type, (defined?(Activity::TYPES) ? Activity::TYPES : ["Trabalho", "Prova", "Exercício", "Outros"]), 
-                  { prompt: "Selecione o tipo..." }, 
-                  { class: "form-select rounded-3 border-light-subtle shadow-sm", required: true } %>
-            </div>
-
-            <%= f.submit "Salvar Atividade", class: "btn btn-purple w-100 rounded-pill py-2 fw-bold shadow-sm text-white" %>
           <% end %>
+        </div>
+      <% else %>
+        <div class="glass-card p-5 text-center">
+          <h5 class="text-white-50">Nenhuma atividade selecionada.</h5>
+          <p class="small">Selecione uma atividade abaixo para começar.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <%# --- ABA: ATIVIDADES NÃO CORRIGIDAS --- %>
+    <div class="tab-pane fade" id="atividades-banco">
+      <div class="glass-card border-glow-orange">
+        <div class="table-responsive-scroll" style="max-height: 500px;">
+          <table class="table table-dark-neon table-hover align-middle mb-0">
+            <thead class="sticky-thead">
+              <tr>
+                <th class="ps-4">Atividade Pendente</th>
+                <th class="text-center">Turma</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Engajamento</th>
+                <th class="text-end pe-4">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @pending_activities.each do |act| %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="text-white fw-bold"><%= act.name %></span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge border border-secondary text-white-50"><%= act.classroom.display_name %></span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge-status-neon badge-neon-red">Não Corrigida</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="text-purple-neon fw-bold">
+                      <%= act.student_activities.where(status: 'Entregue').count %>/<%= act.classroom.students.count %>
+                    </span>
+                  </td>
+                  <td class="text-end pe-4">
+                    <%= link_to activities_path(current_activity_id: act.id), class: "btn btn-sm btn-outline-purple-neon" do %>
+                      <i class="bi bi-pencil-square me-1"></i> Abrir Lançamento
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <%# --- QUADRO 2: HISTÓRICO & PENDÊNCIAS (DIREITA) --- %>
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-header bg-white border-0 pt-4 ps-4">
-          <ul class="nav nav-pills card-header-pills" id="activityTab" role="tablist">
-            <li class="nav-item">
-              <button class="nav-link active rounded-pill fw-bold me-2" data-bs-toggle="tab" data-bs-target="#pendentes">Pendentes</button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#historico">Histórico</button>
-            </li>
-          </ul>
-        </div>
-        <div class="card-body p-0 overflow-auto" style="max-height: 750px;">
-          <div class="tab-content">
-            <div class="tab-pane fade show active" id="pendentes">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead class="bg-light sticky-top">
-                    <tr>
-                      <th class="ps-4 py-3 small text-uppercase text-muted">Nome da Atividade</th>
-                      <th class="small text-uppercase text-muted text-center">Status</th>
-                      <th class="small text-uppercase text-muted">Turma</th>
-                      <th class="small text-uppercase text-muted text-center">Engajamento</th>
-                      <th class="pe-4"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if @pending_activities&.any? %>
-                      <% @pending_activities.each do |act| %>
-                        <tr style="cursor: pointer;" onclick="window.location='<%= activities_path(current_activity_id: act.id) %>'">
-                          <td class="ps-4 fw-bold text-dark">
-                            <%= link_to act.name, activities_path(current_activity_id: act.id), class: "text-decoration-none text-dark" %>
-                          </td>
-                          <td class="text-center">
-                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Não Corrigida</span>
-                          </td>
-                          <td class="small text-muted text-nowrap"><%= act.classroom&.grade&.name %> <%= act.classroom&.section&.name %></td>
-                          <td class="text-center fw-bold text-purple"><%= act.respond_to?(:engagement_count) ? act.engagement_count : 0 %></td>
-                          <td class="pe-4 text-end">
-                            <%= link_to activities_path(current_activity_id: act.id), class: "btn btn-sm btn-light border rounded-circle shadow-sm" do %>
-                              <i class="bx bx-pencil text-purple"></i>
-                            <% end %>
-                          </td>
-                        </tr>
-                      <% end %>
-                    <% else %>
-                      <tr><td colspan="5" class="text-center py-4 text-muted small">Nenhuma atividade pendente.</td></tr>
+    <%# --- NOVA ABA: ATIVIDADES CORRIGIDAS --- %>
+    <div class="tab-pane fade" id="atividades-concluidas">
+      <div class="glass-card border-glow-purple">
+        <div class="table-responsive-scroll" style="max-height: 500px;">
+          <table class="table table-dark-neon table-hover align-middle mb-0">
+            <thead class="sticky-thead">
+              <tr>
+                <th class="ps-4">Atividade Concluída</th>
+                <th class="text-center">Turma</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Aproveitamento Médio</th>
+                <th class="text-end pe-4">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%# Busca todas as atividades com status corrigida %>
+              <%# Adicionamos o &. para que, se for nil, ele não quebre a página %>
+              <% @all_activities&.where(status: 'corrigida')&.order(date: :desc)&.each do |act| %>
+                <tr>
+                  <td class="ps-4">
+                    <span class="text-white fw-bold"><%= act.name %></span>
+                    <div class="text-white-50 small"><%= act.date&.strftime("%d/%m/%Y") %></div>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge border border-secondary text-white-50"><%= act.classroom.display_name %></span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge-status-neon badge-neon-green">Finalizada</span>
+                  </td>
+                  <td class="text-center">
+                     <span class="text-purple-neon fw-bold">
+                       <% avg_points = act.student_activities.average(:points) || 0 %>
+                       <%= number_with_precision(avg_points, precision: 1) %> / <%= act.points %>
+                     </span>
+                  </td>
+                  <td class="text-end pe-4">
+                    <%= link_to activities_path(current_activity_id: act.id), class: "btn btn-sm btn-outline-purple-neon" do %>
+                      <i class="bi bi-eye-fill me-1"></i> Revisar Notas
                     <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="tab-pane fade" id="historico">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead class="bg-light sticky-top">
-                    <tr>
-                      <th class="ps-4 py-3 small text-uppercase text-muted">Atividade</th>
-                      <th class="small text-uppercase text-muted">Data</th>
-                      <th class="small text-uppercase text-muted">Turma</th>
-                      <th class="pe-4"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if @history_activities&.any? %>
-                      <% @history_activities.each do |act| %>
-                        <tr class="opacity-75" style="cursor: pointer;" onclick="window.location='<%= activities_path(current_activity_id: act.id) %>'">
-                          <td class="ps-4 fw-bold text-dark"><%= act.name %></td>
-                          <td class="small"><%= act.date&.strftime("%d/%m/%Y") %></td>
-                          <td class="small"><%= act.classroom&.grade&.name %></td>
-                          <td class="pe-4 text-end">
-                             <%= link_to "Revisar", activities_path(current_activity_id: act.id), class: "btn btn-sm btn-outline-purple rounded-pill px-3 fw-bold" %>
-                          </td>
-                        </tr>
-                      <% end %>
-                    <% else %>
-                      <tr><td colspan="4" class="text-center py-4 text-muted small">Nenhum histórico disponível.</td></tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
-
-  <%# --- QUADRO 3: LANÇAMENTO (BAIXO) --- %>
-  <% if @active_activity %>
-    <div class="row mt-4" id="secao-lancamento">
-      <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4">
-          <div class="card-header bg-white border-0 py-3 ps-4 d-flex justify-content-between align-items-center border-bottom">
-            <h5 class="fw-bold mb-0">Lançamento: <span class="text-purple text-uppercase"><%= @active_activity.name %></span></h5>
-            <%= button_to mark_as_corrected_activity_path(@active_activity), method: :patch, class: "btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm" do %>
-              <i class="bx bx-check-double"></i> Concluir Correção
-            <% end %>
-          </div>
-          
-          <%= form_with url: save_submissions_activities_path, method: :post, local: true do %>
-            <%= hidden_field_tag :current_activity_id, @active_activity.id %>
-            
-            <div class="card-body p-0 overflow-auto" id="launchTableContainer" style="max-height: 500px;">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead class="bg-light sticky-top">
-                    <tr>
-                      <th class="ps-4 py-3 small text-uppercase text-muted">Estudante</th>
-                      <th class="small text-uppercase text-muted">Turma</th>
-                      <th class="text-center small text-uppercase text-muted">Nota / Pontos (<%= @active_activity.points %>)</th>
-                      <th class="text-center small text-uppercase text-muted">Status de Entrega</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if @students&.any? %>
-                      <% @students.each do |student| %>
-                        <% sa = @active_student_activities[student.id] %>
-                        <% status_label, status_color = @active_activity.respond_to?(:status_info_for) ? @active_activity.status_info_for(student) : ["Pendente", "secondary"] %>
-                        <tr>
-                          <td class="ps-4 fw-bold text-dark text-uppercase"><%= student.name %></td>
-                          <td class="small text-muted"><%= @active_activity.classroom&.grade&.name %> <%= @active_activity.classroom&.section&.name %></td>
-                          <td style="width: 140px;">
-                            <%= number_field_tag "student_points[#{student.id}]", sa&.points, step: 0.1, max: @active_activity.points, class: "form-control form-control-sm text-center border-light-subtle rounded-3" %>
-                          </td>
-                          <td class="text-center" style="width: 250px;">
-                            <div class="dropdown w-100 px-3">
-                              <button class="btn btn-sm btn-<%= status_color %> dropdown-toggle rounded-pill px-3 w-100 status-btn-label shadow-sm" 
-                                      type="button" 
-                                      id="btn_<%= student.id %>"
-                                      data-bs-toggle="dropdown">
-                                <%= status_label %>
-                              </button>
-                              <ul class="dropdown-menu shadow">
-                                <li><a class="dropdown-item small status-option" href="#" data-student-id="<%= student.id %>" data-value="Entregue" data-color="success">🟢 Entregue</a></li>
-                                <li><a class="dropdown-item small status-option" href="#" data-student-id="<%= student.id %>" data-value="Entregue com Atraso" data-color="warning">🟡 Entregue com Atraso</a></li>
-                                <li><a class="dropdown-item small status-option" href="#" data-student-id="<%= student.id %>" data-value="Não Entregue" data-color="danger">🔴 Não Entregue</a></li>
-                                <li><a class="dropdown-item small status-option" href="#" data-student-id="<%= student.id %>" data-value="Pendente" data-color="secondary">⚪ Pendente</a></li>
-                              </ul>
-                              <%= hidden_field_tag "statuses[#{student.id}]", sa&.status || 'Pendente', id: "status_input_#{student.id}" %>
-                            </div>
-                          </td>
-                        </tr>
-                      <% end %>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="card-footer bg-white border-0 py-3 text-end pe-4 border-top">
-              <%= submit_tag "Salvar Lançamentos", class: "btn btn-purple rounded-pill px-5 fw-bold shadow text-white" %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-  <% else %>
-    <div class="row mt-4">
-      <div class="col-12 text-center py-5 bg-white rounded-4 shadow-sm">
-        <i class="bx bx-mouse text-muted fs-1"></i>
-        <p class="text-muted mt-2">Selecione uma atividade acima para gerenciar os lançamentos de notas.</p>
-      </div>
-    </div>
-  <% end %>
 </div>
 
 <style>
-  .btn-purple { background-color: #6f42c1; border-color: #6f42c1; }
-  .btn-purple:hover { background-color: #5a32a3; border-color: #5a32a3; color: white; }
-  .btn-outline-purple { color: #6f42c1; border-color: #6f42c1; }
-  .btn-outline-purple:hover { background-color: #6f42c1; color: white; }
-  .text-purple { color: #6f42c1 !important; }
-  .border-purple-light { border-color: #e9ecef; }
-  
-  .overflow-auto::-webkit-scrollbar { width: 6px; }
-  .overflow-auto::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-  .overflow-auto::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-  .overflow-auto::-webkit-scrollbar-thumb:hover { background: #aaa; }
-  
-  .nav-pills .nav-link { color: #6c757d; border: 1px solid transparent; }
-  .nav-pills .nav-link.active { background-color: #6f42c1; color: white; box-shadow: 0 4px 10px rgba(111, 66, 193, 0.2); }
-  .sticky-top { z-index: 1020; background: #f8f9fa; }
-
-  @keyframes pulse-danger {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-    70% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+  .text-center-select {
+    text-align: center;
+    text-align-last: center;
   }
 
-  .heatmap-active tr:not(:hover) .btn-success { opacity: 0.2; filter: grayscale(80%); }
-  .heatmap-active .btn-danger { animation: pulse-danger 1.5s infinite; border: 1px solid white; }
-  .heatmap-active .btn-warning { transform: scale(1.05); box-shadow: 0 0 10px rgba(255, 193, 7, 0.5); }
-  
-  .status-btn-label { transition: all 0.2s ease-in-out; }
+  /* Abas Ativas */
+  .nav-tabs-maestro .nav-link.active.tab-azul {
+    color: var(--neon-blue) !important;
+    border-bottom: 2px solid var(--neon-blue) !important;
+    text-shadow: 0 0 10px var(--neon-blue-glow);
+    background: rgba(36, 182, 255, 0.1) !important;
+  }
+
+  .nav-tabs-maestro .nav-link.active.tab-vermelha {
+    color: #ff3131 !important;
+    border-bottom: 2px solid #ff3131 !important;
+    text-shadow: 0 0 10px rgba(255, 49, 49, 0.4);
+    background: rgba(255, 49, 49, 0.1) !important;
+  }
+
+  .nav-tabs-maestro .nav-link.active.tab-roxa {
+    color: var(--purple-neon) !important;
+    border-bottom: 2px solid var(--purple-neon) !important;
+    text-shadow: 0 0 10px var(--purple-glow);
+    background: rgba(188, 19, 254, 0.1) !important;
+  }
+
+  .btn-concluir-verde {
+    background: var(--neon-green) !important;
+    color: #000 !important;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px var(--neon-green-glow);
+    transition: all 0.3s ease;
+  }
+
+  .btn-concluir-verde:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px var(--neon-green);
+  }
+
+  .form-control-glass { font-size: 0.9rem; }
+  .table-dark-neon td { border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important; }
 </style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const heatmapToggle = document.getElementById('heatmapToggle');
-    const launchTable = document.getElementById('launchTableContainer');
-
-    if (heatmapToggle && launchTable) {
-      heatmapToggle.addEventListener('change', function() {
-        if (this.checked) {
-          launchTable.classList.add('heatmap-active');
-        } else {
-          launchTable.classList.remove('heatmap-active');
-        }
-      });
-    }
-
-    document.querySelectorAll('.status-option').forEach(option => {
-      option.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        const studentId = this.getAttribute('data-student-id');
-        const newValue = this.getAttribute('data-value');
-        const newColor = this.getAttribute('data-color');
-        const labelText = this.innerText;
-
-        const statusInput = document.getElementById(`status_input_${studentId}`);
-        if(statusInput) statusInput.value = newValue;
-
-        const btn = document.getElementById(`btn_${studentId}`);
-        if(btn) {
-          btn.innerText = labelText.replace(/^[^\s]+\s/, ''); 
-          btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'btn-secondary', 'btn-info');
-          btn.classList.add(`btn-${newColor}`);
-        }
-      });
-    });
-  });
-</script>

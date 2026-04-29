@@ -158,25 +158,18 @@ class Student < ApplicationRecord
   # --- MÉTODO DE CÁLCULO DE MÉDIAS (SINCRONIZADO) ---
 
   def calcular_nota_com_pesos(activity_ids)
-    # Limpeza dos IDs e remoção de duplicatas/zeros
     ids = Array(activity_ids).map(&:to_i).reject(&:zero?).uniq
     return 0.0 if ids.empty?
 
-    # Busca as atividades solicitadas
     atividades = Activity.where(id: ids)
-    
-    # Mapeamento rápido: Cria um dicionário { id_da_atividade => nota_do_aluno }
-    # Isso garante que o Ruby encontre a nota 10.0 do aluno 4345 instantaneamente
     pontos_map = self.student_points.where(activity_id: ids).pluck(:activity_id, :points).to_h
 
     vistos = []
     listas = []
     outras_atividades = []
 
-    # Organiza as notas por categoria baseada no nome da atividade
     atividades.each do |activity|
       valor_nota = pontos_map[activity.id].to_f || 0.0
-      
       nome_act = activity.name.to_s.downcase
 
       if nome_act.include?("visto")
@@ -189,26 +182,22 @@ class Student < ApplicationRecord
       end
     end
 
-    # Cálculos das Médias Aritméticas dos grupos
     media_vistos = vistos.any? ? (vistos.sum / vistos.size.to_f) : nil
     media_listas = listas.any? ? (listas.sum / listas.size.to_f) : nil
 
     total_notas_ponderadas = 0.0
     soma_pesos = 0.0
 
-    # Soma atividades que não são Vistos nem Listas (Usando seus pesos individuais)
     outras_atividades.each do |item|
       total_notas_ponderadas += (item[:nota] * item[:peso])
       soma_pesos += item[:peso]
     end
 
-    # Adiciona a média dos Vistos como uma nota única de Peso 1.0
     if media_vistos
       total_notas_ponderadas += media_vistos
       soma_pesos += 1.0
     end
 
-    # Adiciona a média das Listas como uma nota única de Peso 1.0
     if media_listas
       total_notas_ponderadas += media_listas
       soma_pesos += 1.0
@@ -216,6 +205,17 @@ class Student < ApplicationRecord
 
     return 0.0 if soma_pesos.zero?
     (total_notas_ponderadas / soma_pesos).round(2)
+  end
+
+  # --- MÉTODO PARA BUSCAR NOTA DA PROVA (VERSÃO FLEXÍVEL) ---
+  def nota_da_prova(activity_ids)
+    # Buscamos no Mapa de Pontos registros que contenham 'prova' ou 'avaliação' no nome da atividade
+    ponto_registro = self.student_points.joins(:activity)
+                         .where(activity_id: activity_ids)
+                         .where("LOWER(activities.name) LIKE ? OR LOWER(activities.name) LIKE ?", "%prova%", "%avaliação%")
+                         .first
+
+    ponto_registro ? (ponto_registro.points || 0.0) : 0.0
   end
 
   private

@@ -9,6 +9,16 @@ class ActivitiesController < ApplicationController
   def index
     prepare_index_data
     @activity = Activity.new
+
+      # Adicione esta lógica para carregar todas as atividades (usada na aba de corrigidas)
+    if current_professor.admin?
+      @all_activities = Activity.all
+    else
+      # Busca o perfil do professor para filtrar as atividades das turmas dele
+      teacher_profile = current_professor.teacher || Teacher.find_by(email: current_professor.email)
+      @all_activities = Activity.where(classroom_id: Classroom.joins(:classroom_subjects)
+                                .where(classroom_subjects: { teacher_id: teacher_profile.id }).pluck(:id))
+    end
   end
 
   def create
@@ -65,10 +75,17 @@ class ActivitiesController < ApplicationController
   end
 
   def mark_as_corrected
+    @activity = Activity.find(params[:id])
+  
+    # 1. Atualiza os status dos alunos de "Pendente" para "Não Entregue"
+    @activity.student_activities.where(status: "Pendente").update_all(status: "Não Entregue")
+
+    # 2. Tenta atualizar o status da atividade e redireciona APENAS UMA VEZ
     if @activity.update(status: "corrigida")
-      redirect_to activities_path, notice: "🎉 Atividade marcada como corrigida!"
+      # O uso do 'return' garante que o código pare aqui
+      redirect_to activities_path, notice: "Atividade finalizada e pendências atualizadas!"
     else
-      redirect_back fallback_location: activities_path, alert: "Erro ao atualizar status."
+      redirect_to activities_path, alert: "Não foi possível finalizar a atividade."
     end
   end
 
@@ -165,5 +182,27 @@ class ActivitiesController < ApplicationController
       :name, :points, :date, :activity_type, :lesson_id, :classroom_id, 
       :status, :subject_id, :student_delivery_date, :teacher_delivery_date, :grade
     )
+  end
+
+  def update_status
+    # Buscamos a StudentActivity (a entrega do aluno)
+    @student_activity = StudentActivity.find(params[:student_activity_id])
+    @activity = @student_activity.activity # Garante que temos a atividade pai
+  
+    new_status = params[:new_status]
+
+    if @student_activity.update(status: new_status)
+      # Lógica de data automática
+      if new_status == 'Entregue' && @student_activity.delivered_at.nil?
+        @student_activity.update(delivered_at: Date.today)
+      elsif new_status == 'Pendente' || new_status == 'Não Entregue'
+        @student_activity.update(delivered_at: nil)
+      end
+
+      # IMPORTANTE: Redireciona de volta para a atividade ativa com o parâmetro correto
+      redirect_to activities_path(current_activity_id: @activity.id), notice: "Status de #{@student_activity.student.name} atualizado!"
+    else
+      redirect_to activities_path(current_activity_id: @activity.id), alert: "Erro ao atualizar status."
+    end
   end
 end
