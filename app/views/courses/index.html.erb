@@ -45,11 +45,13 @@
                           <i class="bi bi-pencil-square"></i>
                         <% end %>
 
-                        <%# Botão Excluir Reajustado %>
-                        <%= link_to course, 
-                                    method: :delete, 
-                                    data: { confirm: "Deseja excluir o curso '#{course.name}'?" }, 
-                                    class: "btn-action-neon-red", title: "Excluir" do %>
+                        <%# Botão Excluir Atualizado com Turbo Method %>
+                        <%# Substitua o link_to de excluir curso por este button_to %>
+                        <%= button_to course, 
+                                      method: :delete, 
+                                      form: { data: { turbo_confirm: "Deseja excluir o curso '#{course.name}'?" } }, 
+                                      class: "btn-action-neon-red border-0 bg-transparent", 
+                                      title: "Excluir" do %>
                           <i class="bi bi-trash"></i>
                         <% end %>
                       </div>
@@ -87,8 +89,12 @@
               <% Grade.all.each do |g| %>
                 <span class="badge-neon-glass text-white d-flex align-items-center gap-2">
                   <%= g.name %>
-                  <%= link_to g, method: :delete, data: { confirm: "Excluir '#{g.name}'?" }, class: "text-white-50 hover-danger-glow" do %>
-                    <i class="bi bi-x-circle-fill"></i>
+                 <%# Exemplo para as Séries (Grade) %>
+                 <%= button_to g, 
+                                method: :delete, 
+                                form: { data: { turbo_confirm: "Excluir '#{g.name}'?" }, class: "d-inline" }, 
+                                class: "text-white-50 hover-danger-glow border-0 bg-transparent p-0 line-height-1" do %>
+                   <i class="bi bi-x-circle-fill"></i>
                   <% end %>
                 </span>
               <% end %>
@@ -113,8 +119,12 @@
               <% Section.all.each do |s| %>
                 <span class="badge-neon-glass-info text-white d-flex align-items-center gap-2">
                   <%= s.name %>
-                  <%= link_to s, method: :delete, data: { confirm: "Excluir '#{s.name}'?" }, class: "text-white-50 hover-danger-glow" do %>
-                    <i class="bi bi-x-circle-fill"></i>
+                  <%# Exemplo para as Turmas (Section) %>
+                  <%= button_to s, 
+                                 method: :delete, 
+                                 form: { data: { turbo_confirm: "Excluir '#{s.name}'?" }, class: "d-inline" }, 
+                                 class: "text-white-50 hover-danger-glow border-0 bg-transparent p-0 line-height-1" do %>
+                   <i class="bi bi-x-circle-fill"></i>
                   <% end %>
                 </span>
               <% end %>
@@ -137,13 +147,13 @@
 
   /* --- Ajuste dos Botões de Ação --- */
   .btn-action-neon-cyan, .btn-action-neon-red {
-    width: 28px; /* Menor e simétrico */
+    width: 28px;
     height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 0.85rem; /* Ícone menor para não achatar */
+    font-size: 0.85rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent;
     text-decoration: none;
@@ -213,4 +223,30 @@
     padding: 6px 12px;
     font-size: 0.85rem;
   }
+
+  .hover-danger-glow:hover {
+    color: var(--red-neon) !important;
+    filter: drop-shadow(0 0 5px var(--red-neon));
+    transition: 0.3s;
+  }
+
+  /* Garante que o botão dentro das badges e tabelas seja invisível, exceto pelo ícone */
+form.d-inline {
+  display: inline;
+}
+
+button.bg-transparent {
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-neon-glass button, .badge-neon-glass-info button {
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
 </style>

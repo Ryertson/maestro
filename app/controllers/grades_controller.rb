@@ -28,6 +28,16 @@ class GradesController < ApplicationController
     end
   end
 
+  def destroy
+    @grade = Grade.find(params[:id])
+    @grade.destroy
+
+    respond_to do |format|
+      format.html { redirect_to academic_settings_path, notice: "Série excluída com sucesso." }
+      format.json { head :no_content }
+    end
+  end
+
   private
 
   def grade_params

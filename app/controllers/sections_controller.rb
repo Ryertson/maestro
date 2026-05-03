@@ -8,6 +8,16 @@ class SectionsController < ApplicationController
     end
   end
 
+  def destroy
+    @section = Section.find(params[:id])
+    @section.destroy
+
+    respond_to do |format|
+      format.html { redirect_to academic_settings_path, notice: "Identificador excluído com sucesso." }
+      format.json { head :no_content }
+    end
+  end
+
   private
   def section_params
     params.require(:section).permit(:name)
