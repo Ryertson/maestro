@@ -12,7 +12,7 @@ class Student < ApplicationRecord
   has_many :attendances, dependent: :destroy
   has_many :student_points, dependent: :destroy
 
-  has_one :student_user, dependent: :destroy # O aluno pode ter um login
+  has_one :student_user, foreign_key: :email, primary_key: :email # ou conforme sua associação
 
   # Validações
   validates :name, presence: true
@@ -20,6 +20,33 @@ class Student < ApplicationRecord
   validates :grade, presence: true
 
   # --- Lógica de Desempenho e Analytics ---
+
+  # MÉTODO ADICIONADO PARA CORREÇÃO DO ERRO NO RELATÓRIO DE ATIVIDADES PERDIDAS
+  # app/models/student.rb
+
+  # app/models/student.rb
+
+  def has_user
+    # Verifica se já existe um StudentUser com o e-mail deste aluno
+    StudentUser.exists?(email: self.email)
+  end
+
+  def nota_na_atividade(activity_id)
+    # Busca o registro de StudentActivity para este aluno e esta atividade específica
+    sa = self.student_activities.find_by(activity_id: activity_id)
+    return 0.0 unless sa
+
+    # Prioriza o campo 'points' que é o padrão do seu sistema de RPG
+    if sa.respond_to?(:points)
+      sa.points.to_f
+    elsif sa.respond_to?(:grade)
+      sa.grade.to_f
+    else
+      # Backup: busca no mapa de pontos caso não esteja no StudentActivity
+      sp = self.student_points.find_by(activity_id: activity_id)
+      sp ? sp.points.to_f : 0.0
+    end
+  end
 
   def average_for(classroom_id, subject_id, period_number = 1)
     all_bimesters = Bimester.order(:start_date).to_a

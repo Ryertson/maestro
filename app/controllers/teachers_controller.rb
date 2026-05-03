@@ -1,5 +1,6 @@
 class TeachersController < ApplicationController
   before_action :authenticate_professor! # Exige login para qualquer ação
+  skip_before_action :authenticate_professor!, only: [:new, :create]
   before_action :set_teacher, only: [:show, :edit, :update, :destroy, :link_login, :unlink_login]
 
   def index

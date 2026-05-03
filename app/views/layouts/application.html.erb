@@ -40,7 +40,69 @@
       padding: 1.5rem;
     }
 
-    /* --- FLASH MESSAGES NEON ATUALIZADAS --- */
+    /* --- ESTILO LOGOUT NEON --- */
+    .nav-link-logout {
+      color: var(--danger-neon) !important;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .nav-link-logout:hover {
+      filter: drop-shadow(0 0 8px var(--danger-neon));
+      transform: translateX(5px);
+    }
+
+    /* --- MODAL DE LOGOUT PERSONALIZADO (MAESTRO STYLE) --- */
+    .logout-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 17, 23, 0.9);
+      z-index: 10001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .logout-card {
+      background: #1e1e2d;
+      border: 2px solid var(--danger-neon);
+      border-radius: 25px;
+      padding: 35px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 0 40px rgba(255, 49, 49, 0.25);
+      animation: welcomeZoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-cancel-logout {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 10px 25px;
+      border-radius: 50px;
+      margin-right: 10px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn-confirm-logout {
+      background: var(--danger-neon);
+      border: none;
+      color: #fff !important;
+      padding: 10px 25px;
+      border-radius: 50px;
+      font-weight: 800;
+      box-shadow: 0 5px 15px rgba(255, 49, 49, 0.4);
+      transition: 0.3s;
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .btn-confirm-logout:hover { transform: scale(1.05); filter: brightness(1.2); }
+
+    /* --- FLASH MESSAGES --- */
     .flash-container {
       position: fixed;
       top: 25px;
@@ -64,56 +126,24 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
-    .flash-success-neon {
-      border: 1px solid var(--success-neon);
-      box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-    }
-
-    .flash-danger-neon {
-      border: 1px solid var(--danger-neon);
-      box-shadow: 0 0 15px rgba(255, 49, 49, 0.3);
-    }
-
-    .flash-icon-box {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 15px;
-      font-size: 1.4rem;
-    }
+    .flash-success-neon { border: 1px solid var(--success-neon); box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
+    .flash-danger-neon { border: 1px solid var(--danger-neon); box-shadow: 0 0 15px rgba(255, 49, 49, 0.3); }
 
     .bg-success-glow { background: rgba(0, 243, 255, 0.1); color: var(--success-neon); }
     .bg-danger-glow { background: rgba(255, 49, 49, 0.1); color: var(--danger-neon); }
 
-    .flash-text-content b {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      display: block;
-      opacity: 0.7;
-    }
-
-    .flash-text-content span { font-size: 0.9rem; font-weight: 500; }
-
-    .flash-exit {
-      opacity: 0 !important;
-      transform: translateX(120%) scale(0.9) !important;
-    }
+    .flash-exit { opacity: 0 !important; transform: translateX(120%) scale(0.9) !important; }
 
     @keyframes slideInRight {
       from { transform: translateX(120%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
-    /* Cores Padronizadas Maestro IA */
     .text-purple { color: #6f42c1 !important; }
     .icon-points { color: #6f42c1; } 
     .user-icon-custom { color: #6f42c1; }
 
-    /* --- ESTILOS DO MODAL DE BOAS-VINDAS NEON --- */
+    /* --- BOAS VINDAS --- */
     .welcome-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -137,42 +167,6 @@
       animation: welcomeZoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .welcome-icon-box { font-size: 60px; margin-bottom: 15px; }
-    
-    .neon-text-cyan {
-      color: #00f3ff;
-      text-shadow: 0 0 15px rgba(0, 243, 255, 0.8);
-    }
-
-    .welcome-title {
-      color: #fff;
-      font-weight: 800;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-
-    .welcome-desc {
-      color: #a2a3b7;
-      font-size: 15px;
-      margin-bottom: 25px;
-    }
-
-    .btn-neon-start {
-      background: linear-gradient(45deg, #00c6ff, #00f3ff);
-      border: none;
-      padding: 12px 35px;
-      border-radius: 50px;
-      color: #0d1117;
-      font-weight: 800;
-      transition: 0.3s;
-      box-shadow: 0 5px 15px rgba(0, 243, 255, 0.4);
-    }
-
-    .btn-neon-start:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 25px rgba(0, 243, 255, 0.6);
-    }
-
     @keyframes welcomeZoomIn {
       from { transform: scale(0.8); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
@@ -181,27 +175,47 @@
 </head>
 
 <body>
+  <%# --- MODAL DE LOGOUT PERSONALIZADO --- %>
+  <div id="logoutModal" class="logout-overlay">
+    <div class="logout-card">
+      <div style="font-size: 55px; color: var(--danger-neon); margin-bottom: 15px;">
+        <i class='bx bx-log-out-circle'></i>
+      </div>
+      <h3 style="color: #fff; font-weight: 800; letter-spacing: 1px;">ENCERRAR SESSÃO?</h3>
+      <p style="color: #a2a3b7; font-size: 15px; margin-bottom: 30px;">
+        Você está prestes a sair do <strong>Maestro IA</strong>. <br>
+        Deseja realmente confirmar o logout?
+      </p>
+      <div class="d-flex justify-content-center">
+        <button onclick="closeLogoutModal()" class="btn-cancel-logout">VOLTAR</button>
+        <%= link_to "CONFIRMAR SAÍDA", destroy_professor_session_path, 
+            data: { turbo_method: :delete }, 
+            class: "btn-confirm-logout" %>
+      </div>
+    </div>
+  </div>
+
   <%# --- MODAL DE BOAS-VINDAS --- %>
   <% if flash[:welcome_user] %>
     <div id="welcomeModal" class="welcome-overlay">
       <div class="welcome-card shadow-lg">
         <div class="welcome-icon-box">
-          <i class='bx bxs-graduation neon-text-cyan'></i>
+          <i class='bx bxs-graduation neon-text-cyan' style="font-size: 60px; color: #00f3ff; text-shadow: 0 0 15px rgba(0, 243, 255, 0.8);"></i>
         </div>
-        <h2 class="welcome-title">BEM-VINDO AO MAESTRO!</h2>
-        <p class="welcome-desc">
+        <h2 style="color: #fff; font-weight: 800; margin-top: 15px;">BEM-VINDO AO MAESTRO!</h2>
+        <p style="color: #a2a3b7; font-size: 15px; margin-bottom: 25px;">
           Sua conta foi configurada com sucesso. <br>
           A tecnologia agora é sua maior aliada no ensino.
         </p>
-        <button onclick="closeWelcomeModal()" class="btn-neon-start">VAMOS COMEÇAR</button>
+        <button onclick="closeWelcomeModal()" style="background: linear-gradient(45deg, #00c6ff, #00f3ff); border: none; padding: 12px 35px; border-radius: 50px; color: #0d1117; font-weight: 800;">VAMOS COMEÇAR</button>
       </div>
     </div>
   <% end %>
 
-  <%# --- CONTAINER DE MENSAGENS FLASH ATUALIZADO --- %>
+  <%# --- CONTAINER DE FLASH --- %>
   <div id="flash-messages" class="flash-container">
     <% flash.each do |type, message| %>
-      <% next if type == "welcome_user" # Ignora o flash do modal aqui %>
+      <% next if type == "welcome_user" %>
       <div class="alert-neon-flash <%= type == 'notice' ? 'flash-success-neon' : 'flash-danger-neon' %>" role="alert">
         <div class="flash-icon-box <%= type == 'notice' ? 'bg-success-glow' : 'bg-danger-glow' %>">
           <i class="bi <%= type == 'notice' ? 'bi-check2-circle' : 'bi-exclamation-octagon' %>"></i>
@@ -210,7 +224,7 @@
           <b><%= type == 'notice' ? 'SISTEMA: SUCESSO' : 'SISTEMA: ATENÇÃO' %></b>
           <span><%= message %></span>
         </div>
-        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" style="font-size: 0.7rem; opacity: 0.5;"></button>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
       </div>
     <% end %>
   </div>
@@ -255,7 +269,6 @@
           </a>
         </li>
 
-        <%# --- ITEM: RESULTADOS --- %>
         <li class="sidebar-item">
           <a href="<%= results_report_path %>" class="sidebar-link <%= 'active' if current_page?(results_report_path) %>">
             <i class="bx bx-trophy"></i>
@@ -263,7 +276,6 @@
           </a>
         </li>
 
-        <%# --- NOVO ITEM ADICIONADO: ATIVIDADES PERDIDAS --- %>
         <li class="sidebar-item">
           <a href="<%= lost_activities_report_path %>" class="sidebar-link <%= 'active' if current_page?(lost_activities_report_path) %>">
             <i class="bx bx-error-alt" style="color: var(--danger-neon) !important;"></i>
@@ -312,10 +324,11 @@
 
       <div class="sidebar-footer">
         <% if professor_signed_in? %>
-          <%= link_to destroy_professor_session_path, data: { turbo_method: :delete }, class: "sidebar-link text-danger border-0 bg-transparent w-100 text-start" do %>
+          <%# --- DISPARADOR DO MODAL DE LOGOUT --- %>
+          <a href="javascript:void(0);" onclick="openLogoutModal()" class="sidebar-link nav-link-logout border-0 bg-transparent w-100 text-start">
             <i class="bx bx-log-out"></i>
             <span>Sair do Sistema</span>
-          <% end %>
+          </a>
         <% end %>
       </div>
     </aside>
@@ -359,9 +372,10 @@
                   <% end %>
                   
                   <div class="dropdown-divider"></div>
-                  <%= link_to destroy_professor_session_path, data: { turbo_method: :delete }, class: "dropdown-item text-danger" do %>
+                  <%# --- DISPARADOR DO MODAL DE LOGOUT NO DROPDOWN --- %>
+                  <a href="javascript:void(0);" onclick="openLogoutModal()" class="dropdown-item text-danger">
                     <i class="bx bx-log-out-circle me-2"></i><span>Sair</span>
-                  <% end %>
+                  </a>
                 </div>
               <% else %>
                 <%= link_to "Entrar", new_professor_session_path, class: "btn btn-sm btn-purple px-4 rounded-pill text-white" %>
@@ -382,6 +396,17 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
+    // FUNÇÕES DO MODAL DE LOGOUT
+    function openLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.style.display = 'none';
+    }
+
     function closeWelcomeModal() {
       const modal = document.getElementById('welcomeModal');
       if (modal) {
@@ -398,11 +423,16 @@
       const icon = document.querySelector("#icon");
       
       if (btn && sidebar) {
-        btn.addEventListener("click", function(e) {
+        // Remover listeners antigos para evitar duplicação
+        btn.replaceWith(btn.cloneNode(true));
+        const newBtn = document.querySelector(".toggle-btn");
+        
+        newBtn.addEventListener("click", function(e) {
           e.preventDefault();
           sidebar.classList.toggle("expand");
-          if (icon) {
-            icon.className = sidebar.classList.contains("expand") ? "bx bx-chevrons-left" : "bx bx-chevrons-right";
+          const currentIcon = document.querySelector("#icon");
+          if (currentIcon) {
+            currentIcon.className = sidebar.classList.contains("expand") ? "bx bx-chevrons-left" : "bx bx-chevrons-right";
           }
         });
       }
@@ -411,10 +441,11 @@
     function setupFlashMessages() {
       const messages = document.querySelectorAll('.alert-neon-flash');
       messages.forEach(msg => {
-        // Auto-remover após 5 segundos
         setTimeout(() => {
-          msg.classList.add('flash-exit');
-          setTimeout(() => msg.remove(), 500);
+          if (msg) {
+            msg.classList.add('flash-exit');
+            setTimeout(() => msg.remove(), 500);
+          }
         }, 5000);
       });
     }

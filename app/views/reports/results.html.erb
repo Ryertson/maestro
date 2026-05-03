@@ -21,9 +21,9 @@
                 <small class="text-white-50"><%= classroom.course&.name %></small>
               </div>
               
-              <%# Botão de Relatório PDF %>
-              <%= link_to export_recuperacao_path(classroom, format: :pdf), class: "btn btn-neon-orange btn-sm fw-bold shadow-sm" do %>
-                <i class="bi bi-file-earmark-pdf-fill me-2"></i>Relatório Recuperação
+              <%# Botão de Relatório Atualizado para o formato HTML com target: "_blank" %>
+              <%= link_to export_recuperacao_path(classroom_id: classroom.id, format: :html), target: "_blank", class: "btn btn-neon-orange btn-sm fw-bold shadow-sm" do %>
+                <i class="bi bi-file-earmark-text-fill me-2"></i>Relatório Recuperação
               <% end %>
             </div>
 

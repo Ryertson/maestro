@@ -1,5 +1,8 @@
 class ApplicationController < ActionController::Base
+  # 1. Ajuste na trava de segurança: Adicionado bypass para que o aluno logado não seja tratado como professor deslogado
+  before_action :authenticate_professor!, unless: -> { devise_controller? || student_user_signed_in? }
   before_action :configure_permitted_parameters, if: :devise_controller?
+  
   helper_method :current_teacher_profile
   helper_method :current_view_mode # Registrado para ser usado nas Views também
 
@@ -10,7 +13,7 @@ class ApplicationController < ActionController::Base
     @current_teacher_profile ||= Teacher.find_by(email: current_professor.email) if professor_signed_in?
   end
 
-  # --- NOVO MÉTODO: Define se o sistema exibe visão de Professor ou Admin ---
+  # --- MÉTODO: Define se o sistema exibe visão de Professor ou Admin ---
   def current_view_mode
     return :modo_professor unless current_professor
     
@@ -34,19 +37,29 @@ class ApplicationController < ActionController::Base
     devise_parameter_sanitizer.permit(:account_update, keys: [:name, :student_id])
   end
 
-  def after_sign_in_path_for(resource)
-    if resource.is_a?(StudentUser)
-      # Alterado de student_portal_dashboard_path para student_portal_root_path
-      student_portal_root_path 
-    elsif resource.is_a?(Professor)
-      root_path
+  # app/controllers/application_controller.rb
+
+  def after_sign_out_path_for(resource_or_scope)
+    if resource_or_scope == :student_user
+      # Se um aluno sair, vai para o login do Portal do Aluno (Ciano)
+      new_student_user_session_path
+    elsif resource_or_scope == :professor
+      # Se um professor sair, vai para o login do Professor (Roxo)
+      new_professor_session_path
     else
-      super
+      # Caso padrão (segurança)
+      root_path
     end
   end
 
-  # Opcional: Para onde o usuário vai se o login falhar ou ele sair
+  # --- AJUSTE: Evita redirecionar o Professor para o login do Aluno ao sair ---
   def after_sign_out_path_for(resource_or_scope)
-    new_student_user_session_path # Ou a página inicial do Maestro
+    if resource_or_scope == :student_user
+      new_student_user_session_path
+    elsif resource_or_scope == :professor
+      new_professor_session_path
+    else
+      root_path
+    end
   end
 end

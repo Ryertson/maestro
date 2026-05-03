@@ -130,7 +130,7 @@
         </div>
       </div>
 
-      <%# --- SEÇÃO 2: CARDS DE FREQUÊNCIA --- %>
+      <%# --- SEÇÃO 2: CARDS DE PERCENTUAL DE FREQUÊNCIA --- %>
       <div class="row g-3 mb-4">
         <% [
           { label: 'Semanal', valor: @freq_semanal },
@@ -151,13 +151,80 @@
         <% end %>
       </div>
 
-      <%# --- SEÇÃO 3: GRÁFICO E RANKING --- %>
+      <%# --- QUADROS REAIS DA CHAMADA (CORES NEON DARK) --- %>
+      <div class="row g-3 mb-4">
+        <% [
+          { label: 'Total Aulas', valor: @total_aulas_dadas, icon: 'bx-chalkboard', color: '#bc13fe', glow: 'rgba(188, 19, 254, 0.3)' },
+          { label: 'Presenças', valor: @total_presencas, icon: 'bx-check-double', color: '#39ff14', glow: 'rgba(57, 255, 20, 0.3)' },
+          { label: 'Faltas', valor: @total_faltas, icon: 'bx-x', color: '#ff3131', glow: 'rgba(255, 49, 49, 0.3)' },
+          { label: 'Justificadas', valor: @total_justificadas, icon: 'bx-file', color: '#00d4ff', glow: 'rgba(0, 212, 255, 0.3)' },
+          { label: 'Atrasos', valor: @total_atrasos, icon: 'bx-time-five', color: '#ffcc00', glow: 'rgba(255, 204, 0, 0.3)' }
+        ].each do |card| %>
+          <div class="col">
+            <div class="stat-card-neon h-100" style="border: 1px solid <%= card[:color] %>44; box-shadow: 0 0 15px <%= card[:glow] %>; background: rgba(20, 20, 33, 0.7);">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bx <%= card[:icon] %> me-2" style="color: <%= card[:color] %>; font-size: 1.1rem;"></i>
+                <small class="label-neon-small text-white-50"><%= card[:label] %></small>
+              </div>
+              <h3 class="fw-bold mb-0" style="color: <%= card[:color] %>; text-shadow: 0 0 8px <%= card[:color] %>;"><%= card[:valor] || 0 %></h3>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# --- SEÇÃO 3: LINHA DO TEMPO DE ATIVIDADES --- %>
       <div class="row g-4 mb-4">
         <div class="col-lg-8">
-          <div class="content-card-purple h-100 p-4 shadow-lg">
-            <h6 class="fw-bold mb-4 text-white"><i class="bx bx-line-chart text-purple-neon me-2"></i>Evolução Acadêmica</h6>
-            <div style="height: 300px;">
-              <canvas id="evolutionChart"></canvas>
+          <div class="content-card-purple h-100 p-4 shadow-lg overflow-visible position-relative">
+            <h6 class="fw-bold mb-1 text-white">
+              <i class="bx bx-git-commit text-purple-neon me-2"></i>Linha do Tempo de Atividades
+            </h6>
+            
+            <%# Ajustado pt-5 para garantir espaço para as notas acima da barra %>
+            <div class="timeline-scroll-area overflow-x-auto pt-5 pb-4" style="min-height: 280px;">
+              <div class="d-flex align-items-end gap-5 px-3 position-relative" style="height: 180px;">
+                <% if @timeline_data.any? %>
+                  <% @timeline_data.each do |item| %>
+                    <div class="timeline-column d-flex flex-column align-items-center text-center" style="min-width: 70px; z-index: 2;">
+                      
+                      <%# --- TOPO: BARRA OU "X" --- %>
+                      <div class="d-flex align-items-end justify-content-center mb-3" style="height: 120px; width: 100%;">
+                        <% if item[:fez] %>
+                          <div class="activity-bar" 
+                               style="height: <%= item[:nota].to_f * 10 %>%; width: 30px; 
+                                      background: rgba(188, 19, 254, 0.05); 
+                                      border: 1px solid rgba(188, 19, 254, 0.4);
+                                      box-shadow: 0 0 15px rgba(188, 19, 254, 0.1);
+                                      position: relative; border-radius: 4px 4px 0 0;">
+                            <%# Nota ajustada para -35px para não sumir %>
+                            <span class="fw-bold" style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+                                  color: <%= item[:nota].to_f >= 6 ? '#39ff14' : '#ffcc00' %>;
+                                  text-shadow: 0 0 10px <%= item[:nota].to_f >= 6 ? 'rgba(57,255,20,0.5)' : 'rgba(255,204,0,0.5)' %>; font-size: 0.9rem; white-space: nowrap;">
+                              <%= item[:nota] %>
+                            </span>
+                          </div>
+                        <% else %>
+                          <div class="text-danger-neon fw-bold fs-2 animate-pulse-neon" style="text-shadow: 0 0 15px #ff3131; line-height: 1;">
+                            <i class="bx bx-x"></i>
+                          </div>
+                        <% end %>
+                      </div>
+
+                      <%# --- LINHA E INFO --- %>
+                      <div class="timeline-node bg-purple-neon mb-2" style="width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 10px #bc13fe;"></div>
+                      <div class="fw-bold text-white mb-0" style="font-size: 0.7rem;"><%= item[:data] %></div>
+                      <div class="text-white-50 text-truncate" style="font-size: 0.6rem; max-width: 80px;" title="<%= item[:nome] %>">
+                        <%= item[:nome] %>
+                      </div>
+                    </div>
+                  <% end %>
+                  
+                  <%# Linha horizontal decorativa %>
+                  <div class="position-absolute bg-purple-neon opacity-25" style="height: 2px; width: calc(100% - 40px); bottom: 44px; left: 20px; z-index: 1;"></div>
+                <% else %>
+                  <div class="text-center w-100 text-white-50 small py-5">Nenhuma atividade pontuada no período.</div>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>
@@ -190,15 +257,16 @@
               </div>
             </div>
 
-            <%# --- RANKING RÁPIDO NO LADO --- %>
             <div class="mt-auto border-top border-secondary pt-3">
               <h6 class="label-neon-small text-purple-neon mb-3">Ranking da Turma</h6>
-              <% (Student.where(classroom_id: @classroom.id).order(total_xp: :desc).limit(3)).each_with_index do |top_s, idx| %>
-                <div class="d-flex align-items-center mb-2">
-                  <span class="badge bg-dark-dim me-2"><%= idx + 1 %>º</span>
-                  <small class="text-white flex-grow-1 text-truncate"><%= top_s.name.split.first %></small>
-                  <small class="text-success fw-bold"><%= top_s.total_xp %> XP</small>
-                </div>
+              <% if @ranking_turma %>
+                <% @ranking_turma.each_with_index do |top_s, idx| %>
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-dark-dim me-2"><%= idx + 1 %>º</span>
+                    <small class="text-white flex-grow-1 text-truncate"><%= top_s.name.split.first %></small>
+                    <small class="text-success fw-bold"><%= top_s.total_xp %> XP</small>
+                  </div>
+                <% end %>
               <% end %>
             </div>
           </div>
@@ -299,129 +367,46 @@
   }
 
   .teacher-dashboard-neon { background: var(--bg-dark-master); color: #fff; font-family: 'Inter', sans-serif; }
+  .form-select-neon { background-color: rgba(255,255,255,0.1); border: 1px solid rgba(188,19,254,0.3); color: #fff !important; border-radius: 10px; padding: 0.5rem; width: 100%; cursor: pointer; }
+  .form-select-neon option { background-color: var(--card-bg); color: #fff; }
+  .form-select-neon:focus { background-color: var(--card-bg); border-color: var(--purple-neon); box-shadow: 0 0 10px var(--purple-glow); outline: none; }
 
-  /* --- ESTILIZAÇÃO DE SELECTS E OPTIONS (CORREÇÃO DE VISIBILIDADE) --- */
-  .form-select-neon { 
-    background-color: rgba(255,255,255,0.1); 
-    border: 1px solid rgba(188,19,254,0.3); 
-    color: #fff !important; 
-    border-radius: 10px; 
-    padding: 0.5rem; 
-    width: 100%;
-    cursor: pointer;
-  }
-
-  .form-select-neon option {
-    background-color: var(--card-bg); /* Fundo escuro para as opções */
-    color: #fff; /* Texto branco nas opções */
-  }
-
-  .form-select-neon:focus {
-    background-color: var(--card-bg);
-    border-color: var(--purple-neon);
-    box-shadow: 0 0 10px var(--purple-glow);
-    color: #fff;
-    outline: none;
-  }
-
-  /* --- RPG CUSTOM STYLES --- */
+  /* --- RPG --- */
   .border-rpg-gold { border: 1px solid rgba(255, 204, 0, 0.3) !important; box-shadow: 0 0 20px rgba(255, 204, 0, 0.1); }
-  
-  .lvl-hex {
-    background: var(--purple-neon);
-    width: 60px; height: 60px;
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 15px var(--purple-glow);
-  }
+  .lvl-hex { background: var(--purple-neon); width: 60px; height: 60px; clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--purple-glow); }
   .lvl-number { font-size: 1.5rem; font-weight: 900; color: #fff; }
+  .badge-icon-mini { width: 35px; height: 35px; background: rgba(255,255,255,0.1); border: 1px solid var(--purple-neon); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--rpg-gold); font-size: 1.1rem; }
 
-  .badge-icon-mini {
-    width: 35px; height: 35px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid var(--purple-neon);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--rpg-gold);
-    font-size: 1.1rem;
-    transition: 0.3s;
-  }
-  .badge-icon-mini:hover { transform: scale(1.2); background: var(--purple-neon); color: #fff; }
-
-  /* --- QUICK WINS BUTTONS --- */
-  .btn-quick-win {
-    border: none; border-radius: 8px; padding: 8px 15px; font-size: 0.75rem; font-weight: bold;
-    display: flex; align-items: center; transition: 0.3s; color: #000;
-  }
-  .win-danger { background: var(--danger-neon); box-shadow: 0 0 10px var(--danger-glow); }
-  .win-warning { background: var(--warning-neon); box-shadow: 0 0 10px rgba(255,145,0,0.4); }
-  .win-success { background: var(--success-neon); box-shadow: 0 0 10px var(--success-glow); }
-  .btn-quick-win:hover { transform: translateY(-2px); filter: brightness(1.2); }
-
-  /* Estilos Mantidos */
-  .input-date-neon { background: transparent; border: none; color: #fff !important; font-size: 0.75rem; width: 110px; filter: invert(0) brightness(2); }
-  ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-  
+  /* --- STAT CARDS --- */
+  .stat-card-neon { transition: all 0.3s ease; border-radius: 1.25rem; padding: 1.5rem; }
   .glow-success { border: 1px solid var(--success-neon) !important; box-shadow: 0 0 15px var(--success-glow); background: linear-gradient(145deg, #141421, #0d210d); }
   .glow-danger { border: 1px solid var(--danger-neon) !important; box-shadow: 0 0 15px var(--danger-glow); background: linear-gradient(145deg, #141421, #210d0d); }
-  
-  .stat-card-neon { transition: all 0.3s ease; border-radius: 1.25rem; padding: 1.5rem; }
+  .text-purple-neon { color: var(--purple-neon) !important; text-shadow: 0 0 10px var(--purple-glow); }
   .text-success-neon { color: var(--success-neon) !important; text-shadow: 0 0 10px var(--success-neon); }
   .text-danger-neon { color: var(--danger-neon) !important; text-shadow: 0 0 10px var(--danger-neon); }
   .text-warning-neon { color: var(--warning-neon) !important; text-shadow: 0 0 10px var(--warning-neon); }
-  .bg-purple-dim { background: rgba(188, 19, 254, 0.2); }
-
   .content-card-purple { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; }
-  .text-purple-neon { color: var(--purple-neon) !important; text-shadow: 0 0 10px var(--purple-glow); }
   .label-neon-small { text-transform: uppercase; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; color: var(--lavender-light); }
+
+  /* --- TIMELINE --- */
+  .overflow-visible { overflow: visible !important; }
+  .timeline-scroll-area { scrollbar-width: thin; scrollbar-color: var(--purple-neon) transparent; }
+  .timeline-scroll-area::-webkit-scrollbar { height: 6px; }
+  .timeline-scroll-area::-webkit-scrollbar-thumb { background: var(--purple-neon); border-radius: 10px; }
+  .activity-bar { transition: all 0.3s ease; }
+  .activity-bar:hover { background: rgba(188, 19, 254, 0.2) !important; transform: scaleX(1.1); filter: brightness(1.2); }
   
-  .btn-period { border: none; background: transparent; color: var(--lavender-light); padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
+  .animate-pulse-neon { animation: pulse-red 2s infinite; }
+  @keyframes pulse-red {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* --- UTILS --- */
+  .btn-period { border: none; background: transparent; color: var(--lavender-light); padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; text-decoration: none; }
   .btn-period.active { background: var(--purple-neon); color: #fff; box-shadow: 0 0 15px var(--purple-glow); }
   .btn-group-neon { background: rgba(255,255,255,0.08); display: inline-flex; }
-
-  .date-picker-neon { display: flex; align-items: center; background: rgba(255,255,255,0.1); border-radius: 50px; padding: 2px 10px; border: 1px solid rgba(255,255,255,0.2); }
-  .btn-search-neon { background: var(--purple-neon); color: #fff; border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-
-  .ai-insight-card { background: linear-gradient(135deg, #1a1a2e 0%, #2e1a47 100%); border-radius: 1.5rem; border: 1px solid var(--purple-neon); }
-  .ai-icon-box { background: #fff; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
-  .btn-outline-purple-neon { background: transparent; border: 2px solid var(--purple-neon); color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
-  
   .progress-neon { background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; }
   .progress-bar-purple { background: var(--purple-neon); height: 100%; box-shadow: 0 0 10px var(--purple-neon); }
-  .alert-neon-info { background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(188, 19, 254, 0.2); }
 </style>
-
-<script>
-  document.addEventListener("turbo:load", function() {
-    const ctx = document.getElementById('evolutionChart');
-    if (!ctx) return;
-    if (window.myEvolutionChart) { window.myEvolutionChart.destroy(); }
-
-    window.myEvolutionChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: <%= raw (@labels_evolucao || []).to_json %>,
-        datasets: [{
-          label: 'Aluno',
-          data: <%= raw (@notas_aluno_evolucao || []).to_json %>,
-          borderColor: '#bc13fe',
-          backgroundColor: 'rgba(188, 19, 254, 0.1)',
-          borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#fff'
-        },
-        {
-          label: 'Turma',
-          data: <%= raw (@notas_turma_evolucao || []).to_json %>,
-          borderColor: 'rgba(255,255,255,0.3)', borderDash: [5, 5], tension: 0.4, fill: false, pointRadius: 0
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#fff' } } },
-        scales: {
-          y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
-          x: { grid: { display: false }, ticks: { color: '#fff' } }
-        }
-      }
-    });
-  });
-</script>

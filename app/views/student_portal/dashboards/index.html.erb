@@ -1,0 +1,298 @@
+<%
+  # Lógica de Saudação Temporal
+  current_hour = Time.now.hour
+  saudacao = case current_hour
+             when 5..12 then "Bom dia"
+             when 13..18 then "Boa tarde"
+             else "Boa noite"
+             end
+%>
+
+<div class="container-fluid py-4 student-portal-theme">
+  
+  <!-- QUADRO DE BOAS VINDAS -->
+  <div class="welcome-card-neon mb-4 p-4 d-flex align-items-center">
+    <div class="welcome-icon me-4">
+      <i class="bx bxs-rocket text-cyan-neon" style="font-size: 3rem; filter: drop-shadow(0 0 10px #00d4ff);"></i>
+    </div>
+    <div>
+      <h2 class="text-white fw-bold mb-1">
+        <%= saudacao %>, <span class="text-cyan-neon"><%= @student.name %></span>
+      </h2>
+      <p class="text-white-50 mb-0">Pronto para a jornada de hoje? Confira seu progresso no Maestro.</p>
+    </div>
+  </div>
+
+  <!-- FILTROS E PERÍODO DE ANÁLISE -->
+  <div class="card-maestro-neon-cyan p-4 mb-4">
+    <div class="row align-items-center">
+      <div class="col-lg-4">
+        <h4 class="text-white fw-bold mb-0">
+          <i class="bx bxs-calendar-check text-cyan-neon me-2"></i>Período de Análise
+        </h4>
+        <small class="text-white-50">Dados de: <span class="text-cyan-neon"><%= @subject ? @subject.name : "Geral" %></span></small>
+      </div>
+      
+      <div class="col-lg-8">
+        <%= form_with url: student_portal_root_path, method: :get, local: true, class: "row g-2 align-items-center justify-content-end" do |f| %>
+          <div class="col-auto btn-group-neon">
+            <%= link_to "Semana", { period: 'weekly' }, class: "btn-neon-filter #{'active' if @period_filter == 'weekly'}" %>
+            <%= link_to "Mês", { period: 'monthly' }, class: "btn-neon-filter #{'active' if @period_filter == 'monthly'}" %>
+            <%= link_to "1ºB", { period: '1b' }, class: "btn-neon-filter #{'active' if @period_filter == '1b'}" %>
+            <%= link_to "2ºB", { period: '2b' }, class: "btn-neon-filter #{'active' if @period_filter == '2b'}" %>
+            <%= link_to "3ºB", { period: '3b' }, class: "btn-neon-filter #{'active' if @period_filter == '3b'}" %>
+            <%= link_to "4ºB", { period: '4b' }, class: "btn-neon-filter #{'active' if @period_filter == '4b'}" %>
+          </div>
+          
+          <div class="col-auto d-flex align-items-center gap-2">
+            <div class="date-input-container">
+              <%= f.date_field :start_date, value: @start_date, class: "input-date-neon-transparent" %>
+            </div>
+            <span class="text-white">à</span>
+            <div class="date-input-container">
+              <%= f.date_field :end_date, value: @end_date, class: "input-date-neon-transparent" %>
+            </div>
+            <button type="submit" class="btn-search-transparent-cyan">
+              <i class="bx bx-search"></i>
+            </button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS DE FREQUÊNCIA -->
+  <div class="row mb-4">
+    <% [
+      { label: 'SEMANAL', val: @freq_semanal },
+      { label: 'MENSAL', val: @freq_mensal },
+      { label: 'BIMESTRAL', val: @freq_bimestral },
+      { label: 'ANUAL', val: @freq_anual }
+    ].each do |item| 
+      meta_alcançada = item[:val] >= 75
+      color_class = meta_alcançada ? 'card-meta-success' : 'card-meta-danger'
+    %>
+      <div class="col-md-3">
+        <div class="card-metric-neon <%= color_class %> text-center p-3">
+          <label class="label-neon-small-original text-white opacity-75"><%= item[:label] %></label>
+          <div class="metric-value-original text-white"><%= item[:val] %>%</div>
+          <div class="d-flex justify-content-end w-100 mt-2">
+            <small class="text-white opacity-50" style="font-size: 0.6rem;">META 75%</small>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- QUANTITATIVO COM CORES NEON -->
+  <div class="row mb-4">
+    <% [
+      { label: 'TOTAL AULAS', val: @total_aulas_dadas, icon: 'bx-book-open', color: 'cyan' },
+      { label: 'PRESENÇAS', val: @total_presencas, icon: 'bx-check-double', color: 'green' },
+      { label: 'FALTAS', val: @total_faltas, icon: 'bx-x', color: 'red' },
+      { label: 'JUSTIFICADAS', val: @total_justificadas, icon: 'bx-info-circle', color: 'purple' },
+      { label: 'ATRASOS', val: @total_atrasos, icon: 'bx-time', color: 'yellow' }
+    ].each do |stat| %>
+      <div class="col-md col-6 mb-3">
+        <div class="card-stat-neon card-border-<%= stat[:color] %> p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <i class="bx <%= stat[:icon] %> text-<%= stat[:color] %>-neon-glow"></i>
+            <span class="label-neon-mini-original text-white opacity-75"><%= stat[:label] %></span>
+          </div>
+          <div class="stat-number-original text-<%= stat[:color] %>-neon-glow"><%= stat[:val] %></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- QUADRO: NOTIFICAÇÕES DE ATIVIDADES (CABECALHO E FONTES BRANCAS) -->
+  <div class="card-maestro-neon-cyan p-4 mb-4" style="background: rgba(11, 11, 20, 0.7) !important;">
+    <h5 class="text-white fw-black mb-4 letter-spacing-1">
+      <i class="bx bxs-notification text-cyan-neon me-2"></i>NOTIFICAÇÕES DE ATIVIDADES
+    </h5>
+    <div class="table-responsive custom-scrollbar" style="max-height: 250px; overflow-y: auto;">
+      <table class="table mb-0" style="background: transparent !important;">
+        <thead class="sticky-top" style="background: #0b0b14; z-index: 10;">
+          <tr class="text-white small fw-black border-bottom border-secondary">
+            <th style="background: transparent;">ATIVIDADE</th>
+            <th class="text-center" style="background: transparent;">POSTADA EM</th>
+            <th class="text-center" style="background: transparent;">ENTREGA ATÉ</th>
+            <th class="text-center" style="background: transparent;">STATUS</th>
+          </tr>
+        </thead>
+        <tbody class="text-white">
+          <% if @classroom %>
+            <% filtered_activities = @classroom.activities.where(date: @start_date..@end_date).order(date: :desc) %>
+            <% if filtered_activities.any? %>
+              <% filtered_activities.each do |atv| %>
+                <% submission = @student.student_activities.find_by(activity_id: atv.id) %>
+                <tr class="border-bottom border-secondary" style="background: transparent !important;">
+                  <td class="fw-bold py-3 text-white" style="background: transparent !important;"><%= atv.name %></td>
+                  <td class="text-center small py-3 text-white" style="background: transparent !important;"><%= atv.created_at.strftime("%d/%m/%Y") %></td>
+                  <td class="text-center small py-3 text-white" style="background: transparent !important;"><%= atv.date.strftime("%d/%m/%Y") %></td>
+                  <td class="text-center py-3" style="background: transparent !important;">
+                    <% if submission.present? %>
+                      <% case submission.status %>
+                      <% when "Entregue", "Entregou", "No Prazo" %>
+                        <i class="bx bxs-check-circle text-green-neon-glow" style="font-size: 1.4rem;"></i>
+                      <% when "Atrasado", "Entregue com Atraso" %>
+                        <i class="bx bxs-watch text-orange-neon-glow" style="font-size: 1.4rem;"></i>
+                      <% when "Não Entregue", "Não Entregou" %>
+                        <i class="bx bxs-x-circle text-red-neon-glow" style="font-size: 1.4rem;"></i>
+                      <% else %>
+                        <i class="bx bxs-error text-yellow-neon-glow" style="font-size: 1.4rem;"></i>
+                      <% end %>
+                    <% else %>
+                      <i class="bx <%= atv.date < Date.today ? 'bxs-x-circle text-red-neon-glow' : 'bxs-error text-yellow-neon-glow' %>" style="font-size: 1.4rem;"></i>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr style="background: transparent !important;"><td colspan="4" class="text-center text-white py-4" style="background: transparent !important;">Nenhum registro para este período.</td></tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LINHA DO TEMPO E STATUS DE ENTREGA -->
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card-maestro-neon-cyan p-4 h-100">
+        <h5 class="text-white fw-bold mb-4"><i class="bx bx-list-ul text-cyan-neon me-2"></i>Linha do Tempo de Atividades</h5>
+        <div class="timeline-scroll-container custom-scrollbar" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+          <div class="timeline-horizontal-container">
+            <% @timeline_data.each do |data| %>
+              <% nota = data[:nota].to_f %>
+              <div class="timeline-row mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="text-white fw-bold small"><%= data[:nome] %></span>
+                  <div class="d-flex align-items-center">
+                    <% if nota == 0.0 %>
+                      <i class="bx bx-x text-red-neon-glow me-1" style="font-size: 1.2rem;"></i>
+                    <% end %>
+                    <span class="text-cyan-neon fw-bold small"><%= data[:nota] || '0.0' %></span>
+                  </div>
+                </div>
+                <div class="progress-horizontal-wrapper">
+                  <div class="progress-bar-horizontal-cyan" style="width: <%= nota * 10 %>%;"></div>
+                  <div class="date-label text-white-50"><%= data[:data] %></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card-maestro-neon-cyan p-4 h-100">
+        <h5 class="text-white fw-black mb-4 letter-spacing-1">Status de Entrega</h5>
+        <div class="row text-center mb-4">
+          <div class="col-4 border-end border-secondary">
+            <div class="h3 text-green-neon-glow fw-black mb-0"><%= @entregas_prazo %></div>
+            <small class="text-white fw-black small">NO PRAZO</small>
+          </div>
+          <div class="col-4 border-end border-secondary">
+            <div class="h3 text-gold-neon-glow fw-black mb-0"><%= @entregas_atraso %></div>
+            <small class="text-white fw-black small">ATRASO</small>
+          </div>
+          <div class="col-4">
+            <div class="h3 text-red-neon-glow fw-black mb-0"><%= @nao_entregues %></div>
+            <small class="text-white fw-black small">PENDENTE</small>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="d-flex justify-content-between text-white fw-black small mb-2">
+            TAXA DE ENTREGA <span class="text-cyan-neon-glow"><%= @taxa_entrega %>%</span>
+          </label>
+          <div class="progress" style="height: 12px; background: rgba(255,255,255,0.1); border-radius: 20px; border: 1px solid rgba(0, 212, 255, 0.2);">
+            <div class="progress-bar" style="width: <%= @taxa_entrega %>%; background: var(--cyan-neon); box-shadow: 0 0 15px var(--cyan-neon);"></div>
+          </div>
+        </div>
+
+        <div class="ranking-section">
+          <h6 class="text-white fw-black mb-3 small">RANKING DA TURMA</h6>
+          <% @ranking_turma.each_with_index do |aluno, idx| %>
+            <div class="ranking-item d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan-neon);">
+              <span class="text-white fw-bold"><%= idx + 1 %>º <%= aluno.name.split.first %></span>
+              <span class="text-cyan-neon fw-bold"><%= aluno.total_xp %> XP</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root { 
+    --cyan-neon: #00d4ff; --purple-neon: #bc13fe; --green-neon: #00ff88;
+    --red-neon: #ff4444; --yellow-neon: #ffea00; --gold-neon: #ffcc00; --orange-neon: #ff8c00;
+  }
+
+  .metric-value-original { font-size: 2.2rem; font-weight: 800; font-family: sans-serif; }
+  .label-neon-small-original { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; font-family: sans-serif; }
+  .stat-number-original { font-size: 1.8rem; font-weight: 800; font-family: sans-serif; }
+  .label-neon-mini-original { font-size: 0.7rem; font-weight: 700; font-family: sans-serif; }
+
+  .fw-black { font-weight: 900 !important; }
+  .letter-spacing-1 { letter-spacing: 1px; }
+
+  .text-cyan-neon-glow { color: var(--cyan-neon) !important; filter: drop-shadow(0 0 8px var(--cyan-neon)); text-shadow: 0 0 10px var(--cyan-neon); }
+  .text-green-neon-glow { color: var(--green-neon) !important; filter: drop-shadow(0 0 8px var(--green-neon)); text-shadow: 0 0 10px var(--green-neon); }
+  .text-red-neon-glow { color: var(--red-neon) !important; filter: drop-shadow(0 0 8px var(--red-neon)); text-shadow: 0 0 10px var(--red-neon); }
+  .text-yellow-neon-glow { color: var(--yellow-neon) !important; filter: drop-shadow(0 0 8px var(--yellow-neon)); text-shadow: 0 0 10px var(--yellow-neon); }
+  .text-purple-neon-glow { color: var(--purple-neon) !important; filter: drop-shadow(0 0 8px var(--purple-neon)); text-shadow: 0 0 10px var(--purple-neon); }
+  .text-gold-neon-glow { color: var(--gold-neon) !important; filter: drop-shadow(0 0 8px var(--gold-neon)); text-shadow: 0 0 10px var(--gold-neon); }
+  .text-orange-neon-glow { color: var(--orange-neon) !important; filter: drop-shadow(0 0 8px var(--orange-neon)); text-shadow: 0 0 10px var(--orange-neon); }
+
+  .input-date-neon-transparent {
+    background: transparent !important;
+    border: 1px solid rgba(0, 212, 255, 0.4) !important;
+    color: var(--cyan-neon) !important;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: bold;
+    outline: none;
+  }
+  .input-date-neon-transparent::-webkit-calendar-picker-indicator {
+    filter: invert(65%) sepia(85%) saturate(2500%) hue-rotate(165deg) brightness(105%) contrast(105%);
+    cursor: pointer;
+  }
+  
+  .btn-search-transparent-cyan {
+    background: transparent;
+    border: 1px solid var(--cyan-neon);
+    color: var(--cyan-neon);
+    border-radius: 8px;
+    padding: 6px 12px;
+    filter: drop-shadow(0 0 5px var(--cyan-neon));
+  }
+
+  .card-metric-neon, .card-maestro-neon-cyan, .card-stat-neon, .welcome-card-neon {
+    background: rgba(20, 20, 33, 0.7); border-radius: 20px; backdrop-filter: blur(12px);
+  }
+  .card-maestro-neon-cyan { border: 1px solid rgba(0, 212, 255, 0.2); }
+  .card-meta-danger { border: 1px solid rgba(255, 68, 68, 0.4); }
+  .card-meta-success { border: 1px solid rgba(0, 255, 136, 0.4); }
+  
+  .card-border-cyan { border: 1px solid rgba(0, 212, 255, 0.3); }
+  .card-border-green { border: 1px solid rgba(0, 255, 136, 0.3); }
+  .card-border-red { border: 1px solid rgba(255, 68, 68, 0.3); }
+  .card-border-purple { border: 1px solid rgba(188, 19, 254, 0.3); }
+  .card-border-yellow { border: 1px solid rgba(255, 234, 0, 0.3); }
+
+  .progress-horizontal-wrapper { height: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 20px; border: 1px solid rgba(0, 212, 255, 0.1); }
+  .progress-bar-horizontal-cyan { height: 100%; background: rgba(0, 212, 255, 0.15); border: 1px solid var(--cyan-neon); border-radius: 20px; box-shadow: 0 0 10px var(--cyan-neon); }
+
+  .btn-neon-filter { background: rgba(255, 255, 255, 0.05); color: white; padding: 6px 14px; font-size: 0.8rem; text-decoration: none; border: none; }
+  .btn-neon-filter.active { background: var(--cyan-neon); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--cyan-neon); }
+  .btn-group-neon { border-radius: 12px; overflow: hidden; border: 1px solid rgba(0, 212, 255, 0.3); }
+  
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--cyan-neon); border-radius: 10px; }
+</style>

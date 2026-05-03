@@ -1,64 +1,101 @@
 <div class="container-fluid px-4 py-4">
-  <%# --- CABEÇALHO ATUALIZADO COM BOTÃO DE RELATÓRIO --- %>
+  <%# --- CABEÇALHO COM SELEÇÃO DE TURMA --- %>
   <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
       <h1 class="text-white fw-bold h3 mb-1">
         <i class="bi bi-exclamation-octagon-fill text-danger-neon me-2"></i>Atividades Perdidas
       </h1>
-      <p class="text-white-50 small mb-0">Alunos com pendências de entrega ou notas não lançadas.</p>
+      <p class="text-white-50 small mb-0">Selecione uma turma ou visualize as pendências abaixo.</p>
     </div>
     
-    <%# BOTÃO PARA GERAR RELATÓRIO PDF / IMPRESSÃO %>
-    <%= link_to lost_activities_print_path, target: "_blank", class: "btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" do %>
-      <i class="bi bi-file-earmark-pdf-fill me-2"></i>GERAR RELATÓRIO PDF
+    <%# FORMULÁRIO DE ESCOLHA RÁPIDA NO CABEÇALHO %>
+    <% if @classrooms.present? && @classrooms.any? %>
+      <div class="glass-card p-2 border-glow-red d-flex align-items-center gap-3" style="background: rgba(255, 49, 49, 0.05);">
+        <%= form_with url: lost_activities_print_path, method: :get, local: true, html: { target: "_blank", class: "d-flex align-items-center gap-3" } do |f| %>
+          <%= f.hidden_field :format, value: :html %>
+          
+          <div class="form-group mb-0">
+            <%= f.collection_select :classroom_id, @classrooms, :id, :full_name_info, 
+                { prompt: "Escolher Turma para PDF..." }, 
+                { class: "form-select bg-dark text-white border-secondary small", style: "min-width: 220px; font-size: 0.85rem;", required: true } %>
+          </div>
+
+          <%= f.button type: :submit, class: "btn btn-danger-neon fw-bold btn-sm px-3 shadow-sm" do %>
+            <i class="bi bi-file-earmark-pdf-fill me-2"></i>GERAR RELATÓRIO
+          <% end %>
+        <% end %>
+      </div>
     <% end %>
   </div>
 
   <div class="row g-4">
-    <% @classrooms.each do |classroom| %>
-      <div class="col-xl-6">
-        <div class="glass-card border-glow-red h-100">
-          <div class="card-header bg-transparent border-bottom border-secondary p-4">
-            <h5 class="text-white fw-bold mb-0"><%= classroom.full_name_info %></h5>
-            <small class="text-danger-neon fw-bold" style="font-size: 0.7rem; text-transform: uppercase;">Pendências Críticas</small>
-          </div>
+    <%# Verificação de segurança para evitar erro "each for nil" %>
+    <% if @classrooms.present? && @classrooms.any? %>
+      <% @classrooms.each do |classroom| %>
+        <div class="col-xl-6">
+          <div class="glass-card border-glow-red h-100">
+            <div class="card-header bg-transparent border-bottom border-secondary p-4 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="text-white fw-bold mb-0"><%= classroom.full_name_info %></h5>
+                <small class="text-danger-neon fw-bold" style="font-size: 0.7rem; text-transform: uppercase;">Pendências Críticas</small>
+              </div>
+              
+              <%# BOTÃO PDF TURMA "ACESO" COM EFEITO DE BRILHO AO PASSAR O MOUSE %>
+              <%= link_to lost_activities_print_path(classroom_id: classroom.id, format: :html), 
+                          target: "_blank", 
+                          class: "btn fw-bold btn-sm shadow-sm",
+                          style: "background-color: #ff3131; color: white; border: none; box-shadow: 0 0 10px rgba(255, 49, 49, 0.5); transition: all 0.3s ease-in-out;",
+                          onmouseover: "this.style.boxShadow='0 0 20px rgba(255, 49, 49, 0.8)'; this.style.transform='scale(1.05)';",
+                          onmouseout: "this.style.boxShadow='0 0 10px rgba(255, 49, 49, 0.5)'; this.style.transform='scale(1)';" do %>
+                <i class="bi bi-printer-fill me-1"></i> PDF Turma
+              <% end %>
+            </div>
 
-          <div class="card-body p-0">
-            <div class="table-responsive-scroll" style="max-height: 400px;">
-              <table class="table table-dark-neon table-hover align-middle mb-0">
-                <thead>
-                  <tr class="text-uppercase" style="font-size: 0.65rem;">
-                    <th class="ps-4">Estudante</th>
-                    <th>Atividade / Tipo</th>
-                    <th class="text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% classroom.students.each do |student| %>
-                    <%# Buscamos apenas atividades que não foram entregues ou estão pendentes %>
-                    <% lost = student.student_activities.where(activity_id: classroom.activities.pluck(:id), status: ['Não Entregue', 'Pendente']) %>
-                    
-                    <% lost.each do |sa| %>
-                      <tr>
-                        <td class="ps-4">
-                          <span class="text-white small fw-bold"><%= student.name.upcase %></span>
-                        </td>
-                        <td>
-                          <div class="text-white small mb-0"><%= sa.activity.name %></div>
-                          <small class="text-white-50" style="font-size: 0.7rem;"><%= sa.activity.activity_type %></small>
-                        </td>
-                        <td class="text-center">
-                          <span class="badge-status-neon badge-neon-red py-2 px-3">
-                            <i class="bi bi-x-circle me-1"></i> EM FALTA
-                          </span>
-                        </td>
-                      </tr>
+            <div class="card-body p-0">
+              <div class="table-responsive-scroll" style="max-height: 400px;">
+                <table class="table table-dark-neon table-hover align-middle mb-0">
+                  <thead>
+                    <tr class="text-uppercase" style="font-size: 0.65rem;">
+                      <th class="ps-4">Estudante</th>
+                      <th>Atividade / Tipo</th>
+                      <th class="text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% classroom.students.each do |student| %>
+                      <%# Buscamos apenas atividades que não foram entregues ou estão pendentes %>
+                      <% lost = student.student_activities.where(activity_id: classroom.activities.pluck(:id), status: ['Não Entregue', 'Pendente']) %>
+                      
+                      <% lost.each do |sa| %>
+                        <tr>
+                          <td class="ps-4">
+                            <span class="text-white small fw-bold"><%= student.name.upcase %></span>
+                          </td>
+                          <td>
+                            <div class="text-white small mb-0"><%= sa.activity.name %></div>
+                            <small class="text-white-50" style="font-size: 0.7rem;"><%= sa.activity.activity_type %></small>
+                          </td>
+                          <td class="text-center">
+                            <span class="badge-status-neon badge-neon-red py-2 px-3">
+                              <i class="bi bi-x-circle me-1"></i> EM FALTA
+                            </span>
+                          </td>
+                        </tr>
+                      <% end %>
                     <% end %>
-                  <% end %>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="col-12 text-center py-5">
+        <div class="glass-card p-5 border-glow-purple">
+          <i class="bi bi-person-x text-white-50 fs-1 mb-3 d-block"></i>
+          <h5 class="text-white">Nenhuma turma encontrada ou vinculada ao seu perfil.</h5>
+          <p class="text-white-50 small">Verifique se as turmas foram corretamente atribuídas ao seu usuário no sistema Maestro.</p>
         </div>
       </div>
     <% end %>

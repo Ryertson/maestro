@@ -1,0 +1,92 @@
+<%# Painel de Controle - Visível apenas no Navegador %>
+<div class="no-print" style="padding: 20px; background-color: #1a1a2e; border-bottom: 2px solid #ff3131; text-align: center; font-family: sans-serif;">
+  <h4 style="color: white; margin-bottom: 15px; font-size: 16px;">Relatório de Pendências</h4>
+  <button onclick="window.print();" style="padding: 12px 25px; background-color: #ff3131; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 4px 15px rgba(255, 49, 49, 0.4); transition: 0.3s;">
+    <i class="bi bi-download"></i> BAIXAR / IMPRIMIR PENDÊNCIAS
+  </button>
+  <p style="color: #a2a3b7; font-size: 11px; margin-top: 12px;">
+    <strong>Dica:</strong> O download deve abrir automaticamente. Caso contrário, clique no botão acima e selecione <b>"Salvar como PDF"</b>.
+  </p>
+</div>
+
+<div class="pdf-container" style="padding: 40px; background-color: white; color: black;">
+  <div class="pdf-header" style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ff3131; padding-bottom: 10px;">
+    <h1 style="color: #ff3131; margin-bottom: 5px;">Relatório de Atividades Não Entregues</h1>
+    <h2 style="color: #333; font-size: 18px;">Turma: <%= @classroom.full_name_info %></h2>
+    <p style="color: #666; font-size: 12px;">Data de Emissão: <%= Date.today.strftime('%d/%m/%Y') %></p>
+  </div>
+
+  <table class="pdf-table" style="width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif;">
+    <thead>
+      <tr style="background-color: #fff1f1;">
+        <th style="border: 1px solid #333; padding: 12px; text-align: left; color: #ff3131;">Estudante</th>
+        <th style="border: 1px solid #333; padding: 12px; text-align: left; color: #ff3131;">Atividades Pendentes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%# Usamos a variável definida no controller %>
+      <% if @students_com_pendencias.any? %>
+        <% @students_com_pendencias.each do |student| %>
+          <tr style="border-bottom: 1px solid #ccc;">
+            <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 35%; vertical-align: top;"><%= student.name.upcase %></td>
+            <td style="padding: 12px; border: 1px solid #333;">
+              <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+                <%# @activities deve ser carregada no controller %>
+                <% @activities.each do |activity| %>
+                  <% if student.nota_na_atividade(activity.id) == 0 %>
+                    <li style="margin-bottom: 4px;">
+                      <strong><%= activity.name %></strong> 
+                      <% if activity.date %>(Prazo: <%= activity.date.strftime('%d/%m') %>)<% end %>
+                    </li>
+                  <% end %>
+                <% end %>
+              </ul>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="2" style="padding: 30px; text-align: center; color: #28a745; font-weight: bold; border: 1px solid #333;">
+            <i class="bi bi-emoji-smile"></i> Parabéns! Não há atividades pendentes para esta turma.
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div class="pdf-footer" style="margin-top: 50px; text-align: center; font-size: 10px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
+    <p>Maestro - Assistente Pedagógico IA | Lista gerada para fins pedagógicos e recuperação de crédito.</p>
+  </div>
+</div>
+
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    body { background-color: white !important; margin: 0; padding: 0; }
+    .pdf-container { padding: 0 !important; box-shadow: none !important; width: 100% !important; margin: 0 !important; }
+    tr { page-break-inside: avoid; }
+  }
+  
+  body { background-color: #0f0f1a; margin: 0; font-family: sans-serif; }
+  
+  .pdf-container { 
+    max-width: 850px; 
+    margin: 20px auto; 
+    box-shadow: 0 0 30px rgba(0,0,0,0.5); 
+    min-height: 29.7cm; 
+    background-color: white;
+  }
+  
+  .pdf-table td, .pdf-table th {
+    word-wrap: break-word;
+  }
+</style>
+
+<script>
+  window.onload = function() {
+    // Pequeno delay para garantir que o estilo carregou antes de disparar o print
+    setTimeout(function() {
+      window.print();
+    }, 800);
+  };
+</script>
