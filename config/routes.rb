@@ -54,9 +54,9 @@ Rails.application.routes.draw do
     end
   end
 
-  # 7. Estrutura Escolar e Turmas
-  resources :grades, only: [:create]
-  resources :sections, only: [:create]
+  # 7. Estrutura Escolar e Turmas (ATUALIZADO PARA PERMITIR EXCLUSÃO)
+  resources :grades, only: [:create, :destroy]
+  resources :sections, only: [:create, :destroy]
   resources :courses
   resources :students, only: [:destroy]
   

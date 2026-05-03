@@ -1,98 +1,124 @@
 <% content_for :title, "Configurações Acadêmicas" %>
 
-<div class="d-flex justify-content-between align-items-center mb-4 px-2">
-  <div>
-    <h1 class="fw-bold text-dark mb-0" style="letter-spacing: -1px;">Estrutura de Ensino</h1>
-    <p class="text-muted small mb-0">Gerencie cursos, séries e identificadores de turmas</p>
-  </div>
-  <div>
-    <%= link_to new_course_path, class: "btn btn-primary rounded-pill px-4 fw-bold shadow-sm" do %>
-      <i class="bi bi-plus-lg me-2"></i>Novo Curso
-    <% end %>
-  </div>
-</div>
-
-<div class="row g-4">
-  <%# --- COLUNA DA ESQUERDA: LISTA DE CURSOS --- %>
-  <div class="col-lg-7">
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-      <div class="card-header bg-white py-3 border-0">
-        <h5 class="fw-bold mb-0 text-dark"><i class="bx bx-book-bookmark me-2 text-primary"></i>Cursos Cadastrados</h5>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="bg-light">
-            <tr class="text-uppercase small fw-bold text-muted" style="font-size: 0.7rem;">
-              <th class="px-4 py-3">Nome do Curso</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if @courses.any? %>
-              <% @courses.each do |course| %>
-                <tr>
-                  <td class="px-4 py-3 fw-bold text-dark">
-                    <i class="bi bi-mortarboard me-2 text-muted"></i><%= course.name %>
-                  </td>
-                  <td class="text-center">
-                    <%= link_to edit_course_path(course), class: "btn btn-sm btn-light rounded-circle" do %>
-                      <i class="bi bi-pencil-square text-primary"></i>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            <% else %>
-              <tr>
-                <td colspan="2" class="text-center py-4 text-muted">Nenhum curso cadastrado.</td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+<div class="container-fluid py-4 student-portal-theme">
+  <%# --- CABEÇALHO --- %>
+  <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+    <div>
+      <h1 class="fw-bold text-white mb-0" style="letter-spacing: -1px;">Estrutura de Ensino</h1>
+      <p class="text-white-50 small mb-0">Gerencie cursos, séries e identificadores de turmas</p>
+    </div>
+    <div>
+      <%= link_to new_course_path, class: "btn-neon-main px-4 fw-bold shadow-sm" do %>
+        <i class="bi bi-plus-lg me-2"></i>Novo Curso
+      <% end %>
     </div>
   </div>
 
-  <%# --- COLUNA DA DIREITA: CADASTROS RÁPIDOS --- %>
-  <div class="col-lg-5">
-    <div class="row g-4">
-      <%# CARD SÉRIES %>
-      <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-          <h5 class="fw-bold mb-3 text-dark small text-uppercase"><i class="bi bi-layers me-2 text-warning"></i>Séries (Ex: 1º Ano)</h5>
-          <%= form_with(model: Grade.new, class: "mb-3") do |f| %>
-            <div class="input-group">
-              <%= f.text_field :name, class: "form-control bg-light border-0", placeholder: "Nome da Série" %>
-              <%= f.submit "Adicionar", class: "btn btn-dark fw-bold px-3" %>
-            </div>
-          <% end %>
-          
-          <div class="d-flex flex-wrap gap-2">
-            <% Grade.all.each do |g| %>
-              <span class="badge bg-white text-dark border shadow-sm px-3 py-2 rounded-pill fw-normal">
-                <%= g.name %>
-              </span>
-            <% end %>
-          </div>
+  <div class="row g-4">
+    <%# --- COLUNA DA ESQUERDA: LISTA DE CURSOS (DARKNESS) --- %>
+    <div class="col-lg-7">
+      <div class="card-maestro-neon-cyan p-0 overflow-hidden h-100 shadow-lg">
+        <div class="card-header bg-transparent py-3 border-bottom border-secondary">
+          <h5 class="fw-bold mb-0 text-white d-flex align-items-center">
+            <i class="bx bx-book-bookmark me-2 text-cyan-neon-glow"></i>Cursos Cadastrados
+          </h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 bg-transparent text-white">
+            <thead class="bg-black-transparent">
+              <tr class="text-uppercase small fw-bold text-cyan-neon-glow" style="font-size: 0.7rem;">
+                <th class="px-4 py-3 border-secondary" style="background: transparent;">NOME DO CURSO</th>
+                <th class="text-center border-secondary" style="background: transparent;">AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if @courses.any? %>
+                <% @courses.each do |course| %>
+                  <tr class="border-bottom border-secondary-subtle" style="background: transparent;">
+                    <td class="px-4 py-3 fw-bold text-white" style="background: transparent;">
+                      <i class="bi bi-mortarboard me-2 text-white-50"></i><%= course.name %>
+                    </td>
+                    <td class="text-center" style="background: transparent;">
+                      <div class="d-flex justify-content-center gap-3">
+                        <%# Botão Editar Reajustado %>
+                        <%= link_to edit_course_path(course), class: "btn-action-neon-cyan", title: "Editar" do %>
+                          <i class="bi bi-pencil-square"></i>
+                        <% end %>
+
+                        <%# Botão Excluir Reajustado %>
+                        <%= link_to course, 
+                                    method: :delete, 
+                                    data: { confirm: "Deseja excluir o curso '#{course.name}'?" }, 
+                                    class: "btn-action-neon-red", title: "Excluir" do %>
+                          <i class="bi bi-trash"></i>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              <% else %>
+                <tr>
+                  <td colspan="2" class="text-center py-4 text-white-50" style="background: transparent;">Nenhum curso cadastrado.</td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
+    </div>
 
-      <%# CARD SEÇÕES %>
-      <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-          <h5 class="fw-bold mb-3 text-dark small text-uppercase"><i class="bi bi-alphabet-uppercase me-2 text-info"></i>Letras/Turmas (Ex: Turma A)</h5>
-          <%= form_with(model: Section.new, class: "mb-3") do |f| %>
-            <div class="input-group">
-              <%= f.text_field :name, class: "form-control bg-light border-0", placeholder: "Identificador" %>
-              <%= f.submit "Adicionar", class: "btn btn-dark fw-bold px-3" %>
-            </div>
-          <% end %>
-          
-          <div class="d-flex flex-wrap gap-2">
-            <% Section.all.each do |s| %>
-              <span class="badge bg-white text-primary border border-primary-subtle shadow-sm px-3 py-2 rounded-pill fw-normal">
-                <%= s.name %>
-              </span>
+    <%# --- COLUNA DA DIREITA (MANTIDA) --- %>
+    <div class="col-lg-5">
+      <div class="row g-4">
+        <%# CARD SÉRIES %>
+        <div class="col-12">
+          <div class="card-maestro-neon-yellow p-4">
+            <h5 class="fw-bold mb-3 text-white small text-uppercase d-flex align-items-center">
+              <i class="bi bi-layers me-2 text-yellow-neon-glow"></i>Séries (Ex: 1º Ano)
+            </h5>
+            <%= form_with(model: Grade.new, class: "mb-3") do |f| %>
+              <div class="input-group">
+                <%= f.text_field :name, class: "input-neon-transparent", placeholder: "Nome da Série" %>
+                <%= f.submit "Adicionar", class: "btn-neon-dark-yellow px-3" %>
+              </div>
             <% end %>
+            
+            <div class="d-flex flex-wrap gap-2">
+              <% Grade.all.each do |g| %>
+                <span class="badge-neon-glass text-white d-flex align-items-center gap-2">
+                  <%= g.name %>
+                  <%= link_to g, method: :delete, data: { confirm: "Excluir '#{g.name}'?" }, class: "text-white-50 hover-danger-glow" do %>
+                    <i class="bi bi-x-circle-fill"></i>
+                  <% end %>
+                </span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <%# CARD SEÇÕES %>
+        <div class="col-12">
+          <div class="card-maestro-neon-info p-4">
+            <h5 class="fw-bold mb-3 text-white small text-uppercase d-flex align-items-center">
+              <i class="bi bi-alphabet-uppercase me-2 text-info-neon-glow"></i>Turmas (Ex: A)
+            </h5>
+            <%= form_with(model: Section.new, class: "mb-3") do |f| %>
+              <div class="input-group">
+                <%= f.text_field :name, class: "input-neon-transparent", placeholder: "ID" %>
+                <%= f.submit "Adicionar", class: "btn-neon-dark-info px-3" %>
+              </div>
+            <% end %>
+            
+            <div class="d-flex flex-wrap gap-2">
+              <% Section.all.each do |s| %>
+                <span class="badge-neon-glass-info text-white d-flex align-items-center gap-2">
+                  <%= s.name %>
+                  <%= link_to s, method: :delete, data: { confirm: "Excluir '#{s.name}'?" }, class: "text-white-50 hover-danger-glow" do %>
+                    <i class="bi bi-x-circle-fill"></i>
+                  <% end %>
+                </span>
+              <% end %>
+            </div>
           </div>
         </div>
       </div>
@@ -101,11 +127,90 @@
 </div>
 
 <style>
-  .input-group .form-control:focus {
-    box-shadow: none;
-    background-color: #fff !important;
-    border: 1px solid #0d6efd !important;
+  :root {
+    --cyan-neon: #00d4ff;
+    --yellow-neon: #ffea00;
+    --info-neon: #0dcaf0;
+    --red-neon: #ff4444;
+    --bg-dark-glass: rgba(11, 11, 20, 0.9);
   }
-  .badge { transition: all 0.2s; }
-  .badge:hover { transform: translateY(-2px); }
+
+  /* --- Ajuste dos Botões de Ação --- */
+  .btn-action-neon-cyan, .btn-action-neon-red {
+    width: 28px; /* Menor e simétrico */
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem; /* Ícone menor para não achatar */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    text-decoration: none;
+  }
+
+  .btn-action-neon-cyan {
+    color: var(--cyan-neon);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+  }
+  .btn-action-neon-cyan:hover {
+    background: var(--cyan-neon);
+    color: #000;
+    box-shadow: 0 0 12px var(--cyan-neon);
+    transform: scale(1.1);
+  }
+
+  .btn-action-neon-red {
+    color: var(--red-neon);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+  }
+  .btn-action-neon-red:hover {
+    background: var(--red-neon);
+    color: #fff;
+    box-shadow: 0 0 12px var(--red-neon);
+    transform: scale(1.1);
+  }
+
+  /* --- Estilização Geral Maestro --- */
+  .card-maestro-neon-cyan, .card-maestro-neon-yellow, .card-maestro-neon-info {
+    background: var(--bg-dark-glass) !important;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .table, .table td, .table th {
+    background-color: transparent !important;
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .bg-black-transparent { background: rgba(0, 0, 0, 0.5) !important; }
+  .text-cyan-neon-glow { color: var(--cyan-neon) !important; filter: drop-shadow(0 0 4px var(--cyan-neon)); }
+  .text-yellow-neon-glow { color: var(--yellow-neon) !important; filter: drop-shadow(0 0 4px var(--yellow-neon)); }
+  .text-info-neon-glow { color: var(--info-neon) !important; filter: drop-shadow(0 0 4px var(--info-neon)); }
+
+  .input-neon-transparent {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border-radius: 8px 0 0 8px !important;
+  }
+
+  .btn-neon-main {
+    background: var(--cyan-neon);
+    color: #000;
+    border-radius: 50px;
+    border: none;
+    transition: 0.3s;
+  }
+  .btn-neon-main:hover { box-shadow: 0 0 20px var(--cyan-neon); transform: translateY(-2px); }
+
+  .badge-neon-glass, .badge-neon-glass-info {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
 </style>
