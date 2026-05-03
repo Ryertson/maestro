@@ -40,13 +40,12 @@
                     </td>
                     <td class="text-center" style="background: transparent;">
                       <div class="d-flex justify-content-center gap-3">
-                        <%# Botão Editar Reajustado %>
+                        <%# Botão Editar %>
                         <%= link_to edit_course_path(course), class: "btn-action-neon-cyan", title: "Editar" do %>
                           <i class="bi bi-pencil-square"></i>
                         <% end %>
 
-                        <%# Botão Excluir Atualizado com Turbo Method %>
-                        <%# Substitua o link_to de excluir curso por este button_to %>
+                        <%# Botão Excluir Curso %>
                         <%= button_to course, 
                                       method: :delete, 
                                       form: { data: { turbo_confirm: "Deseja excluir o curso '#{course.name}'?" } }, 
@@ -69,16 +68,16 @@
       </div>
     </div>
 
-    <%# --- COLUNA DA DIREITA (MANTIDA) --- %>
+    <%# --- COLUNA DA DIREITA --- %>
     <div class="col-lg-5">
       <div class="row g-4">
-        <%# CARD SÉRIES %>
+        <%# CARD SÉRIES (ATUALIZADO PARA LEVEL) %>
         <div class="col-12">
           <div class="card-maestro-neon-yellow p-4">
             <h5 class="fw-bold mb-3 text-white small text-uppercase d-flex align-items-center">
               <i class="bi bi-layers me-2 text-yellow-neon-glow"></i>Séries (Ex: 1º Ano)
             </h5>
-            <%= form_with(model: Grade.new, class: "mb-3") do |f| %>
+            <%= form_with(model: Level.new, class: "mb-3") do |f| %>
               <div class="input-group">
                 <%= f.text_field :name, class: "input-neon-transparent", placeholder: "Nome da Série" %>
                 <%= f.submit "Adicionar", class: "btn-neon-dark-yellow px-3" %>
@@ -86,15 +85,14 @@
             <% end %>
             
             <div class="d-flex flex-wrap gap-2">
-              <% Grade.all.each do |g| %>
+              <% Level.all.each do |l| %>
                 <span class="badge-neon-glass text-white d-flex align-items-center gap-2">
-                  <%= g.name %>
-                 <%# Exemplo para as Séries (Grade) %>
-                 <%= button_to g, 
-                                method: :delete, 
-                                form: { data: { turbo_confirm: "Excluir '#{g.name}'?" }, class: "d-inline" }, 
-                                class: "text-white-50 hover-danger-glow border-0 bg-transparent p-0 line-height-1" do %>
-                   <i class="bi bi-x-circle-fill"></i>
+                  <%= l.name %>
+                  <%= button_to l, 
+                                 method: :delete, 
+                                 form: { data: { turbo_confirm: "Excluir '#{l.name}'?" }, class: "d-inline" }, 
+                                 class: "text-white-50 hover-danger-glow border-0 bg-transparent p-0 line-height-1" do %>
+                    <i class="bi bi-x-circle-fill"></i>
                   <% end %>
                 </span>
               <% end %>
@@ -102,7 +100,7 @@
           </div>
         </div>
 
-        <%# CARD SEÇÕES %>
+        <%# CARD SEÇÕES (IDENTIFICADORES DE TURMA) %>
         <div class="col-12">
           <div class="card-maestro-neon-info p-4">
             <h5 class="fw-bold mb-3 text-white small text-uppercase d-flex align-items-center">
@@ -119,12 +117,11 @@
               <% Section.all.each do |s| %>
                 <span class="badge-neon-glass-info text-white d-flex align-items-center gap-2">
                   <%= s.name %>
-                  <%# Exemplo para as Turmas (Section) %>
                   <%= button_to s, 
                                  method: :delete, 
                                  form: { data: { turbo_confirm: "Excluir '#{s.name}'?" }, class: "d-inline" }, 
                                  class: "text-white-50 hover-danger-glow border-0 bg-transparent p-0 line-height-1" do %>
-                   <i class="bi bi-x-circle-fill"></i>
+                    <i class="bi bi-x-circle-fill"></i>
                   <% end %>
                 </span>
               <% end %>
@@ -231,22 +228,22 @@
   }
 
   /* Garante que o botão dentro das badges e tabelas seja invisível, exceto pelo ícone */
-form.d-inline {
-  display: inline;
-}
+  form.d-inline {
+    display: inline;
+  }
 
-button.bg-transparent {
-  outline: none;
-  box-shadow: none;
-  cursor: pointer;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+  button.bg-transparent {
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-.badge-neon-glass button, .badge-neon-glass-info button {
-  font-size: 0.8rem;
-  vertical-align: middle;
-}
+  .badge-neon-glass button, .badge-neon-glass-info button {
+    font-size: 0.8rem;
+    vertical-align: middle;
+  }
 </style>

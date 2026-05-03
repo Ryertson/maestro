@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_25_132421) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_03_220927) do
   create_table "academic_events", force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -116,21 +116,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_132421) do
     t.index ["professor_id"], name: "index_disciplinas_on_professor_id"
   end
 
-  create_table "grades", force: :cascade do |t|
-    t.integer "activity_id"
-    t.integer "bimester_id"
-    t.integer "classroom_id"
-    t.datetime "created_at", null: false
-    t.string "name"
-    t.integer "student_id"
-    t.datetime "updated_at", null: false
-    t.decimal "value", precision: 5, scale: 2
-    t.index ["activity_id"], name: "index_grades_on_activity_id"
-    t.index ["bimester_id"], name: "index_grades_on_bimester_id"
-    t.index ["classroom_id"], name: "index_grades_on_classroom_id"
-    t.index ["student_id"], name: "index_grades_on_student_id"
-  end
-
   create_table "knowledge_areas", force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -155,6 +140,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_132421) do
     t.index ["classroom_id"], name: "index_lessons_on_classroom_id"
     t.index ["subject_id"], name: "index_lessons_on_subject_id"
     t.index ["teacher_id"], name: "index_lessons_on_teacher_id"
+  end
+
+  create_table "levels", force: :cascade do |t|
+    t.integer "activity_id"
+    t.integer "bimester_id"
+    t.integer "classroom_id"
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.integer "student_id"
+    t.datetime "updated_at", null: false
+    t.decimal "value", precision: 5, scale: 2
+    t.index ["activity_id"], name: "index_levels_on_activity_id"
+    t.index ["bimester_id"], name: "index_levels_on_bimester_id"
+    t.index ["classroom_id"], name: "index_levels_on_classroom_id"
+    t.index ["student_id"], name: "index_levels_on_student_id"
   end
 
   create_table "professors", force: :cascade do |t|
@@ -327,17 +327,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_132421) do
   add_foreign_key "classroom_subjects", "subjects"
   add_foreign_key "classroom_subjects", "teachers"
   add_foreign_key "classrooms", "courses"
-  add_foreign_key "classrooms", "grades"
+  add_foreign_key "classrooms", "levels", column: "grade_id"
   add_foreign_key "classrooms", "sections"
   add_foreign_key "classrooms", "teachers"
   add_foreign_key "disciplinas", "professors"
-  add_foreign_key "grades", "activities"
-  add_foreign_key "grades", "bimesters"
-  add_foreign_key "grades", "classrooms"
-  add_foreign_key "grades", "students"
   add_foreign_key "lessons", "classrooms"
   add_foreign_key "lessons", "subjects"
   add_foreign_key "lessons", "teachers"
+  add_foreign_key "levels", "activities"
+  add_foreign_key "levels", "bimesters"
+  add_foreign_key "levels", "classrooms"
+  add_foreign_key "levels", "students"
   add_foreign_key "student_activities", "activities"
   add_foreign_key "student_activities", "students"
   add_foreign_key "student_badges", "badges"
