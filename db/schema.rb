@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_03_220927) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_04_145242) do
   create_table "academic_events", force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -89,13 +89,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_220927) do
     t.integer "course_id", null: false
     t.datetime "created_at", null: false
     t.string "grade"
-    t.integer "grade_id", null: false
+    t.integer "level_id", null: false
     t.string "section"
     t.integer "section_id", null: false
     t.integer "teacher_id"
     t.datetime "updated_at", null: false
     t.index ["course_id"], name: "index_classrooms_on_course_id"
-    t.index ["grade_id"], name: "index_classrooms_on_grade_id"
+    t.index ["level_id"], name: "index_classrooms_on_level_id"
     t.index ["section_id"], name: "index_classrooms_on_section_id"
     t.index ["teacher_id"], name: "index_classrooms_on_teacher_id"
   end
@@ -114,6 +114,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_220927) do
     t.integer "professor_id", null: false
     t.datetime "updated_at", null: false
     t.index ["professor_id"], name: "index_disciplinas_on_professor_id"
+  end
+
+  create_table "grades", force: :cascade do |t|
+    t.integer "classroom_id", null: false
+    t.datetime "created_at", null: false
+    t.string "period"
+    t.integer "student_id", null: false
+    t.integer "subject_id", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "value"
+    t.index ["classroom_id"], name: "index_grades_on_classroom_id"
+    t.index ["student_id"], name: "index_grades_on_student_id"
+    t.index ["subject_id"], name: "index_grades_on_subject_id"
   end
 
   create_table "knowledge_areas", force: :cascade do |t|
@@ -327,10 +340,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_220927) do
   add_foreign_key "classroom_subjects", "subjects"
   add_foreign_key "classroom_subjects", "teachers"
   add_foreign_key "classrooms", "courses"
-  add_foreign_key "classrooms", "levels", column: "grade_id"
+  add_foreign_key "classrooms", "levels"
   add_foreign_key "classrooms", "sections"
   add_foreign_key "classrooms", "teachers"
   add_foreign_key "disciplinas", "professors"
+  add_foreign_key "grades", "classrooms"
+  add_foreign_key "grades", "students"
+  add_foreign_key "grades", "subjects"
   add_foreign_key "lessons", "classrooms"
   add_foreign_key "lessons", "subjects"
   add_foreign_key "lessons", "teachers"

@@ -164,7 +164,8 @@
             <% @students.each do |student| %>
               <tr>
                 <td class="text-start ps-3 fw-bold text-white small border-secondary" style="background-color: #1b1b28;">
-                  <%= link_to student.name.upcase.truncate(30), student, class: "text-decoration-none text-white" %>
+                  <%# Atualizado: Link do estudante também forçando HTML e sem Turbo %>
+                  <%= link_to student.name.upcase.truncate(30), student_path(student, format: :html), data: { turbo: false }, class: "text-decoration-none text-white" %>
                 </td>
 
                 <% (inicio_mes..fim_mes).each do |day| %>
@@ -180,7 +181,6 @@
                                     end %>
                     
                     <div class="dropdown">
-                      <%# BOTÃO ATUALIZADO: Adicionado autocomplete off e removido comportamentos de foco travado %>
                       <button id="btn-<%= student.id %>-<%= day %>" 
                               class="btn btn-sm p-0 w-100 h-100 attendance-box border-secondary border p-<%= status_slug %> <%= 'opacity-25' unless has_lesson %>" 
                               type="button" data-bs-toggle="dropdown" aria-expanded="false" 
@@ -196,8 +196,8 @@
                         <% if has_lesson %>
                           <% ['present', 'absent', 'late', 'justified', 'clear'].each do |status| %>
                             <li>
-                              <%# FORM_WITH ATUALIZADO: data: { turbo: false } é a chave para o clique contínuo %>
-                              <%= form_with url: student_attendances_path(student), method: :post, local: false, data: { turbo: false } do |f| %>
+                              <%# --- ATUALIZAÇÃO CRÍTICA: Forçado format: :html, local: true e data: { turbo: false } --- %>
+                              <%= form_with url: student_attendances_path(student, format: :html), method: :post, local: true, data: { turbo: false } do |f| %>
                                 <%= hidden_field_tag :date, day %>
                                 <%= hidden_field_tag :status, status %>
                                 <%= hidden_field_tag :classroom_id, student.classroom_id %>

@@ -305,7 +305,8 @@
         </li>
 
         <li class="sidebar-item">
-          <a href="<%= students_path %>" class="sidebar-link <%= 'active' if current_page?(students_path) %>">
+          <%# ATUALIZAÇÃO: Link de Frequência (Students) forçando HTML e desativando Turbo para evitar conflito JSON %>
+          <a href="<%= students_path(format: :html) %>" class="sidebar-link <%= 'active' if current_page?(students_path) %>" data-turbo="false">
             <i class="bx bx-user-check"></i>
             <span>Frequência</span>
           </a>

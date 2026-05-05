@@ -2,15 +2,12 @@ class LessonsController < ApplicationController
   before_action :authenticate_professor!
   before_action :set_lesson, only: %i[show edit update destroy]
   
-  # Carrega as turmas e disciplinas permitidas baseando-se no current_view_mode
   before_action :set_available_classrooms, only: %i[index create update prepare_index_data]
   before_action :set_available_subjects, only: %i[index create update prepare_index_data new edit]
   
-  # Proteção de acesso via ID na URL
   before_action :authorize_lesson_access!, only: %i[show edit update destroy]
 
   def index
-    # 1. Escopo de busca ajustado para o View Mode
     @base_lessons = if current_view_mode == :modo_admin
                       Lesson.all
                     else
@@ -18,7 +15,6 @@ class LessonsController < ApplicationController
                             .where(classroom_id: @available_classrooms.pluck(:id))
                     end
 
-    # 2. Aplicação de Filtros
     @lessons = @base_lessons
     @lessons = @lessons.where(classroom_id: params[:classroom_id]) if params[:classroom_id].present?
     @lessons = @lessons.where(subject_id: params[:subject_id]) if params[:subject_id].present?
@@ -30,7 +26,10 @@ class LessonsController < ApplicationController
     calculate_dashboard_data(@lessons)
 
     @terms = Term.order(:start_date)
-    @lessons_list = @lessons.includes(:subject, classroom: [:course, :grade]).order(date: :desc)
+
+    # --- ATUALIZAÇÃO 1: Trocado :grade por :level ---
+    @lessons_list = @lessons.includes(:subject, classroom: [:course, :level]).order(date: :desc)
+    
     @academic_events = AcademicEvent.all.group_by(&:event_date)
     
     @lesson = Lesson.new
@@ -50,8 +49,6 @@ class LessonsController < ApplicationController
 
     respond_to do |format|
       if @lesson.save
-        # --- AUTOMAÇÃO DA CHAMADA: INÍCIO ---
-        # Assim que a aula é salva, criamos a presença 'Presente' para todos os alunos da turma
         if @lesson.classroom
           @lesson.classroom.students.each do |student|
             Attendance.find_or_create_by!(
@@ -64,7 +61,6 @@ class LessonsController < ApplicationController
             end
           end
         end
-        # --- AUTOMAÇÃO DA CHAMADA: FIM ---
 
         format.html { redirect_to lessons_path, notice: "Aula cadastrada e chamada inicializada com sucesso!" }
         format.turbo_stream
@@ -100,8 +96,6 @@ class LessonsController < ApplicationController
     end
   end
 
-  # ... (mantidos os métodos update_term, prepare_index_data e os privates idênticos ao seu original)
-  
   def prepare_index_data
     @base_lessons = if current_view_mode == :modo_admin
                       Lesson.all
@@ -110,7 +104,10 @@ class LessonsController < ApplicationController
                             .where(classroom_id: @available_classrooms.pluck(:id))
                     end
     @lessons = @base_lessons
-    @lessons_list = @lessons.includes(:subject, classroom: [:course, :grade]).order(date: :desc)
+    
+    # --- ATUALIZAÇÃO 2: Trocado :grade por :level ---
+    @lessons_list = @lessons.includes(:subject, classroom: [:course, :level]).order(date: :desc)
+    
     @terms = Term.order(:start_date)
     @calendar_events = build_calendar_events(@lessons)
     calculate_dashboard_data(@lessons)

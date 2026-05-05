@@ -7,7 +7,6 @@ class StudentsController < ApplicationController
   before_action :set_teacher_context, unless: -> { request.format.json? }
   
   # 2. Agora pulamos as proteções APENAS para a busca JSON de ativação do aluno
-  # O 'raise: false' impede o erro de 'callback not defined'
   skip_before_action :authenticate_professor!, only: [:index], if: -> { request.format.json? }, raise: false
   skip_before_action :verify_authenticity_token, only: [:index], if: -> { request.format.json? }, raise: false
 
@@ -15,84 +14,87 @@ class StudentsController < ApplicationController
   before_action :authorize_student_access!, only: %i[ show edit update destroy ]
 
   def index
-    # --- Lógica para a busca JSON (Ativação de conta do Aluno) ---
-    if request.format.json?
-      @students = if params[:classroom_id].present?
-                    # Query direta para evitar carregar métodos pesados do Model que causam erro 500
-                    Student.where(classroom_id: params[:classroom_id])
-                           .left_outer_joins(:student_user)
-                           .where(student_users: { id: nil })
-                           .select(:id, :name)
-                  else
-                    []
-                  end
-      
-      render json: @students and return
-    end
+    respond_to do |format|
+      # PRIORIDADE 1: INTERFACE DO PROFESSOR (HTML)
+      # Adicionada trava lógica: Se houver parâmetros de busca de data ou turma, 
+      # forçamos o HTML mesmo que o navegador peça JSON por engano.
+      format.html do
+        # 1. Configuração de Datas
+        @selected_date = params[:month_year].present? ? Date.parse("#{params[:month_year]}-01") : Date.today
+        @start_of_month = @selected_date.beginning_of_month
+        @end_of_month = @selected_date.end_of_month
 
-    # --- RESTANTE DO SEU CÓDIGO ORIGINAL (HTML / PROFESSOR) ---
-    
-    # 1. Configuração de Datas
-    @selected_date = params[:month_year].present? ? Date.parse("#{params[:month_year]}-01") : Date.today
-    @start_of_month = @selected_date.beginning_of_month
-    @end_of_month = @selected_date.end_of_month
+        # 2. Definição das Turmas Disponíveis (Filtro por Professor)
+        if current_professor&.admin?
+          @available_classrooms = Classroom.all
+        elsif @teacher
+          @available_classrooms = Classroom.joins(:classroom_subjects)
+                                           .where(classroom_subjects: { teacher_id: @teacher.id })
+                                           .distinct
+        else
+          @available_classrooms = Classroom.none
+        end
 
-    # 2. Definição das Turmas Disponíveis (Filtro por Professor)
-    # Adicionado safe navigation (&) pois current_professor pode ser nulo em contextos JSON
-    if current_professor&.admin?
-      @available_classrooms = Classroom.all
-    elsif @teacher
-      @available_classrooms = Classroom.joins(:classroom_subjects)
-                                       .where(classroom_subjects: { teacher_id: @teacher.id })
-                                       .distinct
-    else
-      @available_classrooms = Classroom.none
-    end
+        # 3. Persistência da Turma Selecionada
+        @classroom_id = params[:classroom_id] || session[:last_classroom_id]
+        
+        # Validação de Segurança
+        unless current_professor&.admin? || @available_classrooms.pluck(:id).include?(@classroom_id.to_i)
+          @classroom_id = @available_classrooms.first&.id
+        end
+        session[:last_classroom_id] = @classroom_id if @classroom_id.present?
 
-    # 3. Persistência da Turma Selecionada
-    @classroom_id = params[:classroom_id] || session[:last_classroom_id]
-    
-    # Validação de Segurança
-    unless current_professor&.admin? || @available_classrooms.pluck(:id).include?(@classroom_id.to_i)
-      @classroom_id = @available_classrooms.first&.id
-    end
-    session[:last_classroom_id] = @classroom_id if @classroom_id.present?
+        # 4. Lógica de Busca de Alunos e Presenças
+        if @classroom_id.present?
+          @classroom = Classroom.find(@classroom_id)
+          @students = @classroom.students.includes(:attendances).order(:name)
+          
+          @students = @students.where(id: params[:student_id]) if params[:student_id].present?
 
-    # 4. Lógica de Busca de Alunos e Presenças
-    if @classroom_id.present?
-      @classroom = Classroom.find(@classroom_id)
-      @students = @classroom.students.includes(:attendances).order(:name)
-      
-      @students = @students.where(id: params[:student_id]) if params[:student_id].present?
+          @lessons_in_month = Lesson.where(classroom_id: @classroom_id, date: @start_of_month..@end_of_month)
+          @planned_dates = @lessons_in_month.pluck(:date).to_set
 
-      @lessons_in_month = Lesson.where(classroom_id: @classroom_id, date: @start_of_month..@end_of_month)
-      @planned_dates = @lessons_in_month.pluck(:date).to_set
+          relevant_attendances = Attendance.where(
+            classroom_id: @classroom_id, 
+            date: @start_of_month..@end_of_month
+          )
 
-      relevant_attendances = Attendance.where(
-        classroom_id: @classroom_id, 
-        date: @start_of_month..@end_of_month
-      )
+          # 5. Cálculos de Métricas
+          @total_presents   = relevant_attendances.where(status: ['Presente', 'present']).count
+          @total_absents     = relevant_attendances.where(status: ['Faltou', 'absent', 'Absent']).count
+          @total_lates       = relevant_attendances.where(status: ['Atrasado', 'late', 'Late']).count
+          @total_justified   = relevant_attendances.where(status: ['Justificada', 'justified', 'Justified']).count
 
-      # 5. Cálculos de Métricas
-      @total_presents   = relevant_attendances.where(status: ['Presente', 'present']).count
-      @total_absents     = relevant_attendances.where(status: ['Faltou', 'absent', 'Absent']).count
-      @total_lates       = relevant_attendances.where(status: ['Atrasado', 'late', 'Late']).count
-      @total_justified   = relevant_attendances.where(status: ['Justificada', 'justified', 'Justified']).count
-
-      # 6. Cálculo da Barra de Aproveitamento Geral
-      total_lessons = @planned_dates.size
-      total_possible_slots = @students.count * total_lessons
-      
-      if total_possible_slots > 0
-        positive_attendances = @total_presents + @total_lates + @total_justified
-        @attendance_rate = ((positive_attendances.to_f / total_possible_slots) * 100).round(1)
-      else
-        @attendance_rate = 0
+          # 6. Cálculo da Barra de Aproveitamento Geral
+          total_lessons = @planned_dates.size
+          total_possible_slots = @students.count * total_lessons
+          
+          if total_possible_slots > 0
+            positive_attendances = @total_presents + @total_lates + @total_justified
+            @attendance_rate = ((positive_attendances.to_f / total_possible_slots) * 100).round(1)
+          else
+            @attendance_rate = 0
+          end
+        else
+          @students = Student.none
+          @planned_dates = Set.new
+          @total_presents = @total_absents = @total_lates = @total_justified = @attendance_rate = 0
+        end
       end
-    else
-      @students = Student.none
-      @planned_dates = Set.new
-      @total_presents = @total_absents = @total_lates = @total_justified = @attendance_rate = 0
+
+      # PRIORIDADE 2: BUSCA PARA ATIVAÇÃO DE ALUNO (JSON)
+      # Só responde JSON se não houver contexto de busca do professor (month_year)
+      format.json do
+        if params[:month_year].blank? && params[:classroom_id].present?
+          @json_students = Student.where(classroom_id: params[:classroom_id])
+                                  .left_outer_joins(:student_user)
+                                  .where(student_users: { id: nil })
+                                  .select(:id, :name)
+          render json: @json_students
+        else
+          render json: []
+        end
+      end
     end
   end
 
@@ -127,12 +129,13 @@ class StudentsController < ApplicationController
       turma_n   = row[3]&.strip
 
       course = Course.where("LOWER(name) LIKE ?", "%#{curso_n.to_s.downcase}%").first
-      grade = Grade.find_by(name: serie_n)
+      grade = Level.find_by(name: serie_n)
       section = Section.find_by(name: turma_n)
 
       next unless course && grade && section
 
-      classroom = Classroom.find_by(course_id: course.id, grade_id: grade.id, section_id: section.id)
+      # Atualizado: grade_id agora é level_id
+      classroom = Classroom.find_by(course_id: course.id, level_id: grade.id, section_id: section.id)
       next unless classroom
 
       Student.create!(
@@ -150,12 +153,13 @@ class StudentsController < ApplicationController
     
     count = 0
     Student.all.each do |student|
-      grade = Grade.find_by(name: student.grade&.strip)
+      grade = Level.find_by(name: student.grade&.strip)
       section = Section.find_by(name: student.section&.strip)
       course = Course.find_by(name: student.course&.strip)
 
       if grade && section && course
-        target = Classroom.find_by(course_id: course.id, grade_id: grade.id, section_id: section.id)
+        # Atualizado: grade_id agora é level_id
+        target = Classroom.find_by(course_id: course.id, level_id: grade.id, section_id: section.id)
         if target
           student.update_columns(classroom_id: target.id)
           count += 1

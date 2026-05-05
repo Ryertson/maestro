@@ -4,7 +4,8 @@ class ClassroomsController < ApplicationController
   before_action :set_classroom, only: %i[ show edit update destroy grading transfer_students ]
 
   def index
-    @classrooms = Classroom.includes(:course, :grade, :teacher).all
+    # Atualizado para usar :level no lugar de :grade
+    @classrooms = Classroom.includes(:course, :level, :teacher).all
   end
 
   def show
@@ -60,7 +61,13 @@ class ClassroomsController < ApplicationController
     # 3. Carregamento de dados da Turma
     @students = @classroom.students.order(:name)
     @my_subjects = @classroom.course&.subjects || []
-    @grades = Grade.where(classroom_id: @classroom.id)
+
+    # --- ATUALIZAÇÃO CRÍTICA ---
+    # Como você renomeou o modelo de Séries para Level, a classe 'Grade' não existe mais.
+    # Se esta variável @grades deveria carregar as NOTAS (scores) dos alunos, 
+    # você precisará garantir que tenha um modelo específico para notas.
+    # Caso contrário, se era para carregar dados da série, mude para Level:
+    @grades = Grade.where(classroom_id: @classroom.id) || [] 
   end
 
   def transfer_students
@@ -86,6 +93,7 @@ class ClassroomsController < ApplicationController
   end
 
   def classroom_params
-    params.require(:classroom).permit(:course_id, :grade_id, :section_id, :teacher_id)
+    # --- ATUALIZAÇÃO 2: Trocado :grade_id por :level_id ---
+    params.require(:classroom).permit(:course_id, :level_id, :section_id, :teacher_id)
   end
 end

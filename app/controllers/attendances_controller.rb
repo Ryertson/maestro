@@ -33,13 +33,26 @@ class AttendancesController < ApplicationController
 
     if sucesso
       respond_to do |format|
-        format.js   # Isso garantirá que o quadrado mude de cor sem recarregar a página
-        format.html { redirect_to students_path(classroom_id: @classroom_id) }
+        # ATUALIZAÇÃO CRÍTICA: 
+        # Removido format.js para evitar que o navegador espere um script e receba HTML.
+        # O redirecionamento agora força o formato HTML e mantém os filtros ativos.
+        format.html do 
+          redirect_to students_path(
+            classroom_id: @classroom_id, 
+            month_year: params[:date].to_date.strftime("%Y-%m"),
+            format: :html
+          ), notice: "Frequência atualizada com sucesso!"
+        end
+        
+        # Mantemos o JSON apenas como fallback técnico, mas o HTML tem prioridade
+        format.json { render json: { status: 'success', attendance: @attendance } }
       end
     else
       Rails.logger.error "❌ ERRO DE SALVAMENTO: #{@attendance.errors.full_messages}"
-      render json: @attendance.errors, status: :unprocessable_entity
-      format.json { render json: { status: 'success', attendance: @attendance } }
+      respond_to do |format|
+        format.html { redirect_to students_path(classroom_id: @classroom_id), alert: "Erro ao salvar: #{@attendance.errors.full_messages.join(', ')}" }
+        format.json { render json: @attendance.errors, status: :unprocessable_entity }
+      end
     end
   end
 end

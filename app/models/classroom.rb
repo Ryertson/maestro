@@ -1,7 +1,7 @@
 class Classroom < ApplicationRecord
   # --- RELACIONAMENTOS PRINCIPAIS ---
   belongs_to :course
-  belongs_to :grade
+  belongs_to :level
   belongs_to :section, optional: true
   belongs_to :teacher, optional: true
 
@@ -28,16 +28,16 @@ class Classroom < ApplicationRecord
 
   # Nome curto (Ex: Informática - 1ª Série A)
   def display_name
-    "#{course&.name} - #{grade&.name} #{section&.name}"
+    "#{course&.name} - #{level&.name} #{section&.name}"
   end
 
   # Nome completo (Ex: Informática - 1ª Série A)
   def full_name
-    "#{course&.name} - #{grade&.name} #{section&.name}"
+    "#{course&.name} - #{level&.name} #{section&.name}"
   end
 
   # Nome detalhado para menus de seleção (Ex: Informática | 1ª Série - Turma A)
   def full_name_info
-    "#{course&.name} | #{grade&.name} - Turma #{section&.name}"
+    "#{course&.name} | #{level&.name} - Turma #{section&.name}"
   end
 end

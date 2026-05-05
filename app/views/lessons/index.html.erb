@@ -138,9 +138,9 @@
       <span class="badge badge-neon-purple opacity-75">Role para ver mais</span>
     </div>
     
-    <div class="table-responsive-scroll"> <%# Container com scroll %>
+    <div class="table-responsive-scroll">
       <table class="table table-dark-neon table-hover align-middle mb-0">
-        <thead class="sticky-thead"> <%# Cabeçalho fixo %>
+        <thead class="sticky-thead">
           <tr>
             <th class="ps-4">Nome da Aula</th>
             <th>Status Aula</th>
@@ -185,7 +185,8 @@
                 </span>
               </td>
               <td class="text-white-50 small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
-              <td><span class="badge border border-secondary text-white-50"><%= lesson.classroom.display_name %></span></td>
+              <%# Atualizado: Usando o novo método do model Classroom que chama 'level' no lugar de 'grade' %>
+              <td><span class="badge border border-secondary text-white-50"><%= lesson.classroom.full_name_info %></span></td>
               <td>
                 <% if lesson.subject %>
                   <span class="text-purple-neon small fw-bold"><%= lesson.subject.name %></span>
@@ -341,7 +342,6 @@
 </div>
 
 <style>
-  /* Novas regras para scroll e cabeçalho fixo */
   .table-responsive-scroll {
     max-height: 450px;
     overflow-y: auto;

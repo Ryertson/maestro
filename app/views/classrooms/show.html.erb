@@ -35,7 +35,7 @@
       </div>
 
       <div class="d-flex gap-2">
-        <%= link_to activities_path(filter_course: @classroom&.course_id, filter_grade: @classroom&.grade_id), class: "btn btn-outline-purple-neon rounded-pill px-4 shadow-sm fw-bold" do %>
+        <%= link_to activities_path(filter_course: @classroom&.level_id, filter_grade: @classroom&.level_id), class: "btn btn-outline-purple-neon rounded-pill px-4 shadow-sm fw-bold" do %>
           <i class="bi bi-graph-up-arrow me-2"></i>Painel de Desempenho
         <% end %>
         <%= link_to grading_classroom_path(@classroom), class: "btn btn-outline-blue-neon rounded-pill px-4 shadow-sm fw-bold" do %>
