@@ -25,10 +25,15 @@
 
     <%# --- SELEÇÃO DE SÉRIE --- %>
     <div class="col-md-6 mb-3">
-      <%= form.label :grade_id, "Série/Grau", class: "form-label fw-bold" %>
-      <%= form.collection_select :grade_id, Grade.all, :id, :name, { prompt: "Selecione a série" }, { class: "form-select shadow-sm" } %>
+      <%= form.label :level_id, "SÉRIE / ANO", class: "form-label fw-bold" %>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-0"><i class='bx bx-layer'></i></span>
+        <%# Alterado para usar @levels e o campo :level_id %>
+        <%= form.collection_select :level_id, (@levels || Level.all), :id, :name, 
+            { prompt: "Selecione a série..." }, 
+            { class: "form-select border-0 shadow-sm", id: "classroom_level_id" } %>
+      </div>
     </div>
-  </div>
 
   <hr class="my-4 opacity-25">
 

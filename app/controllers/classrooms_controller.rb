@@ -13,6 +13,9 @@ class ClassroomsController < ApplicationController
 
   def new
     @classroom = Classroom.new
+    @levels = Level.all.order(:name) 
+    @courses = Course.all
+    @sections = Section.all
   end
 
   def edit
