@@ -46,8 +46,8 @@
                 <span class="input-group-text bg-light border-0"><i class='bx bx-layer text-warning'></i></span>
                 <%# Alterado 'form' para 'f' para seguir o padrão do seu formulário %>
                 <%= f.collection_select :level_id, Level.all.order(:name), :id, :name, 
-                    { prompt: "Séries encontradas: #{Level.count}" }, 
-                    { class: "form-select bg-light border-0 py-3", id: "classroom_level_id" } %>
+                    { prompt: "Selecione a série..." }, 
+                    { class: "form-select", required: true } %>
               </div>
             </div>
 

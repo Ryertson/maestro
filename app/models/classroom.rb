@@ -22,7 +22,7 @@ class Classroom < ApplicationRecord
   has_many :subjects, through: :classroom_subjects
 
   # --- VALIDAÇÕES ---
-  validates :course_id, :grade_id, :section_id, presence: true
+  validates :course_id, :level_id, :section_id, presence: true
 
   # --- MÉTODOS DE EXIBIÇÃO ---
 

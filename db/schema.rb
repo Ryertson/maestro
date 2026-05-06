@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_04_145242) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_135024) do
   create_table "academic_events", force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -88,7 +88,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_145242) do
   create_table "classrooms", force: :cascade do |t|
     t.integer "course_id", null: false
     t.datetime "created_at", null: false
-    t.string "grade"
     t.integer "level_id", null: false
     t.string "section"
     t.integer "section_id", null: false
