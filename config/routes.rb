@@ -8,14 +8,9 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # 3. ÁREA DO ESTUDANTE (Portal Exclusivo - Dark Neon)
-  # O caminho 'meu_portal' gera as rotas que o aluno usará após o login
   namespace :student_portal, path: 'meu_portal' do
-    # Define student_portal_root_path usado no ApplicationController
     root to: 'dashboards#index'
-    
-    # Isso garante que dashboards_path exista dentro do namespace
     resources :dashboards, except: [:show] 
-    
     resources :activities, only: [:index, :show]
     resources :attendances, only: [:index]
     resources :grades, only: [:index]
@@ -33,7 +28,6 @@ Rails.application.routes.draw do
   resources :bimesters, only: [:index, :create, :update, :destroy]
   resources :terms, only: [:update]
   
-  # Gestão de Datas Importantes (Provas, Feriados, Reuniões)
   resources :academic_events, except: [:show]
 
   # 6. Corpo Docente (Cadastro de Professores e Atribuições)
@@ -54,10 +48,17 @@ Rails.application.routes.draw do
     end
   end
 
-  # 7. Estrutura Escolar e Turmas (ATUALIZADO PARA PERMITIR EXCLUSÃO)
-  resources :levels, only: [:create, :destroy] # Agora como Level
+  # 7. Estrutura Escolar e Turmas (ATUALIZADO)
+  resources :levels, only: [:create, :destroy]
   resources :sections, only: [:create, :destroy]
-  resources :courses
+  
+  # Alteração: Adicionada a rota add_level para gerenciar o quadro de séries na página de cursos
+  resources :courses do
+    collection do
+      post :add_level
+    end
+  end
+
   resources :students, only: [:destroy]
   
   resources :classrooms do
@@ -79,7 +80,6 @@ Rails.application.routes.draw do
       post :import
       get :download_template
       get :allocate_classrooms
-      # Essencial para a ativação de conta do aluno via AJAX
       get :index, defaults: { format: :json }
     end
     resources :attendances, only: [:create]
@@ -99,7 +99,6 @@ Rails.application.routes.draw do
     
     member do
       get :grading
-      # Permite a mudança de status individual por aluno
       patch :update_status
       patch :mark_as_corrected
     end
@@ -126,5 +125,4 @@ Rails.application.routes.draw do
   get 'export_recuperacao/:classroom_id', to: 'reports#export_recuperacao', as: :export_recuperacao
   get 'atividades_perdidas', to: 'reports#lost_activities', as: :lost_activities_report
   get 'atividades_perdidas_print', to: 'reports#lost_activities_print', as: :lost_activities_print
-
 end

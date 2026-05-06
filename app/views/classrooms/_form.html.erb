@@ -11,7 +11,7 @@
   <% end %>
 
   <%# --- CAMPO NOME --- %>
-  <div class="mb-3">
+  <div class="mb-4">
     <%= form.label :name, "Nome da Turma", class: "form-label fw-bold" %>
     <%= form.text_field :name, class: "form-control form-control-lg shadow-sm border-2", placeholder: "Ex: 3º Ano A - Matutino" %>
   </div>
@@ -20,7 +20,7 @@
     <%# --- SELEÇÃO DE CURSO --- %>
     <div class="col-md-6 mb-3">
       <%= form.label :course_id, "Curso", class: "form-label fw-bold" %>
-      <%= form.collection_select :course_id, Course.all, :id, :name, { prompt: "Selecione o curso" }, { class: "form-select shadow-sm" } %>
+      <%= form.collection_select :course_id, Course.all.order(:name), :id, :name, { prompt: "Selecione o curso" }, { class: "form-select shadow-sm" } %>
     </div>
 
     <%# --- SELEÇÃO DE SÉRIE --- %>
@@ -28,34 +28,27 @@
       <%= form.label :level_id, "SÉRIE / ANO", class: "form-label fw-bold" %>
       <div class="input-group">
         <span class="input-group-text bg-light border-0"><i class='bx bx-layer'></i></span>
-        <%# Alterado para usar @levels e o campo :level_id %>
-        <%= form.collection_select :level_id, (@levels || Level.all), :id, :name, 
-            { prompt: "Selecione a série..." }, 
-            { class: "form-select border-0 shadow-sm", id: "classroom_level_id" } %>
+        <%# Forçamos a busca direta para garantir que as 3 séries apareçam %>
+        <%= form.collection_select :level_id, Level.all, :id, :id, { prompt: "Teste de ID" }, { class: "form-select" } %>
       </div>
     </div>
+  </div> <%# AQUI ESTAVA O ERRO: Faltava fechar a div row %>
 
   <hr class="my-4 opacity-25">
 
-  <%# --- CAMPO DO PROFESSOR (O QUE ESTAVA FALTANDO) --- %>
+  <%# --- CAMPO DO PROFESSOR --- %>
   <div class="mb-4 p-3 bg-light rounded-4 border">
     <label class="form-label fw-bold text-primary">
       <i class="bi bi-person-badge-fill me-2"></i>Professor Responsável
     </label>
     
-    <%# Esta linha abaixo busca todos os professores cadastrados no seu Corpo Docente %>
     <%= form.collection_select :teacher_id, Teacher.all.order(:name), :id, :name, 
         { include_blank: "Deixar sem professor por enquanto" }, 
         { class: "form-select form-select-lg shadow-sm border-primary" } %>
-    
-    <div class="form-text mt-2">
-      <i class="bi bi-info-circle me-1"></i> 
-      Ao selecionar um professor, esta turma aparecerá automaticamente no perfil dele.
-    </div>
   </div>
 
   <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
     <%= link_to "Cancelar", classrooms_path, class: "btn btn-light rounded-pill px-4" %>
-    <%= form.submit "Salvar Alterações", class: "btn btn-primary rounded-pill px-5 shadow" %>
+    <%= form.submit "Salvar Turma Agora", class: "btn btn-primary rounded-pill px-5 shadow" %>
   </div>
 <% end %>

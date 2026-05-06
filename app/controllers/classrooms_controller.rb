@@ -1,10 +1,8 @@
 class ClassroomsController < ApplicationController
-  # Autenticador correto do projeto (escopo professor)
   before_action :authenticate_professor! 
   before_action :set_classroom, only: %i[ show edit update destroy grading transfer_students ]
 
   def index
-    # Atualizado para usar :level no lugar de :grade
     @classrooms = Classroom.includes(:course, :level, :teacher).all
   end
 
@@ -13,12 +11,11 @@ class ClassroomsController < ApplicationController
 
   def new
     @classroom = Classroom.new
-    @levels = Level.all.order(:name) 
-    @courses = Course.all
-    @sections = Section.all
+    set_form_data # Método auxiliar para carregar as séries, cursos e seções
   end
 
   def edit
+    set_form_data # Garante que as séries apareçam ao editar uma turma
   end
 
   def create
@@ -26,6 +23,7 @@ class ClassroomsController < ApplicationController
     if @classroom.save
       redirect_to classrooms_path, notice: "Turma criada com sucesso!"
     else
+      set_form_data # ESSENCIAL: Se o salvamento falhar, recarrega as séries para a View não quebrar
       render :new, status: :unprocessable_entity
     end
   end
@@ -34,6 +32,7 @@ class ClassroomsController < ApplicationController
     if @classroom.update(classroom_params)
       redirect_to classrooms_path, notice: "Turma atualizada com sucesso!"
     else
+      set_form_data # ESSENCIAL: Garante que as séries continuem lá se a atualização falhar
       render :edit, status: :unprocessable_entity
     end
   end
@@ -44,32 +43,18 @@ class ClassroomsController < ApplicationController
   end
 
   def grading
-    # 1. Identificação do Professor (ID ou E-mail)
     @teacher = Teacher.find_by(user_id: current_professor.id)
     @teacher ||= Teacher.find_by(email: current_professor.email)
   
-    # 2. Busca da disciplina específica vinculada à turma
     if @teacher
       @classroom_subject = @classroom.classroom_subjects.find_by(teacher_id: @teacher.id)
       @current_subject = @classroom_subject&.subject
     end
 
-    # DEBUG PARA MONITORAMENTO NO TERMINAL
-    puts "--- DEBUG MAESTRO ---"
-    puts "ID Login: #{current_professor.id} | Email: #{current_professor.email}"
-    puts "Perfil Teacher: #{@teacher&.name || 'NÃO ENCONTRADO'}"
-    puts "Disciplina: #{@current_subject&.name || 'NÃO DETECTADA'}"
-    puts "---------------------"
-
-    # 3. Carregamento de dados da Turma
     @students = @classroom.students.order(:name)
     @my_subjects = @classroom.course&.subjects || []
-
-    # --- ATUALIZAÇÃO CRÍTICA ---
-    # Como você renomeou o modelo de Séries para Level, a classe 'Grade' não existe mais.
-    # Se esta variável @grades deveria carregar as NOTAS (scores) dos alunos, 
-    # você precisará garantir que tenha um modelo específico para notas.
-    # Caso contrário, se era para carregar dados da série, mude para Level:
+    
+    # Aqui mantemos Grade se este modelo for o de NOTAS e não o de SÉRIES
     @grades = Grade.where(classroom_id: @classroom.id) || [] 
   end
 
@@ -78,11 +63,9 @@ class ClassroomsController < ApplicationController
     student_ids = params[:student_ids]
 
     if target_classroom && student_ids.present?
-      # Atualiza todos os alunos selecionados de uma vez
       Student.where(id: student_ids).update_all(classroom_id: target_classroom.id)
-    
       redirect_to classroom_path(@classroom), 
-                  notice: "#{student_ids.count} aluno(s) transferido(s) com sucesso para #{target_classroom.display_name}!"
+                  notice: "#{student_ids.count} aluno(s) transferido(s) com sucesso!"
     else
       redirect_to classroom_path(@classroom), 
                   alert: "Erro: Selecione os alunos e a turma de destino."
@@ -95,8 +78,15 @@ class ClassroomsController < ApplicationController
     @classroom = Classroom.find(params[:id])
   end
 
+  # Método auxiliar para evitar repetição de código (DRY)
+  def set_form_data
+    @levels = Level.all.order(:name) 
+    @courses = Course.all
+    @sections = Section.all
+  end
+
   def classroom_params
-    # --- ATUALIZAÇÃO 2: Trocado :grade_id por :level_id ---
-    params.require(:classroom).permit(:course_id, :level_id, :section_id, :teacher_id)
+    # :level_id deve estar aqui para o Rails permitir o salvamento
+    params.require(:classroom).permit(:name, :course_id, :level_id, :section_id, :teacher_id)
   end
 end

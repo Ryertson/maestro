@@ -39,15 +39,16 @@
 
           <div class="row">
             <%# Seleção de Série %>
-            <div class="col-md-7 mb-4">
-              <%= f.label :grade_id, "Série / Ano", class: "form-label small fw-bold text-muted text-uppercase" %>
+            <div class="col-md-6 mb-3">
+              <%= form.label :level_id, "SÉRIE / ANO", class: "form-label fw-bold" %>
               <div class="input-group">
-                <span class="input-group-text bg-light border-0"><i class="bx bx-layer text-warning"></i></span>
-                <%= f.collection_select :grade_id, Grade.all, :id, :name, 
-                    { prompt: "Série..." }, 
-                    { class: "form-select bg-light border-0 py-3" } %>
+                <span class="input-group-text bg-light border-0"><i class='bx bx-layer'></i></span>
+                <%# Buscamos diretamente do banco para garantir a exibição das 3 séries %>
+                <%= form.collection_select :level_id, Level.all.order(:name), :id, :name, 
+                    { prompt: "Séries encontradas: #{Level.count}" }, 
+                    { class: "form-select border-0 shadow-sm", id: "classroom_level_id" } %>
+                </div>
               </div>
-            </div>
 
             <%# Seleção de Seção %>
             <div class="col-md-5 mb-4">
