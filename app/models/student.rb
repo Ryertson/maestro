@@ -1,8 +1,13 @@
+require 'csv'
+
 class Student < ApplicationRecord
   # --- Configurações Iniciais e Relacionamentos ---
   
   # Tornamos opcional para permitir a importação via planilha sem erro de vínculo
   belongs_to :classroom, optional: true
+  
+  # Configuração da associação de série (Série Escolar) para não conflitar com a coluna 'level' do RPG
+  belongs_to :level_association, class_name: 'Level', foreign_key: 'level_id', optional: true
 
   has_many :student_activities, dependent: :destroy
   has_many :activities, through: :student_activities
@@ -12,37 +17,53 @@ class Student < ApplicationRecord
   has_many :attendances, dependent: :destroy
   has_many :student_points, dependent: :destroy
 
-  has_one :student_user, foreign_key: :email, primary_key: :email # ou conforme sua associação
+  has_one :student_user, foreign_key: :email, primary_key: :email
 
-  # Validações
+  # Validações Atualizadas
   validates :name, presence: true
   validates :course, presence: true
-  validates :grade, presence: true
+  # Trocamos :grade por :level_id para alinhar com o novo banco de dados
+  validates :level_id, presence: true, on: :create, unless: -> { classroom_id.present? }
+
+  # --- LÓGICA DE IMPORTAÇÃO DE PLANILHA (SOLUÇÃO PARA O ERRO) ---
+
+  def self.import(file)
+    CSV.foreach(file.path, headers: true, header_converters: :symbol) do |row|
+      student_hash = row.to_hash
+      
+      # Tenta encontrar o Level (Série) pelo nome que está na planilha (Ex: "1ª Série")
+      if student_hash[:serie].present?
+        level_name = student_hash[:serie].to_s.strip
+        found_level = Level.find_by("LOWER(name) = ?", level_name.downcase)
+        
+        if found_level
+          student_hash[:level_id] = found_level.id
+        end
+        # Removemos a chave 'serie' que não existe no banco para evitar erro de Mass Assignment
+        student_hash.delete(:serie)
+      end
+
+      # Cria ou atualiza o aluno baseado no e-mail (evita duplicatas)
+      student = Student.find_or_initialize_by(email: student_hash[:email])
+      student.update!(student_hash)
+    end
+  end
 
   # --- Lógica de Desempenho e Analytics ---
 
-  # MÉTODO ADICIONADO PARA CORREÇÃO DO ERRO NO RELATÓRIO DE ATIVIDADES PERDIDAS
-  # app/models/student.rb
-
-  # app/models/student.rb
-
   def has_user
-    # Verifica se já existe um StudentUser com o e-mail deste aluno
     StudentUser.exists?(email: self.email)
   end
 
   def nota_na_atividade(activity_id)
-    # Busca o registro de StudentActivity para este aluno e esta atividade específica
     sa = self.student_activities.find_by(activity_id: activity_id)
     return 0.0 unless sa
 
-    # Prioriza o campo 'points' que é o padrão do seu sistema de RPG
     if sa.respond_to?(:points)
       sa.points.to_f
     elsif sa.respond_to?(:grade)
       sa.grade.to_f
     else
-      # Backup: busca no mapa de pontos caso não esteja no StudentActivity
       sp = self.student_points.find_by(activity_id: activity_id)
       sp ? sp.points.to_f : 0.0
     end
@@ -119,10 +140,11 @@ class Student < ApplicationRecord
     ((presences.to_f / total_lessons) * 100).round(1)
   end
 
-  # --- SISTEMA DE RPG E GAMIFICAÇÃO ---
+  # --- SISTEMA DE RPG E GAMIFICAÇÃO (AJUSTADO PARA self[:level]) ---
 
   def xp_needed_for_next_level
-    lvl = self.level || 1
+    # Acessa a coluna 'level' do banco para o RPG sem conflito com a associação de série
+    lvl = self[:level] || 1 
     (lvl * 100 * 1.2).to_i
   end
 
@@ -135,7 +157,7 @@ class Student < ApplicationRecord
 
   def gain_xp(amount)
     self.xp ||= 0
-    self.level ||= 1
+    self[:level] ||= 1
     self.total_xp ||= 0
 
     self.total_xp += amount
@@ -143,7 +165,7 @@ class Student < ApplicationRecord
 
     while new_xp >= xp_needed_for_next_level
       new_xp -= xp_needed_for_next_level
-      self.level += 1
+      self[:level] += 1
       update_rpg_title
     end
     
@@ -234,9 +256,7 @@ class Student < ApplicationRecord
     (total_notas_ponderadas / soma_pesos).round(2)
   end
 
-  # --- MÉTODO PARA BUSCAR NOTA DA PROVA (VERSÃO FLEXÍVEL) ---
   def nota_da_prova(activity_ids)
-    # Buscamos no Mapa de Pontos registros que contenham 'prova' ou 'avaliação' no nome da atividade
     ponto_registro = self.student_points.joins(:activity)
                          .where(activity_id: activity_ids)
                          .where("LOWER(activities.name) LIKE ? OR LOWER(activities.name) LIKE ?", "%prova%", "%avaliação%")
@@ -257,7 +277,8 @@ class Student < ApplicationRecord
   end
 
   def titles_natureza
-    case (self.level || 1)
+    lvl = self[:level] || 1
+    case lvl
     when 1..5   then "Elétron Livre"
     when 6..10  then "Manipulador de Reações"
     when 11..15 then "Mestre da Estequiometria"
@@ -266,7 +287,8 @@ class Student < ApplicationRecord
   end
 
   def titles_linguagens
-    case (self.level || 1)
+    lvl = self[:level] || 1
+    case lvl
     when 1..5   then "Menestrel de Velastraer"
     when 6..10  then "Escriba dos Pergaminhos"
     when 11..15 then "Orador da Corte"
@@ -275,7 +297,8 @@ class Student < ApplicationRecord
   end
 
   def titles_exatas
-    case (self.level || 1)
+    lvl = self[:level] || 1
+    case lvl
     when 1..5   then "Calculador de Rotas"
     when 6..10  then "Geômetra do Reino"
     when 11..15 then "Engenheiro de Cerco"
@@ -284,7 +307,8 @@ class Student < ApplicationRecord
   end
 
   def titles_humanas
-    case (self.level || 1)
+    lvl = self[:level] || 1
+    case lvl
     when 1..5   then "Explorador de Fronteiras"
     when 6..10  then "Diplomata das Nações"
     when 11..15 then "Estrategista de Guerra"
@@ -293,7 +317,8 @@ class Student < ApplicationRecord
   end
 
   def titles_geral
-    case (self.level || 1)
+    lvl = self[:level] || 1
+    case lvl
     when 1..5   then "Aprendiz Iniciante"
     when 6..10  then "Aventureiro"
     when 11..15 then "Herói do Conhecimento"
