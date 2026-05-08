@@ -18,7 +18,7 @@
           <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Cadastro Individual</h5>
         </div>
         <div class="card-body p-4">
-          <%# Certifique-se de atualizar o arquivo _form.html.erb com o código que passei abaixo %>
+          <%# Renderiza o formulário padrão %>
           <%= render "form", student: @student %>
         </div>
       </div>
@@ -26,14 +26,15 @@
 
     <%# --- COLUNA 2: IMPORTAÇÃO E LISTAGEM --- %>
     <div class="col-lg-6">
-      <%# Importação %>
+      <%# Importação em Massa %>
       <div class="card border-0 shadow-sm rounded-4 bg-light mb-4" style="border-top: 5px solid #198754;">
         <div class="card-body p-4">
           <h5 class="card-title mb-3 fw-bold text-dark">
             <i class="bi bi-file-earmark-excel-fill text-success me-2"></i>Importação em Massa
           </h5>
           
-          <%= form_with url: import_students_path, multipart: true, class: "row g-3" do |f| %>
+          <%# URL atualizada para garantir que a rota de importação receba o arquivo %>
+          <%= form_with url: import_students_path, method: :post, multipart: true, class: "row g-3" do |f| %>
             <div class="col-12">
               <%= f.label :file, "Selecione o arquivo CSV (Modelo Organizado)", class: "form-label small fw-bold" %>
               <%= f.file_field :file, class: "form-control border-0 shadow-sm", accept: ".csv", required: true %>
@@ -46,7 +47,7 @@
         </div>
       </div>
 
-      <%# Listagem com o novo campo CURSO %>
+      <%# Listagem de Alunos Recentes - CORRIGIDA %>
       <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white py-3 border-0">
           <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Alunos Recentes</h5>
@@ -62,11 +63,31 @@
                 </tr>
               </thead>
               <tbody>
+                <%# Buscamos os últimos 10 alunos matriculados %>
                 <% @students.limit(10).order(created_at: :desc).each do |student| %>
                   <tr>
                     <td class="ps-4 fw-medium"><%= student.name %></td>
-                    <td><span class="badge bg-info text-dark"><%= student.course %></span></td>
-                    <td><%= "#{student.grade} #{student.section}" %></td>
+                    <td>
+                      <span class="badge bg-info text-dark">
+                        <%# Usamos &.name para evitar erro se o curso for nulo %>
+                        <%= student.course %>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="small text-muted">
+                        <%# Exibe a série vinculada ao aluno %>
+                        <%= student.level_association&.name || "Série não def." %>
+    
+                        <%# Se o aluno estiver vinculado a uma turma, mostramos os detalhes dela %>
+                        <% if student.classroom %>
+                          <br>
+                          <small class="text-primary">
+                            <%# Aqui chamamos os atributos que compõem a turma: Curso, Nível e Seção %>
+                            <%= "#{student.classroom.course&.name} - #{student.classroom.level&.name} #{student.classroom.section&.name}" %>
+                          </small>
+                        <% end %>
+                      </span>
+                  </td>
                   </tr>
                 <% end %>
               </tbody>

@@ -40,6 +40,9 @@ class LessonsController < ApplicationController
 
   def create
     current_params = lesson_params
+    
+    # Se o interruptor 'has_activity' estiver desligado, removemos os atributos aninhados
+    # para evitar que o Rails tente criar uma atividade em branco.
     if params[:lesson][:has_activity] == "0"
       current_params.delete(:activities_attributes)
     end
@@ -65,6 +68,9 @@ class LessonsController < ApplicationController
         format.html { redirect_to lessons_path, notice: "Aula cadastrada e chamada inicializada com sucesso!" }
         format.turbo_stream
       else
+        # PERSISTÊNCIA: Se o salvamento falhar, garantimos que a atividade 
+        # exista no objeto para que o formulário não quebre a exibição.
+        @lesson.activities.build if @lesson.activities.empty?
         prepare_index_data 
         format.html { render :index, status: :unprocessable_entity }
       end
@@ -73,6 +79,8 @@ class LessonsController < ApplicationController
 
   def update
     current_params = lesson_params
+    
+    # Lógica de remoção de atividade caso o professor desmarque o botão na edição
     if params[:lesson][:has_activity] == "0"
       current_params.delete(:activities_attributes)
     end
@@ -83,6 +91,8 @@ class LessonsController < ApplicationController
     if @lesson.save
       redirect_to lessons_path, notice: "Aula atualizada com sucesso!"
     else
+      # Garante que o formulário recarregue com os campos de atividade disponíveis
+      @lesson.activities.build if @lesson.activities.empty?
       prepare_index_data
       render :index, status: :unprocessable_entity
     end
@@ -111,7 +121,10 @@ class LessonsController < ApplicationController
     @terms = Term.order(:start_date)
     @calendar_events = build_calendar_events(@lessons)
     calculate_dashboard_data(@lessons)
+    
+    # AJUSTE DE PERSISTÊNCIA: Garante que o objeto lesson tenha sempre uma atividade iniciada
     @lesson ||= Lesson.new
+    @lesson.activities.build if @lesson.activities.empty?
   end
 
   private
@@ -170,7 +183,7 @@ class LessonsController < ApplicationController
     params.require(:lesson).permit(
       :topic_name, :date, :week, :status, :classroom_id, :subject_id, :has_activity, :teacher_id,
       activities_attributes: [
-        :id, :name, :activity_type, :points, :status, :date, :classroom_id, :subject_id, :_destroy
+        :id, :name, :activity_type, :points, :status, :date, :classroom_id, :subject_id, :due_date, :_destroy
       ]
     )
   end

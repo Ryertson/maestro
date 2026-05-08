@@ -67,8 +67,8 @@
     </div>
   </div>
 
-  <%# --- Seção Dinâmica da Atividade (ATUALIZADA) --- %>
-  <div id="activity-section" class="col-12 border rounded p-4 shadow-sm" style="display: none; background-color: #f8f9fa; border-left: 5px solid #0d6efd !important;">
+  <%# --- Seção Dinâmica da Atividade (ID CORRIGIDO PARA SINCRONIA COM O SCRIPT) --- %>
+  <div id="section-atv-maestro" class="col-12 border rounded p-4 shadow-sm d-none" style="background-color: #f8f9fa; border-left: 5px solid #0d6efd !important;">
     <h6 class="mb-3 text-primary text-uppercase fw-bold" style="font-size: 0.8rem;">
       <i class="bi bi-pencil-square me-1"></i> Configuração da Atividade Obrigatória
     </h6>
@@ -90,21 +90,19 @@
 
         <div class="col-md-3">
           <%= a.label :points, "Pontuação", class: "form-label fw-semibold" %>
-          <%= a.number_field :points, step: 0.1, class: "form-control", value: 10.0 %>
+          <%= a.number_field :points, step: 0.1, class: "form-control", value: a.object.points || 10.0 %>
         </div>
 
-        <%# ADICIONADO: Campo de Data de Entrega para a Inteligência de Prazos %>
         <div class="col-md-6">
           <%= a.label :due_date, "Data Limite de Entrega", class: "form-label fw-semibold text-danger" %>
           <%= a.date_field :due_date, class: "form-control border-danger shadow-sm", id: "activity_due_date_field" %>
-          <small class="text-muted">Essa data define a urgência (ampulheta) no portal do aluno.</small>
+          <small class="text-muted">Essa data define a urgência no portal do aluno.</small>
         </div>
 
-        <%# Campos ocultos para sincronizar dados da aula com a atividade %>
         <%= a.hidden_field :date, id: "activity_date_hidden" %>
         <%= a.hidden_field :subject_id, id: "activity_subject_hidden" %>
         <%= a.hidden_field :classroom_id, id: "activity_classroom_hidden" %>
-        <%= a.hidden_field :status, value: "pendente" %>
+        <%= a.hidden_field :status, value: a.object.status || "pendente" %>
       </div>
     <% end %>
   </div>
@@ -118,58 +116,52 @@
 <% end %>
 
 <script>
-  function setupActivityUI() {
-    const checkbox = document.querySelector('.js-activity-toggle');
-    const section = document.getElementById('activity-section');
-    const topicField = document.getElementById('lesson_topic_field');
-    const dateField = document.getElementById('lesson_date_field');
-    const classroomSelect = document.getElementById('select-classroom');
-    const subjectSelect = document.getElementById('select-subject');
+  function conectarBotaoAtividade() {
+    // 1. Buscamos os elementos pelos seletores exatos
+    const switchAtv = document.querySelector('#check-has-activity');
+    const quadroAtv = document.querySelector('#section-atv-maestro');
     
-    const actNameField = document.getElementById('activity_name_field');
-    const actDueDateField = document.getElementById('activity_due_date_field'); // Novo
-    const actDateHidden = document.getElementById('activity_date_hidden');
-    const actClassroomHidden = document.getElementById('activity_classroom_hidden');
-    const actSubjectHidden = document.getElementById('activity_subject_hidden');
+    // Verificação de segurança
+    if (!switchAtv || !quadroAtv) {
+      console.warn("Maestro: Botão ou Quadro não encontrados. Verifique se o ID da div é 'section-atv-maestro'.");
+      return;
+    }
 
-    if (!checkbox || !section) return;
+    console.log("Maestro: Conexão estabelecida com sucesso!");
 
-    const syncFields = () => {
-      if (actDateHidden && dateField) actDateHidden.value = dateField.value;
-      if (actClassroomHidden && classroomSelect) actClassroomHidden.value = classroomSelect.value;
-      if (actSubjectHidden && subjectSelect) actSubjectHidden.value = subjectSelect.value;
-      
-      // Se a data de entrega estiver vazia, sugere a mesma data da aula
-      if (actDueDateField && actDueDateField.value === "" && dateField) {
-        actDueDateField.value = dateField.value;
-      }
-    };
+    // Elementos extras para preenchimento automático
+    const topicField = document.querySelector('#lesson_topic_field');
+    const actNameField = document.querySelector('#activity_name_field');
 
-    const toggle = () => {
-      if (checkbox.checked) {
-        section.style.display = 'block';
-        section.querySelectorAll('input, select').forEach(el => el.disabled = false);
+    const atualizarVisibilidade = () => {
+      if (switchAtv.checked) {
+        quadroAtv.classList.remove('d-none');
+        quadroAtv.querySelectorAll('input, select').forEach(el => el.disabled = false);
         
-        syncFields();
-
-        if (actNameField && actNameField.value === "" && topicField) {
-          actNameField.value = "Atv: " + topicField.value;
+        // Sugestão de nome se estiver vazio
+        if (actNameField && actNameField.value === "" && topicField && topicField.value.trim() !== "") {
+          actNameField.value = "Atv: " + topicField.value.trim();
         }
       } else {
-        section.style.display = 'none';
-        section.querySelectorAll('input, select').forEach(el => el.disabled = true);
+        quadroAtv.classList.add('d-none');
+        quadroAtv.querySelectorAll('input, select').forEach(el => el.disabled = true);
       }
     };
 
-    checkbox.addEventListener('change', toggle);
-
-    if (dateField) dateField.addEventListener('change', syncFields);
-    if (classroomSelect) classroomSelect.addEventListener('change', syncFields);
-    if (subjectSelect) subjectSelect.addEventListener('change', syncFields);
-
-    toggle();
+    // Escuta a mudança do interruptor
+    switchAtv.removeEventListener('change', atualizarVisibilidade);
+    switchAtv.addEventListener('change', atualizarVisibilidade);
+    
+    // Executa imediatamente para checar o estado inicial
+    atualizarVisibilidade();
   }
 
-  document.addEventListener("turbo:load", setupActivityUI);
-  document.addEventListener("DOMContentLoaded", setupActivityUI);
+  // Compatibilidade Turbo Drive e Navegação
+  document.removeEventListener("turbo:load", conectarBotaoAtividade);
+  document.addEventListener("turbo:load", conectarBotaoAtividade);
+  document.addEventListener("DOMContentLoaded", conectarBotaoAtividade);
+  
+  if (document.readyState !== "loading") {
+    conectarBotaoAtividade();
+  }
 </script>

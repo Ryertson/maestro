@@ -185,7 +185,6 @@
                 </span>
               </td>
               <td class="text-white-50 small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
-              <%# Atualizado: Usando o novo método do model Classroom que chama 'level' no lugar de 'grade' %>
               <td><span class="badge border border-secondary text-white-50"><%= lesson.classroom.full_name_info %></span></td>
               <td>
                 <% if lesson.subject %>
@@ -238,7 +237,8 @@
           </div>
         </div>
 
-        <div id="main-activity-section" class="col-12 mt-3 glass-card p-4" style="display: none; border-left: 5px solid var(--purple-neon) !important;">
+        <%# Quadro de Detalhes da Atividade %>
+        <div id="main-activity-section" class="col-12 mt-3 glass-card p-4 d-none" style="border-left: 5px solid var(--purple-neon) !important;">
           <h6 class="text-purple-neon fw-bold mb-3 small text-uppercase">Detalhes da Atividade</h6>
           <%= f.fields_for :activities, (@lesson.activities.first || @lesson.activities.build) do |a| %>
             <div class="row g-3 align-items-end">
@@ -248,7 +248,11 @@
               </div>
               <div class="col-md-3">
                 <%= a.label :activity_type, "Tipo", class: "label-neon-small mb-1" %>
-                <%= a.select :activity_type, ["Avaliação", "Trabalho", "Visto", "Redação"], { prompt: "Tipo..." }, { class: "form-select form-control-glass" } %>
+                <%# Lista de opções atualizada conforme sua solicitação %>
+                <%= a.select :activity_type, 
+                    ["Avaliação", "Trabalho", "Visto", "Lista de Exercícios", "Redação", "Apresentação", "Relatório"], 
+                    { prompt: "Tipo..." }, 
+                    { class: "form-select form-control-glass" } %>
               </div>
               <div class="col-md-3">
                 <%= a.label :points, "Peso", class: "label-neon-small mb-1" %>
@@ -269,7 +273,7 @@
     <% end %>
   </div>
 
-  <%# --- Calendário Estilizado --- %>
+  <%# --- Calendário --- %>
   <div class="glass-card mb-5 overflow-hidden border-glow-purple">
     <% current_date = params[:start_date] ? params[:start_date].to_date : Date.today %>
     <div class="card-header bg-transparent py-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
@@ -367,7 +371,7 @@
 </style>
 
 <script>
-  function setupAllPageScripts() {
+  function setupMaestroLessonsUI() {
     const mainToggle = document.querySelector('.js-main-toggle');
     const mainSection = document.getElementById('main-activity-section');
     const topicInput = document.getElementById('main_topic_field');
@@ -388,22 +392,59 @@
       };
 
       const toggleFn = () => {
-        mainSection.style.display = mainToggle.checked ? 'block' : 'none';
-        if (mainToggle.checked && nameInput && (nameInput.value === "" || nameInput.value.startsWith("Atv:"))) {
-          nameInput.value = "Atv: " + (topicInput.value || "");
+        if (mainToggle.checked) {
+          mainSection.classList.remove('d-none');
+          mainSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
+          
+          if (nameInput && (nameInput.value === "" || nameInput.value.startsWith("Atv:"))) {
+            nameInput.value = "Atv: " + (topicInput.value || "");
+          }
+          syncHiddenFields();
+        } else {
+          mainSection.classList.add('d-none');
+          mainSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
         }
-        syncHiddenFields();
       };
 
+      mainToggle.removeEventListener('change', toggleFn);
       mainToggle.addEventListener('change', toggleFn);
-      [dateInput, classroomSelect, subjectSelect].forEach(el => el?.addEventListener('change', syncHiddenFields));
+
+      [dateInput, classroomSelect, subjectSelect].forEach(el => {
+        el?.removeEventListener('change', syncHiddenFields);
+        el?.addEventListener('change', syncHiddenFields);
+      });
+
+      topicInput?.removeEventListener('input', () => {});
       topicInput?.addEventListener('input', () => {
         if (mainToggle.checked && nameInput?.value.startsWith("Atv:")) {
           nameInput.value = "Atv: " + topicInput.value;
         }
       });
+      
       toggleFn();
     }
+
+    const modalToggles = document.querySelectorAll('.js-activity-toggle');
+    modalToggles.forEach(toggle => {
+      const section = document.getElementById('section-atv-maestro');
+      if (!section) return;
+
+      const refreshModalUI = () => {
+        if (toggle.checked) {
+          section.classList.remove('d-none');
+          section.querySelectorAll('input, select').forEach(el => el.disabled = false);
+        } else {
+          section.classList.add('d-none');
+          section.querySelectorAll('input, select').forEach(el => el.disabled = true);
+        }
+      };
+
+      toggle.removeEventListener('change', refreshModalUI);
+      toggle.addEventListener('change', refreshModalUI);
+      refreshModalUI();
+    });
   }
-  document.addEventListener("turbo:load", setupAllPageScripts);
+
+  document.addEventListener("turbo:load", setupMaestroLessonsUI);
+  document.addEventListener("DOMContentLoaded", setupMaestroLessonsUI);
 </script>

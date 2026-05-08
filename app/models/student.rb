@@ -3,7 +3,7 @@ require 'csv'
 class Student < ApplicationRecord
   # --- Configurações Iniciais e Relacionamentos ---
   
-  # Tornamos opcional para permitir a importação via planilha sem erro de vínculo
+  # Tornamos opcional para permitir a importação via planilha sem erro de vínculo imediato
   belongs_to :classroom, optional: true
   
   # Configuração da associação de série (Série Escolar) para não conflitar com a coluna 'level' do RPG
@@ -21,31 +21,73 @@ class Student < ApplicationRecord
 
   # Validações Atualizadas
   validates :name, presence: true
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
   validates :course, presence: true
-  # Trocamos :grade por :level_id para alinhar com o novo banco de dados
-  validates :level_id, presence: true, on: :create, unless: -> { classroom_id.present? }
+  # Trocamos :grade por :level_id para alinhar com o novo banco de dados Maestro
+  validates :level_id, presence: true, on: :create, if: -> { self.respond_to?(:level_id) && classroom_id.blank? }
 
-  # --- LÓGICA DE IMPORTAÇÃO DE PLANILHA (SOLUÇÃO PARA O ERRO) ---
+  # --- LÓGICA DE IMPORTAÇÃO DE PLANILHA (VERSÃO UNIFICADA E BLINDADA) ---
 
   def self.import(file)
-    CSV.foreach(file.path, headers: true, header_converters: :symbol) do |row|
+    # col_sep: ';' -> Ajustado para o padrão de planilhas CSV brasileiras
+    # encoding: 'bom|utf-8' -> Garante que acentos não quebrem a importação
+    CSV.foreach(file.path, headers: true, col_sep: ';', header_converters: :symbol, encoding: 'bom|utf-8', skip_blanks: true) do |row|
       student_hash = row.to_hash
       
-      # Tenta encontrar o Level (Série) pelo nome que está na planilha (Ex: "1ª Série")
-      if student_hash[:serie].present?
-        level_name = student_hash[:serie].to_s.strip
-        found_level = Level.find_by("LOWER(name) = ?", level_name.downcase)
-        
-        if found_level
-          student_hash[:level_id] = found_level.id
-        end
-        # Removemos a chave 'serie' que não existe no banco para evitar erro de Mass Assignment
-        student_hash.delete(:serie)
+      # Limpeza de strings para evitar erros de comparação e e-mail
+      email_limpo = student_hash[:email].to_s.strip.downcase
+      next if email_limpo.blank? || student_hash[:nome_do_aluno].blank?
+
+      # 1. Tratamento da Série (Level)
+      # Busca o Level pelo nome (ex: "1ª Série") vindo da coluna :serie ou :série
+      serie_name = student_hash[:serie] || student_hash[:série]
+      level_id_encontrado = nil
+      if serie_name.present?
+        found_level = Level.find_by("LOWER(name) = ?", serie_name.to_s.strip.downcase)
+        level_id_encontrado = found_level&.id
+        student_hash[:level_id] = level_id_encontrado
       end
 
-      # Cria ou atualiza o aluno baseado no e-mail (evita duplicatas)
-      student = Student.find_or_initialize_by(email: student_hash[:email])
-      student.update!(student_hash)
+      # 2. Tratamento da Turma (Classroom) - A "Junção de Nomes"
+      # Tenta localizar a Classroom correta baseada no Curso, Nível e Seção (Turma)
+      if student_hash[:curso].present? && student_hash[:turma].present? && level_id_encontrado
+        course_found = Course.where("LOWER(name) LIKE ?", "%#{student_hash[:curso].to_s.strip.downcase}%").first
+        section_found = Section.find_by("LOWER(name) = ?", student_hash[:turma].to_s.strip.downcase)
+        
+        if course_found && section_found
+          classroom_target = Classroom.find_by(
+            course_id: course_found.id, 
+            level_id: level_id_encontrado, 
+            section_id: section_found.id
+          )
+          student_hash[:classroom_id] = classroom_target.id if classroom_target
+        end
+      end
+
+      # 3. Limpeza de Atributos e Mass Assignment (PROTEÇÃO CONTRA ERRO 'GRADE')
+      # Removemos chaves que não são colunas reais no banco para evitar erro de 'Unknown Attribute'
+      student_hash[:name] = student_hash[:nome_do_aluno].to_s.strip if student_hash[:nome_do_aluno]
+      student_hash[:email] = email_limpo
+      student_hash[:course] = student_hash[:curso].to_s.strip if student_hash[:curso]
+      
+      # Deletamos as chaves que o CSV usa mas o Banco não possui mais
+      student_hash.delete(:nome_do_aluno)
+      student_hash.delete(:curso)
+      student_hash.delete(:serie)
+      student_hash.delete(:série)
+      student_hash.delete(:turma)
+      student_hash.delete(:grade) # Garantia extra para evitar o erro específico da sua imagem
+
+      # 4. Gravação Segura
+      student = Student.find_or_initialize_by(email: email_limpo)
+      
+      # Filtramos o hash para garantir que só passamos colunas que existem na tabela 'students'
+      valid_columns = Student.column_names.map(&:to_sym)
+      student.assign_attributes(student_hash.slice(*valid_columns))
+      
+      unless student.save
+        Rails.logger.error "Erro ao importar aluno #{student.email}: #{student.errors.full_messages.join(', ')}"
+      end
     end
   end
 
@@ -140,10 +182,9 @@ class Student < ApplicationRecord
     ((presences.to_f / total_lessons) * 100).round(1)
   end
 
-  # --- SISTEMA DE RPG E GAMIFICAÇÃO (AJUSTADO PARA self[:level]) ---
+  # --- SISTEMA DE RPG E GAMIFICAÇÃO ---
 
   def xp_needed_for_next_level
-    # Acessa a coluna 'level' do banco para o RPG sem conflito com a associação de série
     lvl = self[:level] || 1 
     (lvl * 100 * 1.2).to_i
   end
@@ -204,7 +245,7 @@ class Student < ApplicationRecord
     end
   end
 
-  # --- MÉTODO DE CÁLCULO DE MÉDIAS (SINCRONIZADO) ---
+  # --- MÉTODO DE CÁLCULO DE MÉDIAS ---
 
   def calcular_nota_com_pesos(activity_ids)
     ids = Array(activity_ids).map(&:to_i).reject(&:zero?).uniq

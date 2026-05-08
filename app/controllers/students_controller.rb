@@ -16,8 +16,6 @@ class StudentsController < ApplicationController
   def index
     respond_to do |format|
       # PRIORIDADE 1: INTERFACE DO PROFESSOR (HTML)
-      # Adicionada trava lógica: Se houver parâmetros de busca de data ou turma, 
-      # forçamos o HTML mesmo que o navegador peça JSON por engano.
       format.html do
         # 1. Configuração de Datas
         @selected_date = params[:month_year].present? ? Date.parse("#{params[:month_year]}-01") : Date.today
@@ -83,7 +81,6 @@ class StudentsController < ApplicationController
       end
 
       # PRIORIDADE 2: BUSCA PARA ATIVAÇÃO DE ALUNO (JSON)
-      # Só responde JSON se não houver contexto de busca do professor (month_year)
       format.json do
         if params[:month_year].blank? && params[:classroom_id].present?
           @json_students = Student.where(classroom_id: params[:classroom_id])
@@ -100,6 +97,7 @@ class StudentsController < ApplicationController
 
   def new
     @student = Student.new
+    # Busca os últimos 10 alunos matriculados para exibição na sidebar de Alunos Recentes
     @students = current_professor&.admin? ? Student.order(created_at: :desc).limit(10) : Student.none
   end
 
@@ -113,41 +111,24 @@ class StudentsController < ApplicationController
     end
   end
 
+  # MÉTODO DE IMPORTAÇÃO ATUALIZADO (Delegando ao Model Student)
   def import
     return redirect_to students_path, alert: "Apenas administradores podem importar alunos." unless current_professor&.admin?
     
     file = params[:file]
-    return redirect_to new_student_path, alert: "Por favor, selecione um arquivo." if file.nil?
+    return redirect_to new_student_path, alert: "Por favor, selecione um arquivo CSV." if file.nil?
 
-    count = 0
-    CSV.foreach(file.path, col_sep: ';', encoding: 'bom|utf-8') do |row|
-      next if row[0].blank? || row[0].upcase.include?('NOME') || row[0].upcase.include?('MODELO')
-
-      nome      = row[0]&.strip
-      curso_n   = row[1]&.strip
-      serie_n   = row[2]&.strip
-      turma_n   = row[3]&.strip
-
-      course = Course.where("LOWER(name) LIKE ?", "%#{curso_n.to_s.downcase}%").first
-      grade = Level.find_by(name: serie_n)
-      section = Section.find_by(name: turma_n)
-
-      next unless course && grade && section
-
-      # Atualizado: grade_id agora é level_id
-      classroom = Classroom.find_by(course_id: course.id, level_id: grade.id, section_id: section.id)
-      next unless classroom
-
-      Student.create!(
-        name: nome, active: true, classroom: classroom,
-        grade: serie_n, section: turma_n, course: curso_n
-      )
-      count += 1
+    begin
+      # Chamamos a lógica blindada que está no Model
+      Student.import(file)
+      redirect_to students_path, notice: "Importação coletiva concluída com sucesso!"
+    rescue => e
+      # Caso ocorra algum erro no processamento do arquivo, capturamos para evitar erro 500
+      redirect_to new_student_path, alert: "Erro ao processar planilha: #{e.message}"
     end
-
-    redirect_to students_path, notice: "Importação concluída. #{count} alunos inseridos."
   end
 
+  # MÉTODO DE ORGANIZAÇÃO ATUALIZADO (De grade_id para level_id)
   def allocate_classrooms
     return redirect_to students_path, alert: "Ação restrita ao administrador." unless current_professor&.admin?
     
@@ -158,7 +139,7 @@ class StudentsController < ApplicationController
       course = Course.find_by(name: student.course&.strip)
 
       if grade && section && course
-        # Atualizado: grade_id agora é level_id
+        # Atualizado para a nova estrutura de colunas do Maestro
         target = Classroom.find_by(course_id: course.id, level_id: grade.id, section_id: section.id)
         if target
           student.update_columns(classroom_id: target.id)
@@ -166,7 +147,7 @@ class StudentsController < ApplicationController
         end
       end
     end
-    redirect_to students_path, notice: "#{count} alunos organizados!"
+    redirect_to students_path, notice: "#{count} alunos organizados com sucesso!"
   end
 
   def show
@@ -194,7 +175,7 @@ class StudentsController < ApplicationController
 
   def update
     if @student.update(student_params)
-      redirect_to classroom_path(@student.classroom), notice: "Informações do aluno atualizadas com sucesso."
+      redirect_to classroom_path(@student.classroom), notice: "Informações do aluno atualizadas."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -203,15 +184,15 @@ class StudentsController < ApplicationController
   def destroy
     classroom = @student.classroom
     @student.destroy
-    redirect_to classroom_path(classroom), notice: "O aluno foi removido da turma com sucesso.", status: :see_other
+    redirect_to classroom_path(classroom), notice: "Aluno removido com sucesso.", status: :see_other
   end
 
   def download_template
     csv_data = CSV.generate(headers: true, col_sep: ';') do |csv|
-      csv << ["NOME DO ALUNO", "CURSO", "SÉRIE", "TURMA"]
-      csv << ["JOÃO SILVA", "Agroecologia", "1ª Série", "A"]
+      csv << ["NOME DO ALUNO", "EMAIL", "CURSO", "SÉRIE", "TURMA"]
+      csv << ["JOÃO SILVA", "joao@escola.com", "Agroecologia", "1ª Série", "A"]
     end
-    send_data csv_data, filename: "modelo_importacao.csv", type: "text/csv"
+    send_data csv_data, filename: "modelo_maestro_importacao.csv", type: "text/csv"
   end
 
   private
@@ -237,6 +218,7 @@ class StudentsController < ApplicationController
   end
 
   def student_params
-    params.require(:student).permit(:name, :course, :grade, :section, :active, :classroom_id)
+    # Mantemos suporte aos campos antigos e novos para garantir a transição suave
+    params.require(:student).permit(:name, :email, :course, :grade, :section, :active, :classroom_id, :level_id)
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_135024) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_181854) do
   create_table "academic_events", force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -248,6 +248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_135024) do
     t.string "email"
     t.string "grade"
     t.integer "level", default: 1
+    t.integer "level_id"
     t.string "name"
     t.string "section"
     t.integer "student_user_id"
