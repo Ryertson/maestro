@@ -89,14 +89,14 @@
         </div>
       </div>
 
-      <%# --- SEÇÃO 1: FILTROS DE PERÍODO --- %>
+      <%# --- SEÇÃO 1: FILTROS DE PERÍODO E DISCIPLINAS COMPONENTES (ANEXO 2) --- %>
       <div class="content-card-purple p-3 mb-4 shadow-lg">
         <div class="row align-items-center g-3">
           <div class="col-xl-4 col-lg-12">
             <h5 class="fw-bold text-white mb-0">
               <i class="bx bx-calendar text-purple-neon me-2"></i>Período de Análise
             </h5>
-            <small class="text-white-50">Dados de: <strong class="text-purple-neon"><%= @subject&.name %></strong></small>
+            <small class="text-white-50">Dados de: <strong class="text-purple-neon"><%= @subject&.name || "Todos os Componentes" %></strong></small>
           </div>
           
           <div class="col-xl-8 col-lg-12">
@@ -107,7 +107,7 @@
                   { key: '1b', label: '1ºB' }, { key: '2b', label: '2ºB' },
                   { key: '3b', label: '3ºB' }, { key: '4b', label: '4ºB' }
                 ].each do |btn| %>
-                  <%= link_to btn[:label], root_path(student_id: @student.id, classroom_id: @classroom.id, subject_id: @subject&.id, period: btn[:key]), 
+                  <%= link_to btn[:label], root_path(student_id: @student.id, classroom_id: @classroom.id, subject_id: params[:subject_id], period: btn[:key]), 
                       class: "btn-period #{ @period_filter == btn[:key] ? 'active' : '' }" %>
                 <% end %>
               </div>
@@ -115,7 +115,7 @@
               <%= form_with url: root_path, method: :get, local: true, class: "date-picker-neon" do |f| %>
                 <%= f.hidden_field :student_id, value: @student.id %>
                 <%= f.hidden_field :classroom_id, value: @classroom.id %>
-                <%= f.hidden_field :subject_id, value: @subject&.id %>
+                <%= f.hidden_field :subject_id, value: params[:subject_id] %>
                 <div class="d-flex align-items-center px-2">
                   <%= f.date_field :start_date, value: @start_date, class: "input-date-neon text-white" %>
                   <span class="text-white small mx-2">à</span>
@@ -124,6 +124,31 @@
                 <button type="submit" class="btn-search-neon">
                   <i class="bx bx-search-alt-2"></i>
                 </button>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <%# --- NOVA ADIÇÃO: TAGS DINÂMICAS DE COMPONENTES CURRICULARES --- %>
+        <div class="row mt-3 border-top border-secondary pt-3">
+          <div class="col-12">
+            <small class="label-neon-small text-lavender d-block mb-2"><i class="bx bx-category me-1"></i>Análise por Matéria de <%= @student.name.split.first %>:</small>
+            <div class="d-flex flex-wrap gap-2">
+              <%# Tag para limpar filtro de disciplina e ver tudo combinado %>
+              <%= link_to root_path(student_id: @student.id, classroom_id: @classroom.id, period: @period_filter, subject_id: nil), 
+                          class: "badge-subject-tag #{ params[:subject_id].blank? ? 'active' : '' }" do %>
+                Geral (Todas)
+              <% end %>
+
+              <%# Loop que pega as disciplinas injetadas pela turma %>
+              <% if @subjects_in_classroom.present? %>
+                <% @subjects_in_classroom.each do |sub| %>
+                  <% is_active = params[:subject_id].to_i == sub.id %>
+                  <%= link_to root_path(student_id: @student.id, classroom_id: @classroom.id, period: @period_filter, subject_id: sub.id), 
+                              class: "badge-subject-tag #{ is_active ? 'active' : '' }" do %>
+                    <%= sub.name %>
+                  <% end %>
+                <% end %>
               <% end %>
             </div>
           </div>
@@ -172,7 +197,7 @@
         <% end %>
       </div>
 
-      <%# --- SEÇÃO 3: LINHA DO TEMPO DE ATIVIDADES --- %>
+      <%# --- SEÇÃO 3: LINHA DO TEMPO E STATUS DE ENTREGA --- %>
       <div class="row g-4 mb-4">
         <div class="col-lg-8">
           <div class="content-card-purple h-100 p-4 shadow-lg overflow-visible position-relative">
@@ -180,14 +205,12 @@
               <i class="bx bx-git-commit text-purple-neon me-2"></i>Linha do Tempo de Atividades
             </h6>
             
-            <%# Ajustado pt-5 para garantir espaço para as notas acima da barra %>
             <div class="timeline-scroll-area overflow-x-auto pt-5 pb-4" style="min-height: 280px;">
               <div class="d-flex align-items-end gap-5 px-3 position-relative" style="height: 180px;">
                 <% if @timeline_data.any? %>
                   <% @timeline_data.each do |item| %>
                     <div class="timeline-column d-flex flex-column align-items-center text-center" style="min-width: 70px; z-index: 2;">
                       
-                      <%# --- TOPO: BARRA OU "X" --- %>
                       <div class="d-flex align-items-end justify-content-center mb-3" style="height: 120px; width: 100%;">
                         <% if item[:fez] %>
                           <div class="activity-bar" 
@@ -196,7 +219,6 @@
                                       border: 1px solid rgba(188, 19, 254, 0.4);
                                       box-shadow: 0 0 15px rgba(188, 19, 254, 0.1);
                                       position: relative; border-radius: 4px 4px 0 0;">
-                            <%# Nota ajustada para -35px para não sumir %>
                             <span class="fw-bold" style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
                                   color: <%= item[:nota].to_f >= 6 ? '#39ff14' : '#ffcc00' %>;
                                   text-shadow: 0 0 10px <%= item[:nota].to_f >= 6 ? 'rgba(57,255,20,0.5)' : 'rgba(255,204,0,0.5)' %>; font-size: 0.9rem; white-space: nowrap;">
@@ -210,7 +232,6 @@
                         <% end %>
                       </div>
 
-                      <%# --- LINHA E INFO --- %>
                       <div class="timeline-node bg-purple-neon mb-2" style="width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 10px #bc13fe;"></div>
                       <div class="fw-bold text-white mb-0" style="font-size: 0.7rem;"><%= item[:data] %></div>
                       <div class="text-white-50 text-truncate" style="font-size: 0.6rem; max-width: 80px;" title="<%= item[:nome] %>">
@@ -218,8 +239,6 @@
                       </div>
                     </div>
                   <% end %>
-                  
-                  <%# Linha horizontal decorativa %>
                   <div class="position-absolute bg-purple-neon opacity-25" style="height: 2px; width: calc(100% - 40px); bottom: 44px; left: 20px; z-index: 1;"></div>
                 <% else %>
                   <div class="text-center w-100 text-white-50 small py-5">Nenhuma atividade pontuada no período.</div>
@@ -229,20 +248,21 @@
           </div>
         </div>
 
+        <%# ATUALIZADO: CARD DE STATUS DE ENTREGA ADAPTADO AOS PARÂMETROS DINÂMICOS (ANEXO 1) %>
         <div class="col-lg-4">
           <div class="content-card-purple h-100 p-4 shadow-lg d-flex flex-column">
             <h6 class="fw-bold mb-4 text-white border-bottom border-secondary pb-2">Status de Entrega</h6>
             <div class="row text-center mb-4">
               <div class="col-4">
-                <div class="fs-4 fw-bold text-success-neon"><%= @entregas_prazo %></div>
+                <div class="fs-4 fw-bold text-success-neon"><%= @entregas_prazo || 0 %></div>
                 <div class="label-neon-small text-lavender">No Prazo</div>
               </div>
               <div class="col-4 border-start border-secondary">
-                <div class="fs-4 fw-bold text-warning-neon"><%= @entregas_atraso %></div>
+                <div class="fs-4 fw-bold text-warning-neon"><%= @entregas_atraso || 0 %></div>
                 <div class="label-neon-small text-lavender">Atraso</div>
               </div>
               <div class="col-4 border-start border-secondary">
-                <div class="fs-4 fw-bold text-danger-neon"><%= @nao_entregues %></div>
+                <div class="fs-4 fw-bold text-danger-neon"><%= @nao_entregues || 0 %></div>
                 <div class="label-neon-small text-lavender">Pendente</div>
               </div>
             </div>
@@ -250,10 +270,10 @@
             <div class="progress-container-neon mb-3">
               <div class="d-flex justify-content-between mb-2">
                 <span class="small fw-bold text-white">Taxa de Entrega</span>
-                <span class="small fw-bold text-purple-neon"><%= @taxa_entrega_aluno %>%</span>
+                <span class="small fw-bold text-purple-neon"><%= @taxa_entrega_aluno || 0 %>%</span>
               </div>
               <div class="progress-neon">
-                <div class="progress-bar-purple" style="width: <%= @taxa_entrega_aluno %>%"></div>
+                <div class="progress-bar-purple" style="width: <%= @taxa_entrega_aluno || 0 %>%"></div>
               </div>
             </div>
 
@@ -287,7 +307,7 @@
               <% if (@freq_mensal || 0) < 75 %>
                 O aluno <strong><%= @student.name.split.first %></strong> está com baixa assiduidade. O Maestro sugere intervenção imediata.
               <% elsif (@media_aluno || 0) < 6 %>
-                Desempenho acadêmico abaixo do esperado. Recomendado reforço em <strong><%= @subject&.name %></strong>.
+                Desempenho acadêmico abaixo do esperado. Recomendado reforço em <strong><%= @subject&.name || 'componentes críticos' %></strong>.
               <% else %>
                 Desempenho exemplar! Ótimo momento para reforçar o engajamento positivo com o título de <strong><%= @student.title %></strong>.
               <% end %>
@@ -371,13 +391,36 @@
   .form-select-neon option { background-color: var(--card-bg); color: #fff; }
   .form-select-neon:focus { background-color: var(--card-bg); border-color: var(--purple-neon); box-shadow: 0 0 10px var(--purple-glow); outline: none; }
 
-  /* --- RPG --- */
+  /* ESTILO PARA AS NOVAS TAGS DE MATÉRIA NEON */
+  .badge-subject-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--lavender-light);
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .badge-subject-tag:hover {
+    background: rgba(188, 19, 254, 0.1);
+    border-color: rgba(188, 19, 254, 0.4);
+    color: #fff;
+  }
+  .badge-subject-tag.active {
+    background: var(--purple-neon);
+    border-color: var(--purple-neon);
+    color: #fff;
+    box-shadow: 0 0 10px var(--purple-glow);
+  }
+
   .border-rpg-gold { border: 1px solid rgba(255, 204, 0, 0.3) !important; box-shadow: 0 0 20px rgba(255, 204, 0, 0.1); }
   .lvl-hex { background: var(--purple-neon); width: 60px; height: 60px; clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--purple-glow); }
   .lvl-number { font-size: 1.5rem; font-weight: 900; color: #fff; }
   .badge-icon-mini { width: 35px; height: 35px; background: rgba(255,255,255,0.1); border: 1px solid var(--purple-neon); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--rpg-gold); font-size: 1.1rem; }
 
-  /* --- STAT CARDS --- */
   .stat-card-neon { transition: all 0.3s ease; border-radius: 1.25rem; padding: 1.5rem; }
   .glow-success { border: 1px solid var(--success-neon) !important; box-shadow: 0 0 15px var(--success-glow); background: linear-gradient(145deg, #141421, #0d210d); }
   .glow-danger { border: 1px solid var(--danger-neon) !important; box-shadow: 0 0 15px var(--danger-glow); background: linear-gradient(145deg, #141421, #210d0d); }
@@ -388,7 +431,6 @@
   .content-card-purple { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; }
   .label-neon-small { text-transform: uppercase; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; color: var(--lavender-light); }
 
-  /* --- TIMELINE --- */
   .overflow-visible { overflow: visible !important; }
   .timeline-scroll-area { scrollbar-width: thin; scrollbar-color: var(--purple-neon) transparent; }
   .timeline-scroll-area::-webkit-scrollbar { height: 6px; }
@@ -403,7 +445,6 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
-  /* --- UTILS --- */
   .btn-period { border: none; background: transparent; color: var(--lavender-light); padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; text-decoration: none; }
   .btn-period.active { background: var(--purple-neon); color: #fff; box-shadow: 0 0 15px var(--purple-glow); }
   .btn-group-neon { background: rgba(255,255,255,0.08); display: inline-flex; }

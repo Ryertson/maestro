@@ -14,7 +14,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%# AJUSTADO: Evita compilar o arquivo bruto de professores se ele estiver gerando o erro de Sass %>
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload", skip_pipeline: true rescue stylesheet_link_tag "application" %>
   <%= javascript_importmap_tags %>
 
   <style>
@@ -153,7 +154,7 @@
   </div>
 
   <div class="wrapper">
-    <%# --- SIDEBAR DO ALUNO ATUALIZADA --- %>
+    <%# --- SIDEBAR DO ALUNO --- %>
     <aside id="sidebar">
       <div class="d-flex justify-content-between align-items-center p-4">
         <div class="sidebar-logo">
@@ -175,7 +176,6 @@
         </li>
 
         <li class="sidebar-item">
-          <%# O segredo é o prefixo 'student_portal_' antes de 'activities_path' %>
           <%= link_to student_portal_activities_path, class: "sidebar-link #{'active' if controller_name == 'activities'}" do %>
             <i class="bx bx-task"></i>
             <span>Minhas Atividades</span>
@@ -198,14 +198,15 @@
       </ul>
 
       <div class="sidebar-footer">
-        <%= link_to destroy_student_user_session_path, data: { turbo_method: :delete }, class: "sidebar-link text-danger border-0 bg-transparent w-100" do %>
+        <% logout_footer_path = student_user_signed_in? ? destroy_student_user_session_path : destroy_professor_session_path %>
+        <%= link_to logout_footer_path, data: { turbo_method: :delete }, class: "sidebar-link text-danger border-0 bg-transparent w-100" do %>
           <i class="bx bx-log-out"></i>
           <span>Sair do Portal</span>
         <% end %>
       </div>
     </aside>
 
-    <%# --- CONTEÚDO PRINCIPAL ATUALIZADO --- %>
+    <%# --- CONTEÚDO PRINCIPAL --- %>
     <div class="main">
       <nav class="navbar navbar-expand px-4 py-3 navbar-neon shadow-sm">
         <div class="d-flex align-items-center">
@@ -218,7 +219,15 @@
               <a href="#" data-bs-toggle="dropdown" class="nav-icon pe-md-0 d-flex align-items-center text-decoration-none">
                 <div class="nav-user-box d-flex align-items-center">
                   <div class="text-end me-3 d-none d-md-block">
-                    <span class="d-block text-white fw-bold" style="line-height: 1; font-size: 0.85rem;"><%= current_student_user.student&.name&.split(' ')&.first %></span>
+                    <span class="d-block text-white fw-bold" style="line-height: 1; font-size: 0.85rem;">
+                      <% if student_user_signed_in? %>
+                        <%= current_student_user.student&.name&.split(' ')&.first %>
+                      <% elsif professor_signed_in? %>
+                        <%= current_professor.email.split('@').first.upcase %> (Modo Teste)
+                      <% else %>
+                        Visitante
+                      <% end %>
+                    </span>
                     <small class="text-cyan-neon" style="font-size: 0.6rem; text-transform: uppercase; font-weight: 800;">Aluno</small>
                   </div>
                   <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background: var(--neon-cyan); color: #000;">
@@ -228,11 +237,17 @@
               </a>
               <div class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow mt-3 bg-dark">
                 <div class="dropdown-header text-center text-white-50 small">
-                  <%= current_student_user.email %>
+                  <% if student_user_signed_in? %>
+                    <%= current_student_user.email %>
+                  <% elsif professor_signed_in? %>
+                    <%= current_professor.email %> (DOCENTE)
+                  <% else %>
+                    visitante@maestro.com
+                  <% end %>
                 </div>
-                <div class="dropdown-divider border-secondary"></div>
-                <%= link_to destroy_student_user_session_path, data: { turbo_method: :delete }, class: "dropdown-item text-danger d-flex align-items-center" do %>
-                  <i class="bx bx-log-out-circle me-2"></i><span>Sair</span>
+                <% logout_dropdown_path = student_user_signed_in? ? destroy_student_user_session_path : destroy_professor_session_path %>
+                <%= link_to logout_dropdown_path, data: { turbo_method: :delete }, class: "dropdown-item text-danger d-flex align-items-center" do %>
+                  <i class="bx bx-log-out-circle me-2"></i><span>Sair do Painel</span>
                 <% end %>
               </div>
             </li>
@@ -259,7 +274,6 @@
       if (btn && sidebar) {
         btn.addEventListener("click", function(e) {
           e.preventDefault();
-          // No mobile usa 'expand', no desktop usa 'collapsed'
           if (window.innerWidth > 768) {
             sidebar.classList.toggle("collapsed");
           } else {

@@ -14,6 +14,7 @@ Rails.application.routes.draw do
     resources :activities, only: [:index, :show]
     resources :attendances, only: [:index]
     resources :grades, only: [:index]
+    resources :students, only: [:index]
   end
 
   # 4. Dashboard e Planejamento Geral (Professor/Admin)
@@ -120,6 +121,9 @@ Rails.application.routes.draw do
   # 12. Funções Auxiliares e AJAX
   post 'update_student_points', to: 'student_points#update_score'
   post 'toggle_view_mode', to: 'professors#toggle_view_mode'
+
+  # --- NOVA ROTA ISOLADA PARA O PORTAL DO ALUNO ---
+  get 'busca_alunos_portal', to: 'students#busca_portal', defaults: { format: 'json' }
 
   get 'resultados', to: 'reports#results', as: :results_report
   get 'export_recuperacao/:classroom_id', to: 'reports#export_recuperacao', as: :export_recuperacao

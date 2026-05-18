@@ -1,16 +1,10 @@
 module StudentPortal
   class DashboardsController < ApplicationController
     # --- AJUSTE DE SEGURANÇA MAESTRO ---
-    # 1. Pulamos a exigência global de professor para permitir a entrada do Aluno
-    skip_before_action :authenticate_professor!
-    
-    # 2. Criamos uma trava flexível: Exige login de Aluno OU de Professor
+    skip_before_action :authenticate_professor!, raise: false
     before_action :autenticar_acesso_portal
 
     def index
-      # --- IDENTIFICAÇÃO DO ALUNO (Lógica Inteligente) ---
-      # Se houver um aluno logado, usamos o perfil dele.
-      # Se for um professor logado (você testando), usamos o ID do parâmetro ou o primeiro do banco.
       if student_user_signed_in?
         @student = current_student_user.student
       elsif professor_signed_in?
@@ -18,7 +12,6 @@ module StudentPortal
       end
 
       if @student.nil?
-        # Redireciona conforme o tipo de usuário logado
         path = professor_signed_in? ? root_path : new_student_user_session_path
         redirect_to path, alert: "Perfil de aluno não localizado no sistema." and return
       end
@@ -74,15 +67,16 @@ module StudentPortal
         { nome: atv.name.truncate(15), data: atv.date.strftime("%d/%m"), nota: reg&.points, fez: reg&.points.present? }
       end
 
-      # --- MÉDIAS E RANKING ---
-      @media_aluno = registros_atividades.where.not(points: nil).average(:points).to_f.round(1)
+      # --- MÉDIAS E RANKING (Sincronizado com a tabela student_points) ---
+      # CORRIGIDO: Alterado de 'Atividade' para 'Activity' para refletir o nome real do modelo no sistema
+      relevant_activity_ids = Activity.where(id: atividades_ids).where(date: @start_date..@end_date).pluck(:id)
+      @media_aluno = @student.calcular_nota_com_pesos(relevant_activity_ids)
       @ranking_turma = @classroom.students.order(total_xp: :desc).limit(3)
     end
 
     private
 
     def autenticar_acesso_portal
-      # Se não houver nem Aluno nem Professor logado, manda para o login de Aluno
       unless student_user_signed_in? || professor_signed_in?
         redirect_to new_student_user_session_path, alert: "Você precisa entrar no sistema para acessar o portal."
       end
@@ -96,8 +90,9 @@ module StudentPortal
         when 'weekly'  then @start_date, @end_date = Date.today.beginning_of_week, Date.today.end_of_week
         when 'monthly' then @start_date, @end_date = Date.today.beginning_of_month, Date.today.end_of_month
         when '1b', '2b', '3b', '4b'
-          term = Term.find_by("name LIKE ?", "#{ @period_filter[0] }º%")
-          @start_date, @end_date = term ? [term.start_date, term.end_date] : [Date.today.beginning_of_year, Date.today]
+          # CORRIGIDO: Aponta para a tabela Bimester real do seu banco
+          bimestre = Bimester.find_by("LOWER(name) LIKE ?", "%#{ @period_filter[0] }º%")
+          @start_date, @end_date = bimestre ? [bimestre.start_date, bimestre.end_date] : [Date.today.beginning_of_year, Date.today]
         else
           @start_date, @end_date = Date.today.beginning_of_year, Date.today
         end

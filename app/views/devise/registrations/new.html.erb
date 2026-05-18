@@ -1,104 +1,107 @@
 <div class="auth-container d-flex align-items-center justify-content-center" style="min-height: 100vh; background: #0b0b14; position: relative; overflow: hidden;">
-  <%# Efeito de brilho de fundo para profundidade %>
-  <div class="glow-bg" style="position: absolute; width: 400px; height: 400px; background: rgba(188, 19, 254, 0.1); filter: blur(150px); border-radius: 50%; top: 10%; left: 10%;"></div>
-  <div class="glow-bg" style="position: absolute; width: 400px; height: 400px; background: rgba(0, 212, 255, 0.05); filter: blur(150px); border-radius: 50%; bottom: 10%; right: 10%;"></div>
+  <div class="glow-bg" style="position: absolute; width: 400px; height: 400px; background: rgba(188, 19, 254, 0.08); filter: blur(150px); border-radius: 50%; top: 10%; left: 10%;"></div>
+  <div class="glow-bg" style="position: absolute; width: 400px; height: 400px; background: rgba(0, 212, 255, 0.04); filter: blur(150px); border-radius: 50%; bottom: 10%; right: 10%;"></div>
 
   <div class="container position-relative" style="z-index: 2;">
     <div class="row justify-content-center">
       <div class="col-12 col-md-6 col-lg-5">
         
         <% if resource_name == :professor %>
-          <%# --- CARD MAESTRO DARK NEON: PROFESSOR --- %>
-          <div class="card-maestro-neon p-4 p-md-5">
-            <div class="text-center mb-5">
+          <%# ================================================================= %>
+          <%# --- CARD MAESTRO DOCENTE (ESTRUTURA COMPLETA ROXA) --- %>
+          <%# ================================================================= %>
+          <div class="card-maestro-neon-professor p-4 p-md-5">
+            <div class="text-center mb-4">
               <div class="brand-logo mb-3">
-                <i class="bx bxs-institution text-purple-neon" style="font-size: 3.5rem; filter: drop-shadow(0 0 12px #bc13fe);"></i>
+                <i class="bx bxs-home-alt-2 text-purple-neon-prof" style="font-size: 3.5rem; filter: drop-shadow(0 0 12px #bc13fe);"></i>
               </div>
-              <h2 class="fw-bold text-white tracking-wider">NOVO DOCENTE</h2>
-              <div class="neon-line-purple mx-auto"></div>
-              <p class="text-white-50 mt-3">Solicite seu acesso ao ecossistema Maestro</p>
+              <h2 class="fw-bold text-white tracking-wider title-prof-neon">NOVO DOCENTE</h2>
+              <div class="neon-line-purple mx-auto mb-3"></div>
+              <p class="text-white-50 small mt-2">Solicite seu acesso ao ecossistema Maestro</p>
             </div>
 
             <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
               <%= render "devise/shared/error_messages", resource: resource %>
 
-              <div class="mb-4">
-                <label class="label-neon-small mb-2">E-MAIL INSTITUCIONAL</label>
-                <%= f.email_field :email, autofocus: true, class: "input-maestro-neon", placeholder: "professor@escola.com" %>
+              <div class="mb-3">
+                <label class="label-neon-small-prof mb-2">E-MAIL INSTITUCIONAL</label>
+                <%= f.email_field :email, autofocus: true, class: "input-maestro-neon-prof", placeholder: "professor@escola.com" %>
               </div>
 
-              <div class="row g-3 mb-5">
+              <div class="row g-3 mb-4">
                 <div class="col-md-6">
-                  <label class="label-neon-small mb-2">SENHA</label>
-                  <%= f.password_field :password, class: "input-maestro-neon", placeholder: "Mín. 6 dígitos" %>
+                  <label class="label-neon-small-prof mb-2">SENHA</label>
+                  <%= f.password_field :password, class: "input-maestro-neon-prof", placeholder: "Mín. 6 dígitos" %>
                 </div>
                 <div class="col-md-6">
-                  <label class="label-neon-small mb-2">CONFIRMAR</label>
-                  <%= f.password_field :password_confirmation, class: "input-maestro-neon", placeholder: "Repita a senha" %>
+                  <label class="label-neon-small-prof mb-2">CONFIRMAR</label>
+                  <%= f.password_field :password_confirmation, class: "input-maestro-neon-prof", placeholder: "Repita a senha" %>
                 </div>
               </div>
 
               <div class="d-grid gap-3">
-                <%= f.submit "CRIAR CONTA DOCENTE", class: "btn-maestro-purple py-3 fw-bold" %>
-                <%= link_to "VOLTAR AO LOGIN", new_session_path(resource_name), class: "btn-maestro-outline py-2" %>
+                <%= f.submit "CRIAR CONTA DOCENTE", class: "btn-maestro-purple-prof py-3 fw-bold" %>
+                <%= link_to "VOLTAR AO LOGIN", new_session_path(resource_name), class: "btn-maestro-outline-prof py-2 fw-bold text-center" %>
               </div>
             <% end %>
           </div>
 
         <% elsif resource_name == :student_user %>
-          <%# --- CARD MAESTRO DARK NEON: ALUNO --- %>
-          <div class="card-maestro-neon-cyan p-4 p-md-5">
-            <div class="text-center mb-5">
+          <%# ================================================================= %>
+          <%# --- CARD MAESTRO ALUNO (ESTRUTURA COMPLETA CIANO) --- %>
+          <%# ================================================================= %>
+          <div class="card-maestro-neon-student p-4 p-md-5">
+            <div class="text-center mb-4">
               <div class="brand-logo mb-3">
-                <i class="bx bxs-user-badge text-cyan-neon" style="font-size: 3.5rem; filter: drop-shadow(0 0 12px #00d4ff);"></i>
+                <i class="bx bxs-user-badge text-cyan-neon-student" style="font-size: 3.5rem; filter: drop-shadow(0 0 12px #00d4ff);"></i>
               </div>
-              <h2 class="fw-bold text-white tracking-wider">ATIVAR MEU ACESSO</h2>
-              <div class="neon-line-cyan mx-auto"></div>
-              <p class="text-white-50 mt-3">Localize seu perfil na lista para começar</p>
+              <h2 class="fw-bold text-white tracking-wider title-student-neon">ATIVAR MEU ACESSO</h2>
+              <div class="neon-line-cyan mx-auto mb-3"></div>
+              <p class="text-white-50 small mt-2">Localize seu perfil na lista para começar</p>
             </div>
 
             <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
               <%= render "devise/shared/error_messages", resource: resource %>
 
-              <%# 1. SELEÇÃO DA TURMA (Composição de Nomes Maestro) %>
+              <%# 1. SELEÇÃO DA TURMA %>
               <div class="mb-3">
-                <label class="label-neon-small-cyan mb-2">SUA TURMA</label>
+                <label class="label-neon-small-student mb-2">SUA TURMA</label>
                 <%= select_tag :classroom_id, 
-                    options_for_select(Classroom.all.map { |c| [c.respond_to?(:full_name) ? c.full_name : (c.try(:name) || c.try(:nome) || "Turma ##{c.id}"), c.id] }), 
-                    { prompt: "Selecione sua Turma", class: "input-maestro-neon-cyan select-custom-neon", id: "select-classroom" } %>
+                    options_for_select(Classroom.all.map { |c| [c.full_name_info, c.id] }), 
+                    { prompt: "Selecione sua Turma", class: "input-maestro-neon-student select-custom-neon", id: "select-classroom-portal" } %>
               </div>
 
               <%# 2. SELEÇÃO DO NOME %>
               <div class="mb-4">
-                <label class="label-neon-small-cyan mb-2">SEU NOME NA LISTA</label>
+                <label class="label-neon-small-student mb-2">SEU NOME NA LISTA</label>
                 <%= f.hidden_field :student_id, id: "student-id-hidden" %>
-                <select id="select-student" class="input-maestro-neon-cyan select-custom-neon" disabled>
+                <select id="select-student-portal" class="input-maestro-neon-student select-custom-neon" disabled>
                   <option value="" class="opt-black">Selecione a turma primeiro...</option>
                 </select>
               </div>
 
-              <div class="neon-line-cyan w-100 mb-4 opacity-25"></div>
+              <div class="neon-line-cyan w-100 mb-4 opacity-25" style="height: 1px;"></div>
 
               <%# 3. CRIAÇÃO DE LOGIN %>
               <div class="mb-3">
-                <label class="label-neon-small-cyan mb-2">SEU MELHOR E-MAIL</label>
-                <%= f.email_field :email, class: "input-maestro-neon-cyan", placeholder: "aluno@escola.com" %>
+                <label class="label-neon-small-student mb-2">SEU MELHOR E-MAIL</label>
+                <%= f.email_field :email, class: "input-maestro-neon-student", placeholder: "aluno@escola.com" %>
               </div>
 
               <div class="row g-3 mb-4">
                 <div class="col-md-6">
-                  <label class="label-neon-small-cyan mb-2">SENHA</label>
-                  <%= f.password_field :password, class: "input-maestro-neon-cyan", placeholder: "Senha" %>
+                  <label class="label-neon-small-student mb-2">SENHA</label>
+                  <%= f.password_field :password, class: "input-maestro-neon-student", placeholder: "Senha" %>
                 </div>
                 <div class="col-md-6">
-                  <label class="label-neon-small-cyan mb-2">CONFIRMAR</label>
-                  <%= f.password_field :password_confirmation, class: "input-maestro-neon-cyan", placeholder: "Confirmar" %>
+                  <label class="label-neon-small-student mb-2">CONFIRMAR</label>
+                  <%= f.password_field :password_confirmation, class: "input-maestro-neon-student", placeholder: "Confirmar" %>
                 </div>
               </div>
 
               <div class="d-grid gap-3">
-                <%= f.submit "ATIVAR MEU ACESSO", class: "btn-maestro-cyan py-3 fw-bold" %>
-                <%= link_to "JÁ TENHO CONTA (LOGIN)", new_session_path(resource_name), class: "btn-maestro-outline-cyan py-2" %>
+                <%= f.submit "ATIVAR MEU ACESSO", class: "btn-maestro-cyan-student py-3 fw-bold" %>
+                <%= link_to "JÁ TENHO CONTA (LOGIN)", new_session_path(resource_name), class: "btn-maestro-outline-student py-2 fw-bold text-center" %>
               </div>
             <% end %>
           </div>
@@ -110,115 +113,185 @@
 </div>
 
 <style>
-  /* --- BASE MAESTRO DARK NEON --- */
-  :root {
-    --purple-neon: #bc13fe;
-    --cyan-neon: #00d4ff;
-    --dark-bg: #141421;
-  }
+  /* --- CONFIGURAÇÕES DE FONTES E PROSE --- */
+  .tracking-wider { letter-spacing: 1.5px; }
+  .title-prof-neon, .title-student-neon { font-size: 1.75rem; letter-spacing: 2px; }
 
-  .tracking-wider { letter-spacing: 2px; }
-
-  .card-maestro-neon {
-    background: rgba(20, 20, 33, 0.8);
-    border: 1px solid rgba(188, 19, 254, 0.3);
-    border-radius: 24px;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(188, 19, 254, 0.05);
-    backdrop-filter: blur(10px);
+  /* ================================================================= */
+  <%# --- ESTILIZAÇÃO DO MODELO ROXO (PROFESSOR) --- %>
+  /* ================================================================= */
+  .card-maestro-neon-professor { 
+    background: #141421; 
+    border: 1px solid #bc13fe44; 
+    border-radius: 20px; 
+    box-shadow: 0 0 25px rgba(188, 19, 254, 0.15); 
   }
-
-  .card-maestro-neon-cyan {
-    background: rgba(20, 20, 33, 0.8);
-    border: 1px solid rgba(0, 212, 255, 0.3);
-    border-radius: 24px;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 212, 255, 0.05);
-    backdrop-filter: blur(10px);
-  }
-
-  .input-maestro-neon, .input-maestro-neon-cyan {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 14px;
-    color: white;
-    transition: 0.3s;
-  }
-
-  /* Ajuste de legibilidade para Selects no Aluno */
-  .select-custom-neon option {
-    background-color: var(--cyan-neon) !important;
-    color: #000 !important;
-    font-weight: bold;
-  }
+  .text-purple-neon-prof { color: #bc13fe; }
+  .neon-line-purple { width: 50px; height: 3px; background: #bc13fe; box-shadow: 0 0 8px #bc13fe; border-radius: 10px; }
+  .label-neon-small-prof { font-size: 0.7rem; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; }
   
-  .opt-black { color: #000 !important; }
-
-  .input-maestro-neon:focus {
-    outline: none;
-    border-color: var(--purple-neon);
-    box-shadow: 0 0 15px rgba(188, 19, 254, 0.3);
-    background: rgba(188, 19, 254, 0.05);
+  .input-maestro-neon-prof { 
+    width: 100%; 
+    background: #1b1b2b; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    border-radius: 12px; 
+    padding: 14px; 
+    color: white; 
+    transition: all 0.3s ease;
   }
-
-  .input-maestro-neon-cyan:focus {
-    outline: none;
-    border-color: var(--cyan-neon);
-    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-    background: rgba(0, 212, 255, 0.05);
+  .input-maestro-neon-prof:focus { 
+    outline: none; 
+    border-color: #bc13fe; 
+    box-shadow: 0 0 12px rgba(188, 19, 254, 0.4); 
+    background: #1b1b2b;
   }
+  .btn-maestro-purple-prof { 
+    background: #bc13fe; 
+    color: #ffffff; 
+    border: none; 
+    border-radius: 12px; 
+    box-shadow: 0 0 15px rgba(188, 19, 254, 0.4);
+    transition: all 0.3s ease; 
+  }
+  .btn-maestro-purple-prof:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 0 25px rgba(188, 19, 254, 0.6); }
+  .btn-maestro-outline-prof { 
+    background: transparent; 
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    color: #ffffff; 
+    border-radius: 12px; 
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+  .btn-maestro-outline-prof:hover { background: rgba(255, 255, 255, 0.05); color: #ffffff; }
 
-  .btn-maestro-purple { background: var(--purple-neon); color: white; border: none; border-radius: 12px; box-shadow: 0 0 20px rgba(188, 19, 254, 0.4); transition: 0.4s; }
-  .btn-maestro-purple:hover { filter: brightness(1.2); transform: translateY(-3px); box-shadow: 0 0 30px rgba(188, 19, 254, 0.6); }
+  /* ================================================================= */
+  <%# --- ESTILIZAÇÃO DO MODELO CIANO (ALUNO) --- %>
+  /* ================================================================= */
+  .card-maestro-neon-student { 
+    background: #141421; 
+    border: 1px solid rgba(0, 212, 255, 0.15); 
+    border-radius: 20px; 
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.05); 
+  }
+  .text-cyan-neon-student { color: #00d4ff; }
+  .neon-line-cyan { width: 50px; height: 3px; background: #00d4ff; box-shadow: 0 0 8px #00d4ff; border-radius: 10px; }
+  .label-neon-small-student { font-size: 0.7rem; font-weight: 800; color: #00d4ff; letter-spacing: 0.5px; }
+  
+  .input-maestro-neon-student { 
+    width: 100%; 
+    background: #1b1b2b; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    border-radius: 12px; 
+    padding: 14px; 
+    color: white; 
+    transition: all 0.3s ease;
+  }
+  .input-maestro-neon-student:focus { 
+    outline: none; 
+    border-color: #00d4ff; 
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.3); 
+    background: #1b1b2b;
+  }
+  .btn-maestro-cyan-student { 
+    background: #00d4ff; 
+    color: #0b0b14; 
+    border: none; 
+    border-radius: 12px; 
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+    transition: all 0.3s ease; 
+  }
+  .btn-maestro-cyan-student:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 0 25px rgba(0, 212, 255, 0.4); }
+  .btn-maestro-outline-student { 
+    background: transparent; 
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    color: #ffffff; 
+    border-radius: 12px; 
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+  .btn-maestro-outline-student:hover { background: rgba(255, 255, 255, 0.05); color: #ffffff; }
 
-  .btn-maestro-cyan { background: var(--cyan-neon); color: #0b0b14; border: none; border-radius: 12px; box-shadow: 0 0 20px rgba(0, 212, 255, 0.4); transition: 0.4s; }
-  .btn-maestro-cyan:hover { filter: brightness(1.1); transform: translateY(-3px); box-shadow: 0 0 30px rgba(0, 212, 255, 0.6); }
-
-  .btn-maestro-outline, .btn-maestro-outline-cyan { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: white; border-radius: 12px; text-decoration: none; text-align: center; font-size: 0.8rem; transition: 0.3s; }
-  .btn-maestro-outline:hover, .btn-maestro-outline-cyan:hover { background: rgba(255, 255, 255, 0.05); color: white; }
-
-  .neon-line-purple { width: 60px; height: 3px; background: var(--purple-neon); box-shadow: 0 0 10px var(--purple-neon); border-radius: 10px; }
-  .neon-line-cyan { width: 60px; height: 3px; background: var(--cyan-neon); box-shadow: 0 0 10px var(--cyan-neon); border-radius: 10px; }
-
-  .label-neon-small { font-size: 0.7rem; font-weight: 700; color: var(--purple-neon); letter-spacing: 1px; }
-  .label-neon-small-cyan { font-size: 0.7rem; font-weight: 700; color: var(--cyan-neon); letter-spacing: 1px; }
+  /* Seletor Customizado Dropdown */
+  .select-custom-neon option { background-color: #141421 !important; color: #ffffff !important; }
+  .opt-black { color: #ffffff !important; background-color: #141421 !important; }
 </style>
 
 <script>
-document.addEventListener('turbo:load', function() {
-  const classroomSelect = document.getElementById('select-classroom');
-  const studentSelect = document.getElementById('select-student');
-  const hiddenStudentField = document.getElementById('student-id-hidden');
+function inicializarBuscaAlunosPortal() {
+  const classroomSelect = document.getElementById('select-classroom-portal');
+  const studentSelect = document.getElementById('select-student-portal');
+  const hiddenField = document.getElementById('student-id-hidden');
 
-  if (classroomSelect) {
-    classroomSelect.addEventListener('change', function() {
-      const classroomId = this.value;
-      if (!classroomId) {
-        studentSelect.disabled = true;
-        studentSelect.innerHTML = '<option value="" class="opt-black">Selecione a turma primeiro...</option>';
-        return;
+  if (!classroomSelect || !studentSelect) return;
+
+  // Limpa eventos anteriores para evitar duplicações do Turbo
+  classroomSelect.onchange = null;
+
+  classroomSelect.onchange = function() {
+    const cid = this.value;
+    
+    studentSelect.disabled = true;
+    studentSelect.innerHTML = '<option value="" class="opt-black">Carregando alunos...</option>';
+
+    if (!cid) {
+      studentSelect.innerHTML = '<option value="" class="opt-black">Selecione a turma primeiro...</option>';
+      return;
+    }
+
+    // Aponta para a nova rota isolada com bypass de cache completo
+    const url = `/busca_alunos_portal?classroom_id=${cid}&_t=${new Date().getTime()}`;
+
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Erro na resposta do servidor');
+      return response.json();
+    })
+    .then(data => {
+      studentSelect.innerHTML = '';
+      
+      if (!data || data.length === 0) {
+        studentSelect.innerHTML = '<option value="" class="opt-black">Nenhum aluno disponível (ou já cadastrados)</option>';
+        studentSelect.disabled = true;
+      } else {
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.textContent = "Selecione seu nome na lista...";
+        defaultOpt.className = "opt-black";
+        studentSelect.appendChild(defaultOpt);
 
-      fetch(`/students.json?classroom_id=${classroomId}`)
-        .then(response => response.json())
-        .then(data => {
-          studentSelect.disabled = false;
-          studentSelect.innerHTML = '<option value="" class="opt-black">Selecione seu nome...</option>';
-          data.forEach(student => {
-            if (!student.has_user) {
-              const option = document.createElement('option');
-              option.value = student.id;
-              option.textContent = student.name;
-              option.className = 'opt-black';
-              studentSelect.appendChild(option);
-            }
-          });
+        data.forEach(student => {
+          const opt = document.createElement('option');
+          opt.value = student.id;
+          opt.textContent = student.name.toUpperCase();
+          opt.className = 'opt-black';
+          studentSelect.appendChild(opt);
         });
+        studentSelect.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('Erro na requisição:', error);
+      studentSelect.innerHTML = '<option value="" class="opt-black">Erro ao carregar lista de alunos</option>';
     });
+  };
 
-    studentSelect.addEventListener('change', function() {
-      hiddenStudentField.value = this.value;
-    });
-  }
-});
+  studentSelect.onchange = function() {
+    if (hiddenField) {
+      hiddenField.value = this.value;
+    }
+  };
+}
+
+// Inicialização segura para Turbo/Turbolinks e carregamento nativo
+document.addEventListener('turbo:load', inicializarBuscaAlunosPortal);
+document.addEventListener('DOMContentLoaded', inicializarBuscaAlunosPortal);
+if (document.readyState !== 'loading') { inicializarBuscaAlunosPortal(); }
 </script>

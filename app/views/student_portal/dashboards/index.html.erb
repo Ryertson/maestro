@@ -10,7 +10,6 @@
 
 <div class="container-fluid py-4 student-portal-theme">
   
-  <!-- QUADRO DE BOAS VINDAS -->
   <div class="welcome-card-neon mb-4 p-4 d-flex align-items-center">
     <div class="welcome-icon me-4">
       <i class="bx bxs-rocket text-cyan-neon" style="font-size: 3rem; filter: drop-shadow(0 0 10px #00d4ff);"></i>
@@ -23,9 +22,8 @@
     </div>
   </div>
 
-  <!-- FILTROS E PERÍODO DE ANÁLISE -->
   <div class="card-maestro-neon-cyan p-4 mb-4">
-    <div class="row align-items-center">
+    <div class="row align-items-center mb-3">
       <div class="col-lg-4">
         <h4 class="text-white fw-bold mb-0">
           <i class="bx bxs-calendar-check text-cyan-neon me-2"></i>Período de Análise
@@ -35,13 +33,16 @@
       
       <div class="col-lg-8">
         <%= form_with url: student_portal_root_path, method: :get, local: true, class: "row g-2 align-items-center justify-content-end" do |f| %>
+          <%# Mantém o filtro de disciplina ativo ao alterar as datas manuais %>
+          <%= f.hidden_field :subject_id, value: params[:subject_id] %>
+          
           <div class="col-auto btn-group-neon">
-            <%= link_to "Semana", { period: 'weekly' }, class: "btn-neon-filter #{'active' if @period_filter == 'weekly'}" %>
-            <%= link_to "Mês", { period: 'monthly' }, class: "btn-neon-filter #{'active' if @period_filter == 'monthly'}" %>
-            <%= link_to "1ºB", { period: '1b' }, class: "btn-neon-filter #{'active' if @period_filter == '1b'}" %>
-            <%= link_to "2ºB", { period: '2b' }, class: "btn-neon-filter #{'active' if @period_filter == '2b'}" %>
-            <%= link_to "3ºB", { period: '3b' }, class: "btn-neon-filter #{'active' if @period_filter == '3b'}" %>
-            <%= link_to "4ºB", { period: '4b' }, class: "btn-neon-filter #{'active' if @period_filter == '4b'}" %>
+            <%= link_to "Semana", student_portal_root_path(period: 'weekly', subject_id: params[:subject_id]), class: "btn-neon-filter #{'active' if @period_filter == 'weekly'}" %>
+            <%= link_to "Mês", student_portal_root_path(period: 'monthly', subject_id: params[:subject_id]), class: "btn-neon-filter #{'active' if @period_filter == 'monthly'}" %>
+            <%= link_to "1ºB", student_portal_root_path(period: '1b', subject_id: params[:subject_id]), class: "btn-neon-filter #{'active' if @period_filter == '1b'}" %>
+            <%= link_to "2ºB", student_portal_root_path(period: '2b', subject_id: params[:subject_id]), class: "btn-neon-filter #{'active' if @period_filter == '2b'}" %>
+            <%= link_to "3ºB", student_portal_root_path(period: '3b', subject_id: params[:subject_id]), class: "btn-neon-filter #{'active' if @period_filter == '3b'}" %>
+            <%= link_to "4ºB", student_portal_root_path(period: '4b', subject_id: params[:subject_id]), class: "btn-neon-filter #{'active' if @period_filter == '4b'}" %>
           </div>
           
           <div class="col-auto d-flex align-items-center gap-2">
@@ -59,9 +60,24 @@
         <% end %>
       </div>
     </div>
+
+    <%# --- AS PILULAS DE SELEÇÃO DE COMPONENTES CURRICULARES --- %>
+    <div class="border-top border-secondary border-opacity-20 pt-3">
+      <small class="text-white-50 d-block mb-2 text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Filtrar Componente Curricular</small>
+      <div class="d-flex flex-wrap gap-2">
+        <%= link_to "Geral (Ver Tudo)", student_portal_root_path(period: @period_filter, subject_id: 'geral'), 
+                    class: "badge-student-subject #{params[:subject_id].blank? || params[:subject_id] == 'geral' ? 'active' : ''}" %>
+        <% if @subjects.any? %>
+          <% @subjects.each do |sub| %>
+            <% is_active = params[:subject_id].to_i == sub.id %>
+            <%= link_to sub.name, student_portal_root_path(period: @period_filter, subject_id: sub.id), 
+                        class: "badge-student-subject #{'active' if is_active}" %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
   </div>
 
-  <!-- CARDS DE FREQUÊNCIA -->
   <div class="row mb-4">
     <% [
       { label: 'SEMANAL', val: @freq_semanal },
@@ -84,7 +100,6 @@
     <% end %>
   </div>
 
-  <!-- QUANTITATIVO COM CORES NEON -->
   <div class="row mb-4">
     <% [
       { label: 'TOTAL AULAS', val: @total_aulas_dadas, icon: 'bx-book-open', color: 'cyan' },
@@ -105,7 +120,6 @@
     <% end %>
   </div>
 
-  <!-- QUADRO: NOTIFICAÇÕES DE ATIVIDADES (CABECALHO E FONTES BRANCAS) -->
   <div class="card-maestro-neon-cyan p-4 mb-4" style="background: rgba(11, 11, 20, 0.7) !important;">
     <h5 class="text-white fw-black mb-4 letter-spacing-1">
       <i class="bx bxs-notification text-cyan-neon me-2"></i>NOTIFICAÇÕES DE ATIVIDADES
@@ -157,7 +171,6 @@
     </div>
   </div>
 
-  <!-- LINHA DO TEMPO E STATUS DE ENTREGA -->
   <div class="row">
     <div class="col-lg-8">
       <div class="card-maestro-neon-cyan p-4 h-100">
@@ -241,6 +254,31 @@
 
   .fw-black { font-weight: 900 !important; }
   .letter-spacing-1 { letter-spacing: 1px; }
+
+  /* ESTILOS CUSTOMIZADOS PARA AS PÍLULAS DE COMPONENTES DO PORTAL */
+  .badge-student-subject {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    color: #fff;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .badge-student-subject:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: var(--cyan-neon);
+  }
+  .badge-student-subject.active {
+    background: var(--cyan-neon);
+    border-color: var(--cyan-neon);
+    color: #0b0b14;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+  }
 
   .text-cyan-neon-glow { color: var(--cyan-neon) !important; filter: drop-shadow(0 0 8px var(--cyan-neon)); text-shadow: 0 0 10px var(--cyan-neon); }
   .text-green-neon-glow { color: var(--green-neon) !important; filter: drop-shadow(0 0 8px var(--green-neon)); text-shadow: 0 0 10px var(--green-neon); }

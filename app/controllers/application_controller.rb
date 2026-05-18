@@ -6,6 +6,8 @@ class ApplicationController < ActionController::Base
   helper_method :current_teacher_profile
   helper_method :current_view_mode # Registrado para ser usado nas Views também
 
+  layout :layout_by_resource
+
   def current_teacher_profile
     return nil unless current_professor
     # Tenta encontrar o registro de professor na tabela 'teachers' 
@@ -37,18 +39,14 @@ class ApplicationController < ActionController::Base
     devise_parameter_sanitizer.permit(:account_update, keys: [:name, :student_id])
   end
 
-  # app/controllers/application_controller.rb
-
-  def after_sign_out_path_for(resource_or_scope)
-    if resource_or_scope == :student_user
-      # Se um aluno sair, vai para o login do Portal do Aluno (Ciano)
-      new_student_user_session_path
-    elsif resource_or_scope == :professor
-      # Se um professor sair, vai para o login do Professor (Roxo)
-      new_professor_session_path
-    else
-      # Caso padrão (segurança)
+  # --- INJEÇÃO DE LOGICA: Redirecionamento pós-login correto ---
+  def after_sign_in_path_for(resource)
+    if resource.is_a?(StudentUser)
+      student_portal_root_path
+    elsif resource.is_a?(Professor)
       root_path
+    else
+      super
     end
   end
 
@@ -60,6 +58,17 @@ class ApplicationController < ActionController::Base
       new_professor_session_path
     else
       root_path
+    end
+  end
+
+  private
+
+  # --- INJEÇÃO DE LOGICA: Garante o carregamento dos estilos CSS corretos para o login do aluno ---
+  def layout_by_resource
+    if devise_controller? && resource_name == :student_user
+      "student_portal"
+    else
+      "application"
     end
   end
 end
