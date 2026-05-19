@@ -77,7 +77,7 @@
                     <%= f.label :classroom_id, "Vincular à Turma (Curso/Série/Turma)", 
                           class: "form-label small fw-bold text-muted text-uppercase" %>
                     <%= f.collection_select :classroom_id, 
-                          Classroom.all.includes(:course, :grade, :section), :id, :full_name_info, 
+                          Classroom.all.includes(:course, :section), :id, :full_name_info, 
                           { prompt: "Selecione a Turma..." }, 
                           { class: "form-select shadow-sm", required: true } %>
                     <div class="form-text small">Ao alterar a turma, o curso e a série serão atualizados automaticamente na tabela.</div>

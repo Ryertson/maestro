@@ -99,7 +99,7 @@ class StudentsController < ApplicationController
     @classroom = @student.classroom
 
     # 1. Carrega todas as disciplinas da turma para listar as tags na View
-    @subjects = Subject.joins(:classroom_subjects).where(classroom_subjects: { classroom_id: @classroom.id }).distinct
+    @subjects = @classroom.subjects.distinct
   
     # 2. Captura os filtros selecionados pelo professor na tela
     @selected_subject_id = params[:subject_id].presence
@@ -123,7 +123,10 @@ class StudentsController < ApplicationController
                       end
 
     if meses_do_periodo.any?
-      atividades_filtradas_por_periodo = atividades_da_turma.where("EXTRACT(MONTH FROM date) IN (?)", meses_do_periodo)
+      atividades_filtradas_por_periodo = atividades_da_turma.joins(:lesson)
+                                                            .where(lessons: { classroom_id: @classroom.id })
+                                                            .where(date: Date.new(Date.today.year, 2, 1)..Date.new(Date.today.year, 4, 30))
+                                                            .order(date: :asc)
     else
       atividades_filtradas_por_periodo = atividades_da_turma
     end
