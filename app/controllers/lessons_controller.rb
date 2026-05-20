@@ -19,6 +19,14 @@ class LessonsController < ApplicationController
     @lessons = @lessons.where(classroom_id: params[:classroom_id]) if params[:classroom_id].present?
     @lessons = @lessons.where(subject_id: params[:subject_id]) if params[:subject_id].present?
     
+    # --- FILTRO POR PERÍODO / BIMESTRE ---
+    if params[:term_id].present?
+      term = Term.find_by(id: params[:term_id])
+      if term
+        @lessons = @lessons.where(date: term.start_date..term.end_date)
+      end
+    end
+
     if params[:search].present?
       @lessons = @lessons.where("topic_name LIKE ?", "%#{params[:search]}%")
     end
@@ -127,6 +135,14 @@ class LessonsController < ApplicationController
                     end
     @lessons = @base_lessons
     
+    # Mantém filtros aplicados em caso de recarga por falha de validação
+    @lessons = @lessons.where(classroom_id: params[:classroom_id]) if params[:classroom_id].present?
+    @lessons = @lessons.where(subject_id: params[:subject_id]) if params[:subject_id].present?
+    if params[:term_id].present?
+      term = Term.find_by(id: params[:term_id])
+      @lessons = @lessons.where(date: term.start_date..term.end_date) if term
+    end
+    
     # --- ATUALIZAÇÃO 2: Trocado :grade por :level ---
     @lessons_list = @lessons.includes(:subject, classrooms: [:course, :level]).order(date: :desc)
     
@@ -143,14 +159,10 @@ class LessonsController < ApplicationController
 
   def can_manage_lesson?(lesson)
     return true if current_view_mode == :modo_admin
-    # Permite se for o criador da aula (teacher_id)
     return true if lesson.teacher_id == current_teacher_profile&.id
-    # Adicione aqui a lógica se o professor fez a chamada (exemplo: se você tiver uma relação de attendance)
-    # return true if lesson.attendances.where(teacher_id: current_teacher_profile&.id).exists?
-  
     false
   end
-  helper_method :can_manage_lesson? # Isso permite usar o método na View
+  helper_method :can_manage_lesson?
 
   def current_teacher_profile
     @current_teacher_profile ||= current_professor.teacher || Teacher.find_by(email: current_professor.email)
@@ -196,6 +208,16 @@ class LessonsController < ApplicationController
     @lessons_in_progress = scope.where(status: "preparando").count
     @lessons_not_started = scope.where(status: "não_iniciada").count
     @progress_percentage = @total_lessons > 0 ? ((@lessons_ready.to_f / @total_lessons) * 100).round : 0
+
+    # --- ESCOPO DE ATIVIDADES CONECTADO AO FILTRO DO DASHBOARD ---
+    # Captura apenas as atividades vinculadas às aulas que estão no filtro atual (Turma/Disciplina/Bimestre)
+    @filtered_activities = Activity.where(lesson_id: scope.pluck(:id))
+    
+    # Variáveis globais para alimentar o quadro de "Status de Entrega" com dados reais filtrados
+    @entregas_no_prazo = @filtered_activities.where(status: "entregue_no_prazo").count
+    @entregas_em_atraso = @filtered_activities.where(status: "entregue_com_atraso").count
+    @entregas_pendentes = @filtered_activities.where(status: "pendente").count
+    @entregas_corrigidas = @filtered_activities.where(status: "corrigida").count
   end
 
   def set_lesson

@@ -68,18 +68,21 @@
     </div>
   </div>
 
-  <%# --- Cards de Bimestre com Botão Alinhado --- %>
+  <%# --- Cards de Bimestre com Filtro Ativo --- %>
   <div class="row align-items-center g-3 mb-5">
     <% @terms.each_with_index do |term, index| %>
       <% glow_class = ["border-glow-purple", "border-glow-blue", "border-glow-green", "border-glow-orange"][index] %>
+      <% is_active = params[:term_id] == term.id.to_s %>
       <div class="col">
-        <div class="glass-card text-center p-3 h-100 <%= glow_class %>" style="border-top: 3px solid <%= term.color %> !important; transition: all 0.3s ease;">
-          <span class="d-block label-neon-small mb-1" style="color: <%= term.color %>; font-size: 0.6rem; letter-spacing: 1px;">
-            <%= term.name.upcase %>
-          </span>
-          <div class="h3 fw-bold mb-0 text-white"><%= term.work_days %></div>
-          <div class="text-white-50" style="font-size: 0.55rem; letter-spacing: 0.5px; text-transform: uppercase;">Dias Letivos</div>
-        </div>
+        <%= link_to lessons_path(classroom_id: params[:classroom_id], subject_id: params[:subject_id], term_id: (is_active ? nil : term.id)), class: "text-decoration-none" do %>
+          <div class="glass-card text-center p-3 h-100 <%= glow_class %>" style="border-top: 3px solid <%= term.color %> !important; background: <%= is_active ? 'rgba(255,255,255,0.1)' : 'transparent' %>; transition: all 0.3s ease;">
+            <span class="d-block label-neon-small mb-1" style="color: <%= term.color %>; font-size: 0.6rem; letter-spacing: 1px;">
+              <%= term.name.upcase %> <%= "✓" if is_active %>
+            </span>
+            <div class="h3 fw-bold mb-0 text-white"><%= term.work_days %></div>
+            <div class="text-white-50" style="font-size: 0.55rem; letter-spacing: 0.5px; text-transform: uppercase;">Dias Letivos</div>
+          </div>
+        <% end %>
       </div>
     <% end %>
 
@@ -388,7 +391,7 @@
     
     const hiddenDate = document.getElementById('main_act_date_hidden');
     const hiddenClassroom = document.getElementById('main_act_classroom_hidden');
-    const hiddenSubject = document.getElementById('main_subject_hidden'); // Corrigido de main_act_subject_hidden para main_act_subject_hidden caso seja esse o ID no form
+    const hiddenSubject = document.getElementById('main_act_subject_hidden'); // Corrigido de main_act_subject_hidden para main_act_subject_hidden caso seja esse o ID no form
 
     // Inicialização do Tom Select
     let tsInstance;
