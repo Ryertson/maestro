@@ -1,6 +1,6 @@
 class Lesson < ApplicationRecord
   # 1. ASSOCIAÇÕES
-  belongs_to :classroom
+  has_and_belongs_to_many :classrooms
   belongs_to :teacher, optional: true
   belongs_to :subject, optional: true
   

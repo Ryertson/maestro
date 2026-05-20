@@ -32,12 +32,17 @@
     <%= form.date_field :date, class: "form-control shadow-sm", id: "lesson_date_field" %>
   </div>
 
+  <%# --- MUDANÇA: Agora permite múltiplas turmas --- %>
   <div class="col-md-6">
-    <%= form.label :classroom_id, "Vincular à Turma", class: "form-label fw-semibold" %>
-    <%= form.collection_select :classroom_id, 
-          @available_classrooms, :id, :full_name_info, 
-          { prompt: "Escolha a Turma..." }, 
-          { class: "form-select shadow-sm", id: "select-classroom" } %>
+    <%= form.label :classroom_ids, "Vincular às Turmas", class: "form-label fw-semibold" %>
+    <div class="border rounded p-2 shadow-sm bg-white" style="max-height: 150px; overflow-y: auto;">
+      <%= form.collection_check_boxes :classroom_ids, @available_classrooms, :id, :full_name_info do |b| %>
+        <div class="form-check">
+          <%= b.check_box class: "form-check-input" %>
+          <%= b.label class: "form-check-label" %>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <div class="col-md-6">
@@ -67,7 +72,7 @@
     </div>
   </div>
 
-  <%# --- Seção Dinâmica da Atividade (ID CORRIGIDO PARA SINCRONIA COM O SCRIPT) --- %>
+  <%# --- Seção Dinâmica da Atividade --- %>
   <div id="section-atv-maestro" class="col-12 border rounded p-4 shadow-sm d-none" style="background-color: #f8f9fa; border-left: 5px solid #0d6efd !important;">
     <h6 class="mb-3 text-primary text-uppercase fw-bold" style="font-size: 0.8rem;">
       <i class="bi bi-pencil-square me-1"></i> Configuração da Atividade Obrigatória
@@ -96,7 +101,6 @@
         <div class="col-md-6">
           <%= a.label :due_date, "Data Limite de Entrega", class: "form-label fw-semibold text-danger" %>
           <%= a.date_field :due_date, class: "form-control border-danger shadow-sm", id: "activity_due_date_field" %>
-          <small class="text-muted">Essa data define a urgência no portal do aluno.</small>
         </div>
 
         <%= a.hidden_field :date, id: "activity_date_hidden" %>
@@ -117,19 +121,11 @@
 
 <script>
   function conectarBotaoAtividade() {
-    // 1. Buscamos os elementos pelos seletores exatos
     const switchAtv = document.querySelector('#check-has-activity');
     const quadroAtv = document.querySelector('#section-atv-maestro');
     
-    // Verificação de segurança
-    if (!switchAtv || !quadroAtv) {
-      console.warn("Maestro: Botão ou Quadro não encontrados. Verifique se o ID da div é 'section-atv-maestro'.");
-      return;
-    }
+    if (!switchAtv || !quadroAtv) return;
 
-    console.log("Maestro: Conexão estabelecida com sucesso!");
-
-    // Elementos extras para preenchimento automático
     const topicField = document.querySelector('#lesson_topic_field');
     const actNameField = document.querySelector('#activity_name_field');
 
@@ -137,8 +133,6 @@
       if (switchAtv.checked) {
         quadroAtv.classList.remove('d-none');
         quadroAtv.querySelectorAll('input, select').forEach(el => el.disabled = false);
-        
-        // Sugestão de nome se estiver vazio
         if (actNameField && actNameField.value === "" && topicField && topicField.value.trim() !== "") {
           actNameField.value = "Atv: " + topicField.value.trim();
         }
@@ -148,20 +142,12 @@
       }
     };
 
-    // Escuta a mudança do interruptor
     switchAtv.removeEventListener('change', atualizarVisibilidade);
     switchAtv.addEventListener('change', atualizarVisibilidade);
-    
-    // Executa imediatamente para checar o estado inicial
     atualizarVisibilidade();
   }
 
-  // Compatibilidade Turbo Drive e Navegação
   document.removeEventListener("turbo:load", conectarBotaoAtividade);
   document.addEventListener("turbo:load", conectarBotaoAtividade);
   document.addEventListener("DOMContentLoaded", conectarBotaoAtividade);
-  
-  if (document.readyState !== "loading") {
-    conectarBotaoAtividade();
-  }
 </script>

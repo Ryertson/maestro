@@ -33,9 +33,10 @@ class AttendancesController < ApplicationController
 
     if sucesso
       respond_to do |format|
-        # ATUALIZAÇÃO CRÍTICA: 
-        # Removido format.js para evitar que o navegador espere um script e receba HTML.
-        # O redirecionamento agora força o formato HTML e mantém os filtros ativos.
+        # ATUALIZAÇÃO: Adicionamos o turbo_stream para atualizar a UI sem recarregar
+        format.turbo_stream
+        
+        # Mantemos o HTML como fallback (caso o navegador não suporte Turbo)
         format.html do 
           redirect_to students_path(
             classroom_id: @classroom_id, 
@@ -44,7 +45,7 @@ class AttendancesController < ApplicationController
           ), notice: "Frequência atualizada com sucesso!"
         end
         
-        # Mantemos o JSON apenas como fallback técnico, mas o HTML tem prioridade
+        # Mantemos o JSON para usos futuros ou integrações
         format.json { render json: { status: 'success', attendance: @attendance } }
       end
     else

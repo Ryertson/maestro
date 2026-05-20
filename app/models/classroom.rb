@@ -8,7 +8,7 @@ class Classroom < ApplicationRecord
   # --- RELACIONAMENTOS DE DEPENDÊNCIA ---
   # Se a turma for excluída, apaga os alunos e as aulas (o que dispara a limpeza de notas e atividades)
   has_many :students, dependent: :destroy
-  has_many :lessons, dependent: :destroy
+  has_and_belongs_to_many :lessons, dependent: :destroy
   
   # Busca as atividades através das aulas
   has_many :activities, through: :lessons

@@ -185,7 +185,11 @@
                 </span>
               </td>
               <td class="text-white-50 small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
-              <td><span class="badge border border-secondary text-white-50"><%= lesson.classroom.full_name_info %></span></td>
+              <td>
+                <% lesson.classrooms.each do |c| %>
+                  <span class="badge border border-secondary text-white-50 d-block mb-1"><%= c.full_name_info %></span>
+                <% end %>
+              </td>
               <td>
                 <% if lesson.subject %>
                   <span class="text-purple-neon small fw-bold"><%= lesson.subject.name %></span>
@@ -216,7 +220,7 @@
         </div>
         <div class="col-md-2">
           <label class="label-neon-small mb-1">Turma</label>
-          <%= f.collection_select :classroom_id, @available_classrooms, :id, :full_name_info, { prompt: "Selecionar" }, { class: "form-select form-control-glass", id: "main_classroom_select" } %>
+          <%= f.collection_select :classroom_ids, @available_classrooms, :id, :full_name_info, {}, { class: "form-select form-control-glass", id: "select-turmas", multiple: true } %>
         </div>
         <div class="col-md-2">
           <label class="label-neon-small mb-1">Disciplina</label>
@@ -377,17 +381,34 @@
     const topicInput = document.getElementById('main_topic_field');
     const nameInput = document.getElementById('main_act_name');
     const dateInput = document.getElementById('main_date_field');
-    const classroomSelect = document.getElementById('main_classroom_select');
+    
+    // Atualizado para o ID 'select-turmas'
+    const classroomSelect = document.getElementById('select-turmas');
     const subjectSelect = document.getElementById('main_subject_select');
     
     const hiddenDate = document.getElementById('main_act_date_hidden');
     const hiddenClassroom = document.getElementById('main_act_classroom_hidden');
-    const hiddenSubject = document.getElementById('main_act_subject_hidden');
+    const hiddenSubject = document.getElementById('main_subject_hidden'); // Corrigido de main_act_subject_hidden para main_act_subject_hidden caso seja esse o ID no form
+
+    // Inicialização do Tom Select
+    let tsInstance;
+    if (classroomSelect) {
+      tsInstance = new TomSelect(classroomSelect, {
+        persist: false,
+        create: false,
+        plugins: ['remove_button']
+      });
+    }
 
     if (mainToggle && mainSection) {
       const syncHiddenFields = () => {
         if (hiddenDate && dateInput) hiddenDate.value = dateInput.value;
-        if (hiddenClassroom && classroomSelect) hiddenClassroom.value = classroomSelect.value;
+        
+        // Tratamento para select múltiplo (Tom Select)
+        if (hiddenClassroom && tsInstance) {
+          hiddenClassroom.value = tsInstance.getValue().join(',');
+        }
+        
         if (hiddenSubject && subjectSelect) hiddenSubject.value = subjectSelect.value;
       };
 
@@ -409,10 +430,16 @@
       mainToggle.removeEventListener('change', toggleFn);
       mainToggle.addEventListener('change', toggleFn);
 
-      [dateInput, classroomSelect, subjectSelect].forEach(el => {
+      // Eventos para sincronização
+      [dateInput, subjectSelect].forEach(el => {
         el?.removeEventListener('change', syncHiddenFields);
         el?.addEventListener('change', syncHiddenFields);
       });
+
+      // Evento específico para o Tom Select
+      if (tsInstance) {
+        tsInstance.on('change', syncHiddenFields);
+      }
 
       topicInput?.removeEventListener('input', () => {});
       topicInput?.addEventListener('input', () => {

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_181854) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_19_145800) do
   create_table "academic_events", force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -97,6 +97,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_181854) do
     t.index ["level_id"], name: "index_classrooms_on_level_id"
     t.index ["section_id"], name: "index_classrooms_on_section_id"
     t.index ["teacher_id"], name: "index_classrooms_on_teacher_id"
+  end
+
+  create_table "classrooms_lessons", id: false, force: :cascade do |t|
+    t.integer "classroom_id", null: false
+    t.integer "lesson_id", null: false
+    t.index ["classroom_id", "lesson_id"], name: "index_classrooms_lessons_on_classroom_id_and_lesson_id"
+    t.index ["lesson_id", "classroom_id"], name: "index_classrooms_lessons_on_lesson_id_and_classroom_id"
   end
 
   create_table "courses", force: :cascade do |t|

@@ -28,7 +28,7 @@ class LessonsController < ApplicationController
     @terms = Term.order(:start_date)
 
     # --- ATUALIZAÇÃO 1: Trocado :grade por :level ---
-    @lessons_list = @lessons.includes(:subject, classroom: [:course, :level]).order(date: :desc)
+    @lessons_list = @lessons.includes(:subject, classrooms: [:course, :level]).order(date: :desc)
     
     @academic_events = AcademicEvent.all.group_by(&:event_date)
     
@@ -78,8 +78,14 @@ class LessonsController < ApplicationController
   end
 
   def update
+    # Verificação de permissão antes de qualquer lógica
+    unless can_manage_lesson?(@lesson)
+      redirect_to lessons_path, alert: "Você não tem permissão para editar esta aula."
+      return
+    end
+
     current_params = lesson_params
-    
+  
     # Lógica de remoção de atividade caso o professor desmarque o botão na edição
     if params[:lesson][:has_activity] == "0"
       current_params.delete(:activities_attributes)
@@ -99,6 +105,12 @@ class LessonsController < ApplicationController
   end
 
   def destroy
+    # Verificação de permissão antes da exclusão
+    unless can_manage_lesson?(@lesson)
+      redirect_to lessons_path, alert: "Você não tem permissão para excluir esta aula."
+      return
+    end
+
     if @lesson.destroy
       redirect_to lessons_path, notice: "Tópico excluído permanentemente."
     else
@@ -116,7 +128,7 @@ class LessonsController < ApplicationController
     @lessons = @base_lessons
     
     # --- ATUALIZAÇÃO 2: Trocado :grade por :level ---
-    @lessons_list = @lessons.includes(:subject, classroom: [:course, :level]).order(date: :desc)
+    @lessons_list = @lessons.includes(:subject, classrooms: [:course, :level]).order(date: :desc)
     
     @terms = Term.order(:start_date)
     @calendar_events = build_calendar_events(@lessons)
@@ -128,6 +140,17 @@ class LessonsController < ApplicationController
   end
 
   private
+
+  def can_manage_lesson?(lesson)
+    return true if current_view_mode == :modo_admin
+    # Permite se for o criador da aula (teacher_id)
+    return true if lesson.teacher_id == current_teacher_profile&.id
+    # Adicione aqui a lógica se o professor fez a chamada (exemplo: se você tiver uma relação de attendance)
+    # return true if lesson.attendances.where(teacher_id: current_teacher_profile&.id).exists?
+  
+    false
+  end
+  helper_method :can_manage_lesson? # Isso permite usar o método na View
 
   def current_teacher_profile
     @current_teacher_profile ||= current_professor.teacher || Teacher.find_by(email: current_professor.email)
@@ -181,7 +204,14 @@ class LessonsController < ApplicationController
 
   def lesson_params
     params.require(:lesson).permit(
-      :topic_name, :date, :week, :status, :classroom_id, :subject_id, :has_activity, :teacher_id,
+      :status, 
+      :week, 
+      :date, 
+      :subject_id, 
+      :topic_name, 
+      :has_activity, 
+      :teacher_id, 
+      { classroom_ids: [] },
       activities_attributes: [
         :id, :name, :activity_type, :points, :status, :date, :classroom_id, :subject_id, :due_date, :_destroy
       ]
