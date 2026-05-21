@@ -47,40 +47,50 @@ class LessonsController < ApplicationController
   end
 
   def create
-    current_params = lesson_params
-    
-    # Se o interruptor 'has_activity' estiver desligado, removemos os atributos aninhados
-    # para evitar que o Rails tente criar uma atividade em branco.
-    if params[:lesson][:has_activity] == "0"
-      current_params.delete(:activities_attributes)
-    end
+    # 1. Captura os IDs das turmas selecionadas removendo valores em branco
+    classroom_ids = params[:lesson][:classroom_ids].reject(&:blank?)
 
-    @lesson = Lesson.new(current_params)
-    @lesson.teacher_id ||= current_teacher_profile&.id
+    if classroom_ids.size > 1
+      success = true
 
-    respond_to do |format|
-      if @lesson.save
-        if @lesson.classroom
-          @lesson.classroom.students.each do |student|
-            Attendance.find_or_create_by!(
-              student_id: student.id,
-              lesson_id: @lesson.id
-            ) do |a|
-              a.date = @lesson.date
-              a.classroom_id = @lesson.classroom_id
-              a.status = "Presente"
-            end
+      Lesson.transaction do
+        classroom_ids.each do |c_id|
+          # Injeta o teacher_id e isola os parâmetros para cada registro
+          single_lesson_params = lesson_params.merge(
+            teacher_id: current_teacher_profile&.id
+          )
+          # Remove os IDs múltiplos para não confundir o inicializador
+          single_lesson_params.delete(:classroom_ids)
+
+          @lesson = Lesson.new(single_lesson_params)
+        
+          # Faz a associação correta da turma no modelo N:N
+          @lesson.classroom_ids = [c_id]
+
+          unless @lesson.save
+            success = false
+            raise ActiveRecord::Rollback # Cancela a transação se uma falhar
           end
         end
+      end
 
-        format.html { redirect_to lessons_path, notice: "Aula cadastrada e chamada inicializada com sucesso!" }
-        format.turbo_stream
+      if success
+        redirect_to lessons_path, notice: "Aulas cadastradas com sucesso para todas as turmas!"
       else
-        # PERSISTÊNCIA: Se o salvamento falhar, garantimos que a atividade 
-        # exista no objeto para que o formulário não quebre a exibição.
-        @lesson.activities.build if @lesson.activities.empty?
-        prepare_index_data 
-        format.html { render :index, status: :unprocessable_entity }
+        render_form_error
+      end
+
+    else
+      # Comportamento para apenas uma turma selecionada (ou fallback)
+      @lesson = Lesson.new(lesson_params.merge(teacher_id: current_teacher_profile&.id))
+    
+      # Garante que mesmo sendo uma, ela use o array se for N:N
+      @lesson.classroom_ids = classroom_ids if classroom_ids.present?
+
+      if @lesson.save
+        redirect_to lessons_path, notice: "Aula cadastrada no Maestro!"
+      else
+        render_form_error
       end
     end
   end
@@ -225,19 +235,7 @@ class LessonsController < ApplicationController
   end
 
   def lesson_params
-    params.require(:lesson).permit(
-      :status, 
-      :week, 
-      :date, 
-      :subject_id, 
-      :topic_name, 
-      :has_activity, 
-      :teacher_id, 
-      { classroom_ids: [] },
-      activities_attributes: [
-        :id, :name, :activity_type, :points, :status, :date, :classroom_id, :subject_id, :due_date, :_destroy
-      ]
-    )
+    params.require(:lesson).permit(:topic_name, :subject_id, :date, :status, :has_activity, classroom_ids: [], activities_attributes: [:id, :name, :activity_type, :points, :status])
   end
 
   def term_params
@@ -252,5 +250,15 @@ class LessonsController < ApplicationController
       events[l.date] << { id: l.id, name: l.topic_name, type: 'lesson', status: l.status }
     end
     events
+  end
+
+  def render_form_error
+    # Recarrega as variáveis necessárias para renderizar a view novamente mostrando os erros
+    @available_classrooms = Classroom.all 
+    @available_subjects = Subject.all
+    @terms = Term.all
+    @lessons_list = Lesson.all
+    # ... suas outras variáveis do dashboard ...
+    render :index, status: :unprocessable_entity
   end
 end
