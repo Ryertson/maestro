@@ -253,14 +253,18 @@ class LessonsController < ApplicationController
   end
 
   def calculate_dashboard_data(lessons_scope)
-    @total_lessons = lessons_scope.respond_to?(:count) ? lessons_scope.count(:id) : lessons_scope.size
-    
     if lessons_scope.respond_to?(:where)
-      @lessons_ready = lessons_scope.where(status: "pronto").count
-      @lessons_in_progress = lessons_scope.where(status: "preparando").count
-      @lessons_not_started = lessons_scope.where(status: "não_iniciada").count
-      lesson_ids = lessons_scope.pluck(:id)
+      # Limpa ordenações conflitantes e garante contagem única no Postgres
+      base_scope = lessons_scope.unscope(:order)
+    
+      @total_lessons = base_scope.distinct.count(:id)
+      @lessons_ready = base_scope.where(status: "pronto").distinct.count
+      @lessons_in_progress = base_scope.where(status: "preparando").distinct.count
+      @lessons_not_started = base_scope.where(status: "não_iniciada").distinct.count
+      lesson_ids = base_scope.pluck(:id)
     else
+      # Fallback caso receba um Array comum de dados
+      @total_lessons = lessons_scope.size
       @lessons_ready = lessons_scope.select { |l| l.status == "pronto" }.size
       @lessons_in_progress = lessons_scope.select { |l| l.status == "preparando" }.size
       @lessons_not_started = lessons_scope.select { |l| l.status == "não_iniciada" }.size
@@ -269,10 +273,11 @@ class LessonsController < ApplicationController
 
     @progress_percentage = @total_lessons > 0 ? ((@lessons_ready.to_f / @total_lessons) * 100).round : 0
 
+    # Dashboard de entregas de atividades relacionados às aulas filtradas
     @filtered_activities = Activity.where(lesson_id: lesson_ids)
-    @entregas_no_prazo = @filtered_activities.where(status: "entregue_no_prazo").count
-    @entregas_em_atraso = @filtered_activities.where(status: "entregue_com_atraso").count
-    @entregas_pendentes = @filtered_activities.where(status: "pendente").count
+    @entregas_no_prazo   = @filtered_activities.where(status: "entregue_no_prazo").count
+    @entregas_em_atraso  = @filtered_activities.where(status: "entregue_com_atraso").count
+    @entregas_pendentes  = @filtered_activities.where(status: "pendente").count
     @entregas_corrigidas = @filtered_activities.where(status: "corrigida").count
   end
 
