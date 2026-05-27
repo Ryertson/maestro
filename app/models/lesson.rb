@@ -23,7 +23,9 @@ class Lesson < ApplicationRecord
   }
 
   # 3. VALIDAÇÕES
-  validates :topic_name, :status, :date, :classroom_id, presence: true
+  # Atualizado: Removemos o :classroom_id estrito daqui e passamos para uma validação condicional customizada abaixo.
+  validates :topic_name, :status, :date, presence: true
+  validate :must_have_at_least_one_classroom
 
   # 4. CALLBACKS
   # Unificamos a sincronização no before_validation para evitar erros de "classroom missing"
@@ -34,10 +36,20 @@ class Lesson < ApplicationRecord
 
   # 5. MÉTODOS DE SUPORTE
   def teacher_display_name
-    teacher&.name || classroom.teachers.first&.name || "Não atribuído"
+    # Fallback seguro: se não houver relacionamento direto singular antigo, tenta buscar da primeira turma da lista.
+    fallback_classroom = classroom_id.present? ? Classroom.find_by(id: classroom_id) : classrooms.first
+    teacher&.name || fallback_classroom&.teachers&.first&.name || "Não atribuído"
   end
 
   private
+
+  # Validação customizada para garantir que a aula tenha ao menos uma turma associada,
+  # aceitando tanto o formato novo (múltiplas) quanto o antigo (campo classroom_id preenchido).
+  def must_have_at_least_one_classroom
+    if classrooms.blank? && classroom_id.blank?
+      errors.add(:base, "A aula deve possuir pelo menos uma turma associada.")
+    end
+  end
 
   # Este método garante que a atividade criada herde o ID da turma e a data da aula,
   # evitando que fiquem "órfãs" ou com datas divergentes.
@@ -45,8 +57,10 @@ class Lesson < ApplicationRecord
   def sync_data_to_activities
     if activities.any?
       activities.each do |activity|
-        # Só atribuímos se a aula já tiver esses dados
-        activity.classroom_id = self.classroom_id if self.classroom_id.present?
+        # Define qual o ID da turma a ser herdado pela atividade (prioriza o modelo novo ou o fallback antigo)
+        target_classroom_id = self.classroom_id.present? ? self.classroom_id : self.classroom_ids.first
+        
+        activity.classroom_id = target_classroom_id if target_classroom_id.present?
         activity.date = self.date if self.date.present?
       end
     end

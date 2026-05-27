@@ -1,6 +1,6 @@
 <div class="container-fluid px-4 py-4">
 
-  <%# --- Botão de Alternância de Avatar (Apenas para Admins) --- %>
+  <%# --- Botão de Alternância de Visão (Apenas para Admins) --- %>
   <% if current_professor.admin? %>
     <div class="row mb-4">
       <div class="col-12">
@@ -51,10 +51,10 @@
           <div class="col-md-4">
             <div class="position-relative">
               <input type="text" name="search" 
-                      class="form-control form-control-glass py-3" 
-                      placeholder="Pesquisar tópicos..." 
-                      value="<%= params[:search] %>"
-                      style="padding-left: 15px !important;">
+                     class="form-control form-control-glass py-3" 
+                     placeholder="Pesquisar tópicos..." 
+                     value="<%= params[:search] %>"
+                     style="padding-left: 15px !important;">
             </div>
           </div>
 
@@ -134,7 +134,7 @@
     </div>
   </div>
 
-  <%# --- BANCO DE AULAS LECIONADAS (COM SCROLL) --- %>
+  <%# --- BANCO DE AULAS LECIONADAS --- %>
   <div class="glass-card mb-5 overflow-hidden">
     <div class="card-header bg-transparent py-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
       <h5 class="mb-0 fw-bold text-white">Banco de Aulas Lecionadas</h5>
@@ -164,7 +164,7 @@
                       <span class="badge-status-neon badge-neon-blue">
                         <i class="bi bi-file-earmark-text"></i> Atividade Vinculada
                       </span>
-                      <% act = Activity.find_by(lesson_id: lesson.id) %>
+                      <% act = lesson.activities.first %>
                       <% if act&.status == "corrigida" %>
                         <span class="badge-status-neon badge-neon-green">
                           <i class="bi bi-check-circle-fill"></i> Corrigida
@@ -183,14 +183,21 @@
                 </div>
               </td>
               <td>
-                <span class="badge <%= lesson.status == 'pronta' ? 'badge-neon-green' : 'badge-neon-purple' %> px-2 py-1">
+                <%# CORREÇÃO DO ENUM: Compatível com 'pronto' definido no model %>
+                <span class="badge <%= (lesson.status == 'pronto' || lesson.status == 'pronta') ? 'badge-neon-green' : 'badge-neon-purple' %> px-2 py-1">
                   <%= lesson.status.humanize %>
                 </span>
               </td>
               <td class="text-white-50 small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
               <td>
-                <% lesson.classrooms.each do |c| %>
-                  <span class="badge border border-secondary text-white-50 d-block mb-1"><%= c.full_name_info %></span>
+                <% if lesson.classrooms.any? %>
+                  <% lesson.classrooms.each do |c| %>
+                    <span class="badge border border-secondary text-white-50 d-block mb-1 text-start"><%= c.full_name_info %></span>
+                  <% end %>
+                <% elsif lesson.classroom_id.present? && (fallback_classroom = Classroom.find_by(id: lesson.classroom_id)) %>
+                  <span class="badge border border-secondary text-white-50 d-block mb-1 text-start"><%= fallback_classroom.full_name_info %></span>
+                <% else %>
+                  <span class="badge border border-danger text-danger d-block mb-1">Sem Turma</span>
                 <% end %>
               </td>
               <td>
@@ -219,11 +226,11 @@
       <div class="row g-3 align-items-end">
         <div class="col-md-3">
           <label class="label-neon-small mb-1">Título da Aula</label>
-          <%= f.text_field :topic_name, class: "form-control form-control-glass", id: "main_topic_field", placeholder: "Ex: Química Orgânica" %>
+          <%= f.text_field :topic_name, class: "form-control form-control-glass", id: "main_topic_field", placeholder: "Ex: Classificação do Carbono" %>
         </div>
         <div class="col-md-2">
-          <label class="label-neon-small mb-1">Turma</label>
-          <%= f.collection_select :classroom_ids, @available_classrooms, :id, :full_name_info, {}, { class: "form-select form-control-glass", id: "select-turmas", multiple: true } %>
+          <label class="label-neon-small mb-1">Turma(s)</label>
+          <%= f.collection_select :classroom_ids, @available_classrooms, :id, :full_name_info, {}, { class: "form-select form-control-glass js-maestro-tom-select", id: "select-turmas", multiple: true, name: "lesson[classroom_ids][]" } %>
         </div>
         <div class="col-md-2">
           <label class="label-neon-small mb-1">Disciplina</label>
@@ -255,15 +262,14 @@
               </div>
               <div class="col-md-3">
                 <%= a.label :activity_type, "Tipo", class: "label-neon-small mb-1" %>
-                <%# Lista de opções atualizada conforme sua solicitação %>
                 <%= a.select :activity_type, 
                     ["Avaliação", "Trabalho", "Visto", "Lista de Exercícios", "Redação", "Apresentação", "Relatório"], 
                     { prompt: "Tipo..." }, 
-                    { class: "form-select form-control-glass" } %>
+                    { class: "form-select form-control-glass", id: "main_act_type" } %>
               </div>
               <div class="col-md-3">
                 <%= a.label :points, "Peso", class: "label-neon-small mb-1" %>
-                <%= a.number_field :points, step: 0.1, class: "form-control form-control-glass", value: 10.0 %>
+                <%= a.number_field :points, step: 0.1, class: "form-control form-control-glass", value: 10.0, id: "main_act_points" %>
               </div>
               <%= a.hidden_field :date, id: "main_act_date_hidden" %>
               <%= a.hidden_field :classroom_id, id: "main_act_classroom_hidden" %>
@@ -349,7 +355,7 @@
         <% end %>
       </div>
     </div>
-  </div>
+  end
 </div>
 
 <style>
@@ -370,7 +376,6 @@
     z-index: 10;
     background-color: #121214 !important;
   }
-
   .calendar-container-fixed table { table-layout: fixed !important; width: 100% !important; border-collapse: collapse; }
   .calendar-day-cell { height: 100px; width: 100%; padding: 4px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
   .badge-calendar-lesson { background: var(--purple-neon); color: white; font-size: 0.55rem; padding: 2px 4px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -385,40 +390,51 @@
     const nameInput = document.getElementById('main_act_name');
     const dateInput = document.getElementById('main_date_field');
     
-    // Atualizado para o ID 'select-turmas'
     const classroomSelect = document.getElementById('select-turmas');
     const subjectSelect = document.getElementById('main_subject_select');
     
     const hiddenDate = document.getElementById('main_act_date_hidden');
     const hiddenClassroom = document.getElementById('main_act_classroom_hidden');
-    const hiddenSubject = document.getElementById('main_act_subject_hidden'); // Corrigido de main_act_subject_hidden para main_act_subject_hidden caso seja esse o ID no form
+    const hiddenSubject = document.getElementById('main_act_subject_hidden');
 
-    // Inicialização do Tom Select
     let tsInstance;
     if (classroomSelect) {
+      // 1. Força a destruição de qualquer instância fantasma do TomSelect presa no elemento
+      if (classroomSelect.tomselect) {
+        classroomSelect.tomselect.destroy();
+      }
+      
+      // 2. Inicializa com o comportamento de pílula (multi-select por clique)
       tsInstance = new TomSelect(classroomSelect, {
         persist: false,
         create: false,
-        plugins: ['remove_button']
+        maxItems: null,
+        plugins: {
+          'remove_button': {
+            title: 'Remover turma',
+          }
+        },
+        placeholder: "Selecione as turmas...",
+        onDropdownOpen: function() {
+          // Garante que o dropdown acompanhe o estilo escuro/neon do Maestro
+          this.dropdown.classList.add('glass-card');
+        }
       });
     }
 
     if (mainToggle && mainSection) {
       const syncHiddenFields = () => {
         if (hiddenDate && dateInput) hiddenDate.value = dateInput.value;
-        
-        // Tratamento para select múltiplo (Tom Select)
         if (hiddenClassroom && tsInstance) {
           hiddenClassroom.value = tsInstance.getValue().join(',');
         }
-        
         if (hiddenSubject && subjectSelect) hiddenSubject.value = subjectSelect.value;
       };
 
       const toggleFn = () => {
         if (mainToggle.checked) {
           mainSection.classList.remove('d-none');
-          mainSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
+          mainSection.querySelectorAll('input:not([type="hidden"]), select').forEach(el => el.disabled = false);
           
           if (nameInput && (nameInput.value === "" || nameInput.value.startsWith("Atv:"))) {
             nameInput.value = "Atv: " + (topicInput.value || "");
@@ -426,20 +442,18 @@
           syncHiddenFields();
         } else {
           mainSection.classList.add('d-none');
-          mainSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
+          mainSection.querySelectorAll('input:not([type="hidden"]), select').forEach(el => el.disabled = true);
         }
       };
 
       mainToggle.removeEventListener('change', toggleFn);
       mainToggle.addEventListener('change', toggleFn);
 
-      // Eventos para sincronização
       [dateInput, subjectSelect].forEach(el => {
         el?.removeEventListener('change', syncHiddenFields);
         el?.addEventListener('change', syncHiddenFields);
       });
 
-      // Evento específico para o Tom Select
       if (tsInstance) {
         tsInstance.on('change', syncHiddenFields);
       }
@@ -453,28 +467,16 @@
       
       toggleFn();
     }
-
-    const modalToggles = document.querySelectorAll('.js-activity-toggle');
-    modalToggles.forEach(toggle => {
-      const section = document.getElementById('section-atv-maestro');
-      if (!section) return;
-
-      const refreshModalUI = () => {
-        if (toggle.checked) {
-          section.classList.remove('d-none');
-          section.querySelectorAll('input, select').forEach(el => el.disabled = false);
-        } else {
-          section.classList.add('d-none');
-          section.querySelectorAll('input, select').forEach(el => el.disabled = true);
-        }
-      };
-
-      toggle.removeEventListener('change', refreshModalUI);
-      toggle.addEventListener('change', refreshModalUI);
-      refreshModalUI();
-    });
   }
 
+  // Desvincula eventos anteriores antes de reassinar para evitar loops no Turbo
+  document.removeEventListener("turbo:load", setupMaestroLessonsUI);
   document.addEventListener("turbo:load", setupMaestroLessonsUI);
-  document.addEventListener("DOMContentLoaded", setupMaestroLessonsUI);
+  
+  // Fallback para carregamento bruto
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupMaestroLessonsUI);
+  } else {
+    setupMaestroLessonsUI();
+  }
 </script>

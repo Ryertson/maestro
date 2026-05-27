@@ -8,114 +8,154 @@ class LessonsController < ApplicationController
   before_action :authorize_lesson_access!, only: %i[show edit update destroy]
 
   def index
-    @base_lessons = if current_view_mode == :modo_admin
-                      Lesson.all
-                    else
-                      Lesson.where(teacher_id: current_teacher_profile&.id)
-                            .where(classroom_id: @available_classrooms.pluck(:id))
-                    end
+    # 1. Iniciamos o escopo cruzando a tabela associativa de turmas
+    @lessons = Lesson.left_outer_joins(:classrooms).distinct
 
-    @lessons = @base_lessons
-    @lessons = @lessons.where(classroom_id: params[:classroom_id]) if params[:classroom_id].present?
+    # 2. Se não for admin, restringe às aulas que pertencem ao professor logado
+    unless current_view_mode == :modo_admin
+      allowed_classroom_ids = @available_classrooms.pluck(:id)
+      @lessons = @lessons.where(teacher_id: current_teacher_profile&.id)
+                         .where("lessons.classroom_id IN (?) OR classrooms_lessons.classroom_id IN (?)", allowed_classroom_ids, allowed_classroom_ids)
+    end
+
+    # 3. Filtro por Turma selecionada no painel
+    if params[:classroom_id].present?
+      @lessons = @lessons.where("lessons.classroom_id = ? OR classrooms_lessons.classroom_id = ?", params[:classroom_id], params[:classroom_id])
+    end
+
+    # 4. Demais filtros do Maestro
     @lessons = @lessons.where(subject_id: params[:subject_id]) if params[:subject_id].present?
     
-    # --- FILTRO POR PERÍODO / BIMESTRE ---
     if params[:term_id].present?
       term = Term.find_by(id: params[:term_id])
-      if term
-        @lessons = @lessons.where(date: term.start_date..term.end_date)
-      end
+      @lessons = @lessons.where(date: term.start_date..term.end_date) if term
     end
 
     if params[:search].present?
-      @lessons = @lessons.where("topic_name LIKE ?", "%#{params[:search]}%")
+      @lessons = @lessons.where("lessons.topic_name LIKE ?", "%#{params[:search]}%")
     end
 
-    calculate_dashboard_data(@lessons)
+    # 5. Otimização de queries N+1 e ordenação das aulas
+    @lessons_list = @lessons.includes(:subject, classrooms: [:course, :level]).order(date: :desc)
+
+    # 6. Alimenta o Dashboard e Calendário
+    calculate_dashboard_data(@lessons_list)
 
     @terms = Term.order(:start_date)
-
-    # --- ATUALIZAÇÃO 1: Trocado :grade por :level ---
-    @lessons_list = @lessons.includes(:subject, classrooms: [:course, :level]).order(date: :desc)
-    
     @academic_events = AcademicEvent.all.group_by(&:event_date)
     
     @lesson = Lesson.new
     @lesson.activities.build 
     @view_date = params[:date] ? Date.parse(params[:date]) : Date.today
-    @calendar_events = build_calendar_events(@lessons)
+    @calendar_events = build_calendar_events(@lessons_list)
   end
 
   def create
-    # 1. Captura os IDs das turmas selecionadas removendo valores em branco
-    classroom_ids = params[:lesson][:classroom_ids].reject(&:blank?)
+    # --- EXTRAÇÃO SEGURA DAS TURMAS ---
+    # Captura os IDs das turmas do select múltiplo, limpando valores vazios
+    selected_classroom_ids = params[:lesson][:classroom_ids]&.reject(&:blank?) || []
+  
+    # Caso o array venha vazio, tenta usar o ID singular para não quebrar o comportamento padrão
+    if selected_classroom_ids.blank? && params[:lesson][:classroom_id].present?
+      selected_classroom_ids = [params[:lesson][:classroom_id]]
+    end
 
-    if classroom_ids.size > 1
-      success = true
+    # Se mesmo assim não houver turmas, barra o salvamento usando seu bloco de erro padrão
+    if selected_classroom_ids.blank?
+      flash.now[:alert] = "Falha ao cadastrar no Maestro. Motivo: Você precisa selecionar pelo menos uma turma."
+      prepare_index_data
+      return respond_to do |format|
+        format.html { render :index, status: :unprocessable_entity }
+        format.json { render json: { errors: ["Classroom can't be blank"] }, status: :unprocessable_entity }
+      end
+    end
 
-      Lesson.transaction do
-        classroom_ids.each do |c_id|
-          # Injeta o teacher_id e isola os parâmetros para cada registro
-          single_lesson_params = lesson_params.merge(
-            teacher_id: current_teacher_profile&.id
-          )
-          # Remove os IDs múltiplos para não confundir o inicializador
-          single_lesson_params.delete(:classroom_ids)
+    # Isolamos os parâmetros base da aula para podermos instanciar uma por turma
+    base_params = lesson_params.except(:classroom_ids)
+  
+    # Inicializamos as variáveis de controle que seu código já utiliza
+    attendance_errors = []
+    lesson_save_failed = false
+    @lesson = nil # Será usada para reter a última instância ou alimentar a view em caso de falha
 
-          @lesson = Lesson.new(single_lesson_params)
-        
-          # Faz a associação correta da turma no modelo N:N
-          @lesson.classroom_ids = [c_id]
+    # --- O LOOP DE MULTIPLICAÇÃO ---
+    selected_classroom_ids.each do |classroom_id|
+      classroom = Classroom.find_by(id: classroom_id)
+      next unless classroom
 
-          unless @lesson.save
-            success = false
-            raise ActiveRecord::Rollback # Cancela a transação se uma falhar
-          end
+      # Criamos uma aula física nova para cada turma selecionada no laço
+      current_lesson = Lesson.new(base_params)
+      current_lesson.teacher_id = current_teacher_profile&.id
+      current_lesson.classroom_id = classroom_id
+
+      # Se houver atividade vinculada, duplicamos os atributos aninhados injetando a turma atual
+      if current_lesson.has_activity && params[:lesson][:activities_attributes].present?
+        params[:lesson][:activities_attributes].each do |_index, act_params|
+          current_lesson.activities.build(act_params.merge(classroom_id: classroom_id))
         end
       end
 
-      if success
-        redirect_to lessons_path, notice: "Aulas cadastradas com sucesso para todas as turmas!"
+      if current_lesson.save
+        @lesson = current_lesson # Guarda uma instância válida para o respond_to de sucesso
+
+        # Executa exatamente a sua lógica de frequências (chamada) para a turma da vez
+        classroom.students.each do |student|
+          attendance = current_lesson.attendances.find_or_initialize_by(student_id: student.id)
+          attendance.classroom_id = classroom_id
+          attendance.status       = "Presente" if attendance.new_record? 
+
+          unless attendance.save
+            attendance_errors << "#{student.name}: #{attendance.errors.full_messages.join(', ')}"
+          end
+        end
       else
-        render_form_error
+        @lesson = current_lesson # Retém a instância com os erros de validação para exibir na tela
+        lesson_save_failed = true
+        break # Interrompe o processo se uma das turmas falhar na validação interna
       end
+    end
 
-    else
-      # Comportamento para apenas uma turma selecionada (ou fallback)
-      @lesson = Lesson.new(lesson_params.merge(teacher_id: current_teacher_profile&.id))
-    
-      # Garante que mesmo sendo uma, ela use o array se for N:N
-      @lesson.classroom_ids = classroom_ids if classroom_ids.present?
+    # --- SEUS RESPOND_TO E TRATAMENTOS DE FLUSH MANANTIDOS ---
+    respond_to do |format|
+      unless lesson_save_failed
+        if attendance_errors.any?
+          flash[:warning] = "Aula criada, mas houve problemas nas frequências: #{attendance_errors.first(3).join(' | ')}"
+        else
+          flash[:notice] = "Aula cadastrada com sucesso nas turmas selecionadas!"
+        end
 
-      if @lesson.save
-        redirect_to lessons_path, notice: "Aula cadastrada no Maestro!"
+        format.html { redirect_to lessons_path }
+        format.json { render :show, status: :created, location: @lesson }
       else
-        render_form_error
+        # Se falhou, reconstrói os dados usando o seu padrão exato de tratamento
+        error_messages = @lesson.errors.full_messages.join(", ")
+        flash.now[:alert] = "Falha ao cadastrar no Maestro. Motivo: #{error_messages}"
+        prepare_index_data
+        format.html { render :index, status: :unprocessable_entity }
+        format.json { render json: @lesson.errors, status: :unprocessable_entity }
       end
     end
   end
 
   def update
-    # Verificação de permissão antes de qualquer lógica
     unless can_manage_lesson?(@lesson)
       redirect_to lessons_path, alert: "Você não tem permissão para editar esta aula."
       return
     end
 
     current_params = lesson_params
-  
-    # Lógica de remoção de atividade caso o professor desmarque o botão na edição
     if params[:lesson][:has_activity] == "0"
       current_params.delete(:activities_attributes)
     end
 
     @lesson.assign_attributes(current_params)
+    
+    # --- AJUSTE CRUCIAL: Garante o professor também no update ---
     @lesson.teacher_id ||= current_teacher_profile&.id
 
     if @lesson.save
       redirect_to lessons_path, notice: "Aula atualizada com sucesso!"
     else
-      # Garante que o formulário recarregue com os campos de atividade disponíveis
       @lesson.activities.build if @lesson.activities.empty?
       prepare_index_data
       render :index, status: :unprocessable_entity
@@ -123,7 +163,6 @@ class LessonsController < ApplicationController
   end
 
   def destroy
-    # Verificação de permissão antes da exclusão
     unless can_manage_lesson?(@lesson)
       redirect_to lessons_path, alert: "Você não tem permissão para excluir esta aula."
       return
@@ -137,30 +176,31 @@ class LessonsController < ApplicationController
   end
 
   def prepare_index_data
-    @base_lessons = if current_view_mode == :modo_admin
-                      Lesson.all
-                    else
-                      Lesson.where(teacher_id: current_teacher_profile&.id)
-                            .where(classroom_id: @available_classrooms.pluck(:id))
-                    end
-    @lessons = @base_lessons
+    @lessons = Lesson.left_outer_joins(:classrooms).distinct
+
+    unless current_view_mode == :modo_admin
+      allowed_classroom_ids = @available_classrooms.pluck(:id)
+      @lessons = @lessons.where(teacher_id: current_teacher_profile&.id)
+                         .where("lessons.classroom_id IN (?) OR classrooms_lessons.classroom_id IN (?)", allowed_classroom_ids, allowed_classroom_ids)
+    end
     
-    # Mantém filtros aplicados em caso de recarga por falha de validação
-    @lessons = @lessons.where(classroom_id: params[:classroom_id]) if params[:classroom_id].present?
+    if params[:classroom_id].present?
+      @lessons = @lessons.where("lessons.classroom_id = ? OR classrooms_lessons.classroom_id = ?", params[:classroom_id], params[:classroom_id])
+    end
+    
     @lessons = @lessons.where(subject_id: params[:subject_id]) if params[:subject_id].present?
+    
     if params[:term_id].present?
       term = Term.find_by(id: params[:term_id])
       @lessons = @lessons.where(date: term.start_date..term.end_date) if term
     end
     
-    # --- ATUALIZAÇÃO 2: Trocado :grade por :level ---
     @lessons_list = @lessons.includes(:subject, classrooms: [:course, :level]).order(date: :desc)
+    calculate_dashboard_data(@lessons_list)
     
     @terms = Term.order(:start_date)
-    @calendar_events = build_calendar_events(@lessons)
-    calculate_dashboard_data(@lessons)
+    @calendar_events = build_calendar_events(@lessons_list)
     
-    # AJUSTE DE PERSISTÊNCIA: Garante que o objeto lesson tenha sempre uma atividade iniciada
     @lesson ||= Lesson.new
     @lesson.activities.build if @lesson.activities.empty?
   end
@@ -207,23 +247,29 @@ class LessonsController < ApplicationController
     allowed_ids = Classroom.joins(:classroom_subjects)
                            .where(classroom_subjects: { teacher_id: current_teacher_profile&.id })
                            .pluck(:id)
-    unless allowed_ids.include?(@lesson.classroom_id)
+    unless allowed_ids.include?(@lesson.classroom_id) || (@lesson.classroom_ids & allowed_ids).any?
       redirect_to lessons_path, alert: "Você não tem permissão para acessar esta aula."
     end
   end
 
-  def calculate_dashboard_data(scope)
-    @total_lessons = scope.count
-    @lessons_ready = scope.where(status: "pronto").count
-    @lessons_in_progress = scope.where(status: "preparando").count
-    @lessons_not_started = scope.where(status: "não_iniciada").count
+  def calculate_dashboard_data(lessons_scope)
+    @total_lessons = lessons_scope.respond_to?(:count) ? lessons_scope.count(:id) : lessons_scope.size
+    
+    if lessons_scope.respond_to?(:where)
+      @lessons_ready = lessons_scope.where(status: "pronto").count
+      @lessons_in_progress = lessons_scope.where(status: "preparando").count
+      @lessons_not_started = lessons_scope.where(status: "não_iniciada").count
+      lesson_ids = lessons_scope.pluck(:id)
+    else
+      @lessons_ready = lessons_scope.select { |l| l.status == "pronto" }.size
+      @lessons_in_progress = lessons_scope.select { |l| l.status == "preparando" }.size
+      @lessons_not_started = lessons_scope.select { |l| l.status == "não_iniciada" }.size
+      lesson_ids = lessons_scope.map(&:id)
+    end
+
     @progress_percentage = @total_lessons > 0 ? ((@lessons_ready.to_f / @total_lessons) * 100).round : 0
 
-    # --- ESCOPO DE ATIVIDADES CONECTADO AO FILTRO DO DASHBOARD ---
-    # Captura apenas as atividades vinculadas às aulas que estão no filtro atual (Turma/Disciplina/Bimestre)
-    @filtered_activities = Activity.where(lesson_id: scope.pluck(:id))
-    
-    # Variáveis globais para alimentar o quadro de "Status de Entrega" com dados reais filtrados
+    @filtered_activities = Activity.where(lesson_id: lesson_ids)
     @entregas_no_prazo = @filtered_activities.where(status: "entregue_no_prazo").count
     @entregas_em_atraso = @filtered_activities.where(status: "entregue_com_atraso").count
     @entregas_pendentes = @filtered_activities.where(status: "pendente").count
@@ -235,30 +281,25 @@ class LessonsController < ApplicationController
   end
 
   def lesson_params
-    params.require(:lesson).permit(:topic_name, :subject_id, :date, :status, :has_activity, classroom_ids: [], activities_attributes: [:id, :name, :activity_type, :points, :status])
+    params.require(:lesson).permit(
+      :topic_name, 
+      :subject_id, 
+      :date, 
+      :status, 
+      :has_activity, 
+      :classroom_id,       
+      classroom_ids: [], # <--- ESSA LINHA É CRUCIAL PERMANECER ASSIM
+      activities_attributes: [:id, :name, :activity_type, :points, :date, :classroom_id, :subject_id, :status]
+    )
   end
 
-  def term_params
-    params.require(:term).permit(:start_date, :end_date, :color)
-  end
-
-  def build_calendar_events(lessons)
+  def build_calendar_events(lessons_source)
     events = {}
-    lessons.each do |l|
+    lessons_source.each do |l|
       next unless l.date
       events[l.date] ||= []
       events[l.date] << { id: l.id, name: l.topic_name, type: 'lesson', status: l.status }
     end
     events
-  end
-
-  def render_form_error
-    # Recarrega as variáveis necessárias para renderizar a view novamente mostrando os erros
-    @available_classrooms = Classroom.all 
-    @available_subjects = Subject.all
-    @terms = Term.all
-    @lessons_list = Lesson.all
-    # ... suas outras variáveis do dashboard ...
-    render :index, status: :unprocessable_entity
   end
 end

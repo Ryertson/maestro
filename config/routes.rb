@@ -70,7 +70,7 @@ Rails.application.routes.draw do
 
     resources :grades, only: [:create]
     resources :lessons, only: [:index, :new]
-    resources :activities, only: [:index, :new]
+    resources :activities, only: [:index, :new, :create, :edit, :update, :destroy]
   end
 
   resources :classroom_subjects

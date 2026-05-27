@@ -193,9 +193,18 @@
                     </span>
                   </td>
                   <td class="text-end pe-4">
-                    <%= link_to activities_path(current_activity_id: act.id), class: "btn btn-sm btn-outline-purple-neon" do %>
-                      <i class="bi bi-pencil-square me-1"></i> Abrir Lançamento
-                    <% end %>
+                    <div class="d-flex gap-2 justify-content-end">
+                      <%= link_to activities_path(current_activity_id: act.id), class: "btn btn-sm btn-outline-purple-neon" do %>
+                        <i class="bi bi-pencil-square me-1"></i> Abrir Lançamento
+                      <% end %>
+                      
+                      <%= button_to activity_path(act), 
+                                    method: :delete, 
+                                    form: { data: { turbo_confirm: "Tem certeza que deseja excluir esta atividade permanentemente do Maestro?" } }, 
+                                    class: "btn btn-sm btn-outline-danger text-white" do %>
+                        <i class="bi bi-trash3-fill me-1"></i> Excluir
+                      <% end %>
+                    </div>
                   </td>
                 </tr>
               <% end %>

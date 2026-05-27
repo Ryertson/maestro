@@ -99,8 +99,19 @@ class ActivitiesController < ApplicationController
   end
 
   def destroy
-    @activity.destroy
-    redirect_to activities_path, notice: "Atividade excluída permanentemente."
+    @activity = Activity.find_by(id: params[:id])
+
+    if @activity
+      @activity.destroy
+      flash[:notice] = "Atividade excluída com sucesso do Maestro!"
+    else
+      flash[:alert] = "Não foi possível localizar a atividade para exclusão."
+    end
+
+    respond_to do |format|
+      format.html { redirect_to activities_path }
+      format.json { head :no_content }
+    end
   end
 
   private
