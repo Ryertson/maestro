@@ -183,9 +183,8 @@
                 </div>
               </td>
               <td>
-                <%# CORREÇÃO DO ENUM: Compatível com 'pronto' definido no model %>
                 <span class="badge <%= (lesson.status == 'pronto' || lesson.status == 'pronta') ? 'badge-neon-green' : 'badge-neon-purple' %> px-2 py-1">
-                  <%= lesson.status.humanize %>
+                  <%= lesson.status&.humanize %>
                 </span>
               </td>
               <td class="text-white-50 small"><%= lesson.date&.strftime("%d/%m/%Y") %></td>
@@ -202,7 +201,7 @@
               </td>
               <td>
                 <% if lesson.subject %>
-                  <span class="text-purple-neon small fw-bold"><%= lesson.subject.name %></span>
+                  <span class="text-purple-neon small fw-bold"><%= lesson.subject&.name %></span>
                 <% end %>
               </td>
               <td class="text-end pe-4">
@@ -355,7 +354,7 @@
         <% end %>
       </div>
     </div>
-  end
+  </div>
 </div>
 
 <style>
@@ -399,12 +398,10 @@
 
     let tsInstance;
     if (classroomSelect) {
-      // 1. Força a destruição de qualquer instância fantasma do TomSelect presa no elemento
       if (classroomSelect.tomselect) {
         classroomSelect.tomselect.destroy();
       }
       
-      // 2. Inicializa com o comportamento de pílula (multi-select por clique)
       tsInstance = new TomSelect(classroomSelect, {
         persist: false,
         create: false,
@@ -416,7 +413,6 @@
         },
         placeholder: "Selecione as turmas...",
         onDropdownOpen: function() {
-          // Garante que o dropdown acompanhe o estilo escuro/neon do Maestro
           this.dropdown.classList.add('glass-card');
         }
       });
@@ -469,11 +465,9 @@
     }
   }
 
-  // Desvincula eventos anteriores antes de reassinar para evitar loops no Turbo
   document.removeEventListener("turbo:load", setupMaestroLessonsUI);
   document.addEventListener("turbo:load", setupMaestroLessonsUI);
   
-  // Fallback para carregamento bruto
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", setupMaestroLessonsUI);
   } else {
